@@ -3,6 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 // import { MongooseModule } from '@nestjs/mongoose';
+import { ExampleModule } from './example/example.module';
 
 @Module({
   imports: [
@@ -10,6 +11,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       envFilePath: `.env.${process.env.NODE_ENV || 'development'}`,
       isGlobal: true,
     }),
+    ExampleModule,
     // MongooseModule.forRootAsync({
     //   imports: [ConfigModule],
     //   useFactory: async (configService: ConfigService) => ({
