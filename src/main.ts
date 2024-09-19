@@ -1,12 +1,15 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { HttpExceptionFilter } from './utils/http-exception.filter';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { LoggingInterceptor } from './interception/logging.interceptor';
+import { TransformInterceptor } from './interception/transform.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  // app.useGlobalFilters(new HttpExceptionFilter());
   app.setGlobalPrefix('api'); // set global route
   // config swagger
   const config = new DocumentBuilder()
@@ -21,7 +24,12 @@ async function bootstrap() {
     },
   });
   // middleware
-  app.useGlobalFilters(new HttpExceptionFilter());
+
+  app.useGlobalInterceptors(new LoggingInterceptor());
+  const reflector = app.get(Reflector);
+
+  app.useGlobalInterceptors(new TransformInterceptor(reflector));
+  
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,

@@ -1,9 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { ExampleService } from './example.service';
 import { CreateExampleDto } from './dto/create-example.dto';
 import { UpdateExampleDto } from './dto/update-example.dto';
+import { PageOptionsDto } from 'src/utils/page-option-dto';
+import { PageDto } from 'src/utils/page.dto';
+import { Example } from './entities/example.entity';
+import { ApiTags } from '@nestjs/swagger';
+import { ObjectId } from 'mongoose';
 
 @Controller('example')
+@ApiTags('example')
 export class ExampleController {
   constructor(private readonly exampleService: ExampleService) {}
 
@@ -13,13 +19,13 @@ export class ExampleController {
   }
 
   @Get()
-  findAll() {
-    return this.exampleService.findAll();
+  findAll(@Query() query: Partial<CreateExampleDto>, @Query() pageOptionDto: PageOptionsDto): Promise<PageDto<Example>> {
+    return this.exampleService.findAll(pageOptionDto, query);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.exampleService.findOne(+id);
+  findOne(@Param('id') id: ObjectId) {
+    return this.exampleService.findOne(id);
   }
 
   @Patch(':id')
