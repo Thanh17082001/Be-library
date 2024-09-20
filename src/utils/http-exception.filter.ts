@@ -23,7 +23,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
         statusCode: status,
         timestamp: new Date().toISOString(),
         path: request.url,
-        message: message // Including the message in the response
+        message: status === 500 ? 'Server Error' : message, // Including the message in the response
+        errorDetails: exception.stack || '',
       });
   }
 }

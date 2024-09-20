@@ -31,18 +31,21 @@ export class ExampleService {
 
     //search document
     if (search) {
-      mongoQuery.name = { $regex: new RegExp(search, 'i') }; // Tìm kiếm theo tên với LIKE
+      mongoQuery.name = { $regex: new RegExp(search, 'i') }; 
     }
     
     // Thực hiện phân trang và sắp xếp
     const [results, itemCount] = await Promise.all([
       this.exampleModel
         .find()
-        .sort({ order: 1, createdAt: order === 'ASC' ? 1 : -1 }) // Sắp xếp theo order và createdAt
-        .skip(skip) // Bỏ qua các bản ghi dựa trên `skip`
-        .limit(limit) // Giới hạn số bản ghi dựa trên `take`
-        .exec(),
-      this.exampleModel.countDocuments(), // Đếm số lượng bản ghi phù hợp
+        // .populate('aaaaaa')
+        .sort({ order: 1, createdAt: order === 'ASC' ? 1 : -1 }) 
+        .skip(skip) 
+        .limit(limit) 
+        .lean()
+        .exec()
+        ,
+      this.exampleModel.countDocuments(), 
     ]);
 
     const pageMetaDto = new PageMetaDto({ pageOptionsDto: pageOptions, itemCount });

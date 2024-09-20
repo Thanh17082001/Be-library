@@ -17,10 +17,11 @@ export class TransformInterceptor<T> implements NestInterceptor<T, Response<T>> 
     constructor(private reflector: Reflector) { }
 
     intercept(context: ExecutionContext, next: CallHandler): Observable<Response<T>> {
+        const statusCode: number = context.switchToHttp().getResponse().statusCode;
         return next.handle().pipe(map(data => (
             {
-                statusCode: context.switchToHttp().getResponse().statusCode,
-                message: this.reflector.get<string>(RESPONSE_MESSAGE, context.getHandler()) || 'Success',
+                statusCode: statusCode,
+                message:  this.reflector.get<string>(RESPONSE_MESSAGE, context.getHandler()) || 'Success',
                 data:  Array.isArray(data) ? { result: data } : data, 
             }
         )));
