@@ -1,7 +1,7 @@
 import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
 import { BaseDocument } from 'src/common/base-document';
 
-type permission={
+export type Permission={
     action: string;
     resource: string;
 }
@@ -17,7 +17,7 @@ export class User extends BaseDocument {
     @Prop({
         default: [{ action: 'read', resource: 'test' }], // Người dùng có thể có nhiều quyền
     })
-    permissions: permission[];
+    permissions: Permission[];
 
     @Prop({ default: 'user' }) // Vai trò của người dùng
     role: string;

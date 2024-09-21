@@ -13,7 +13,7 @@ async function bootstrap() {
   app.setGlobalPrefix('api'); // set global route
   // config swagger
   const config = new DocumentBuilder()
-    .setTitle('API USING NEST JS APP TIVI')
+    .setTitle('API USING NEST JS LIBRARY')
     .setDescription('Author: Nguyen Thien Thanh')
     .setVersion('1.0')
     .addBearerAuth()

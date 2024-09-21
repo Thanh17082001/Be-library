@@ -11,10 +11,12 @@ import { TokenService } from 'src/token/token.service';
 import { RefreshTokenDto } from 'src/token/dto/refresh-token.dto';
 
 import { Cron } from '@nestjs/schedule';
+import { PermissonDto } from 'src/user/dto/permisson.to';
 
 @Injectable()
 export class AuthService {
     constructor(private usersService: UserService, private tokenService: TokenService, private jwtService: JwtService) { }
+    
     async signUp(data: CreateUserDto): Promise<User> {
         const password = await bcrypt.hash(data.password, 10)
         const user: CreateUserDto = {
@@ -36,7 +38,7 @@ export class AuthService {
             throw new BadRequestException('Account or password is incorrect');
         }
         const payload = { ...user, password: undefined };
-        const accessToken = this.jwtService.sign(payload, { expiresIn: '60s' });
+        const accessToken = this.jwtService.sign(payload, { expiresIn: '60m' });
         const refreshToken = this.jwtService.sign({ userId: user._id }, { expiresIn: '7d' });
         await this.tokenService.create({
             userId: new Types.ObjectId(user._id.toString()),
@@ -70,5 +72,29 @@ export class AuthService {
             createdAt: { $lt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }, // Thay đổi thời gian theo yêu cầu
         });
         console.log(`Deleted ${result} expired tokens.`);
+    }
+
+    async addPermisson(permissonDto: PermissonDto): Promise<User>{
+        const user: User = await this.usersService.findOne({ _id: permissonDto.userId });
+        if (!user) {
+            throw new NotFoundException('User not found')
+        }
+
+        return await this.usersService.addPermisson(permissonDto);
+
+    }
+
+    async removePermisson(permissonDto: PermissonDto): Promise<User> {
+
+        if (!Types.ObjectId.isValid(permissonDto.userId)) {
+            throw new NotFoundException('User not found')
+        }
+        const user: User = await this.usersService.findOne({ _id: permissonDto.userId });
+        if (!user) {
+            throw new NotFoundException('User not found')
+        }
+
+        return await this.usersService.removePermisson(permissonDto);
+
     }
 }

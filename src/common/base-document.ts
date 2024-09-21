@@ -1,8 +1,17 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
 @Schema({ timestamps: true })
 export class BaseDocument extends Document {
+    @Prop({default: null})
+    createBy: Types.ObjectId | null;
+    
+    @Prop({ default: false })
+    isPulic: boolean;
+
+    @Prop({ default: false })
+    isLink: boolean;
+
     @Prop({ default: Date.now })
     createdAt: Date;
 

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Req } from '@nestjs/common';
 import { ExampleService } from './example.service';
 import { CreateExampleDto } from './dto/create-example.dto';
 import { UpdateExampleDto } from './dto/update-example.dto';
@@ -6,7 +6,7 @@ import { PageOptionsDto } from 'src/utils/page-option-dto';
 import { PageDto } from 'src/utils/page.dto';
 import { Example } from './entities/example.entity';
 import { ApiTags } from '@nestjs/swagger';
-import { ObjectId } from 'mongoose';
+import { ObjectId, Types } from 'mongoose';
 import { Roles } from 'src/role/role.decorator';
 import { Role } from 'src/role/role.enum';
 import { RolesGuard } from 'src/role/role.guard';
@@ -14,6 +14,11 @@ import { CaslGuard } from 'src/casl/casl.guard';
 import { CheckPolicies } from 'src/casl/check-policies.decorator';
 import { AppAbility } from 'src/casl/casl-ability.factory/casl-ability.factory';
 import { Action } from 'src/casl/casl.action';
+import { getUserIntoken } from 'src/common/user-token';
+import { User } from 'src/user/entities/user.entity';
+import { Request } from 'express';
+import { Type } from 'class-transformer';
+
 
 @Controller('example')
 @ApiTags('example')
@@ -21,8 +26,9 @@ export class ExampleController {
   constructor(private readonly exampleService: ExampleService) {}
 
   @Post()
-  create(@Body() createExampleDto: CreateExampleDto) {
-    return this.exampleService.create(createExampleDto);
+  create(@Body() createExampleDto: CreateExampleDto, @Req() request: Request) {
+    const user = request['user'] ?? null;
+    return this.exampleService.create({...createExampleDto,createBy:new Types.ObjectId(user?._id.toString())});
   }
 
   @Get()
