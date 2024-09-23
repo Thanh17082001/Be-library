@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -21,12 +21,20 @@ export class UserService {
     return await this.userModel.findOne(data).lean();
   }
 
-  async addPermisson(permisstonDto:PermissonDto): Promise<User> {
+  async addPermisson(permissonDto: PermissonDto): Promise<User> {
+    if (!Types.ObjectId.isValid(permissonDto.userId)) {
+      throw new BadRequestException('User id not valid')
+    }
+
+    const user: User = await this.userModel.findOne({ _id: permissonDto.userId });
+    if (!user) {
+      throw new NotFoundException('User not found')
+    }
     return await this.userModel.findByIdAndUpdate(
-      { _id: new Types.ObjectId("66ed2fc6e3b5647c22c588c8") },  
+      { _id: new Types.ObjectId(permissonDto.userId) },  
       {
         $addToSet: {
-          permissions: permisstonDto.permisson
+          permissions: permissonDto.permissons
         }
       },
       {
@@ -35,12 +43,20 @@ export class UserService {
     )
   }
 
-  async removePermisson(permisstonDto: PermissonDto): Promise<User> {
+  async removePermisson(permissonDto: PermissonDto): Promise<User> {
+    if (!Types.ObjectId.isValid(permissonDto.userId)) {
+      throw new BadRequestException('User id not valid')
+    }
+
+    const user: User = await this.userModel.findOne({ _id: permissonDto.userId });
+    if (!user) {
+      throw new NotFoundException('User not found')
+    }
     return await this.userModel.findByIdAndUpdate(
-      { _id: new Types.ObjectId("66ed2fc6e3b5647c22c588c8") },
+      { _id: new Types.ObjectId(permissonDto.userId) },
       {
         $pull: {
-          permissions: permisstonDto.permisson
+          permissions: permissonDto.permissons
         }
       },
       {

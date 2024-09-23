@@ -6,12 +6,21 @@ import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { LoggingInterceptor } from './interception/logging.interceptor';
 import { TransformInterceptor } from './interception/transform.interceptor';
+import { WinstonModule } from 'nest-winston';
+import { winstonLoggerConfig } from './logger/winston-logger.config';
+import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: WinstonModule.createLogger(winstonLoggerConfig),
+  });
   app.useGlobalFilters(new HttpExceptionFilter());
-  app.setGlobalPrefix('api'); // set global route
+  
+  // Cấu hình CORS
+  app.enableCors();
+
   // config swagger
+  app.setGlobalPrefix('api'); // set global route
   const config = new DocumentBuilder()
     .setTitle('API USING NEST JS LIBRARY')
     .setDescription('Author: Nguyen Thien Thanh')
@@ -36,7 +45,7 @@ async function bootstrap() {
     new ValidationPipe({
       transform: true,
       whitelist: true,
-      disableErrorMessages:true
+      disableErrorMessages:false
     }),
   );
    const configService = app.get(ConfigService);

@@ -8,11 +8,34 @@ export type Permission={
 
 @Schema()
 export class User extends BaseDocument {
-    @Prop({ unique: true })
+
+    @Prop({ required: true, unique: true })
+    username: string;
+
+    @Prop({ required: false, default: '', unique: true })
     email: string;
 
     @Prop()
     password: string;
+
+    @Prop({ required: true })
+    fullname: string;
+
+    @Prop({ default:'' })
+    phoneNumber: string;
+    
+    @Prop({ default:'' })
+    address: string;
+
+    @Prop({ default: '' })
+    avatar: string;
+
+    @Prop({default: new Date()})
+    birthday: Date;
+    
+    @Prop({ enum: ['nam', 'nữ', 'khác'], default: 'khác'})
+    gender:string
+
 
     @Prop({
         default: [{ action: 'read', resource: 'test' }], // Người dùng có thể có nhiều quyền

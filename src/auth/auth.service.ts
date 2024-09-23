@@ -1,7 +1,7 @@
 import { PartialType } from '@nestjs/swagger';
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, ObjectId, Types } from 'mongoose';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
+import { Connection, Model, ObjectId, Types } from 'mongoose';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { User } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/user.service';
@@ -12,24 +12,26 @@ import { RefreshTokenDto } from 'src/token/dto/refresh-token.dto';
 
 import { Cron } from '@nestjs/schedule';
 import { PermissonDto } from 'src/user/dto/permisson.to';
+import { LoginDto } from 'src/user/dto/login.dto';
 
 @Injectable()
 export class AuthService {
-    constructor(private usersService: UserService, private tokenService: TokenService, private jwtService: JwtService) { }
+    constructor(private usersService: UserService, private tokenService: TokenService, private jwtService: JwtService, @InjectConnection() private readonly connection: Connection) { }
     
     async signUp(data: CreateUserDto): Promise<User> {
         const password = await bcrypt.hash(data.password, 10)
         const user: CreateUserDto = {
-            password: password,
-            email: data.email,
+            ...data,
+            password: password
         }
         
         const newUser = await this.usersService.create(user);
         return newUser;
     }
 
-    async logIn(data: CreateUserDto): Promise<any>{
-        const user = await this.usersService.findOne({ email: data.email });
+    async logIn(data: LoginDto): Promise<any>{
+        const user = await this.usersService.findOne({ username: data.username });
+        console.log(user);
         if (!user) {
             throw new NotFoundException('Account or password is incorrect');
         }
@@ -38,7 +40,7 @@ export class AuthService {
             throw new BadRequestException('Account or password is incorrect');
         }
         const payload = { ...user, password: undefined };
-        const accessToken = this.jwtService.sign(payload, { expiresIn: '60m' });
+        const accessToken = this.jwtService.sign(payload, { expiresIn: '1d' });
         const refreshToken = this.jwtService.sign({ userId: user._id }, { expiresIn: '7d' });
         await this.tokenService.create({
             userId: new Types.ObjectId(user._id.toString()),
@@ -75,26 +77,15 @@ export class AuthService {
     }
 
     async addPermisson(permissonDto: PermissonDto): Promise<User>{
-        const user: User = await this.usersService.findOne({ _id: permissonDto.userId });
-        if (!user) {
-            throw new NotFoundException('User not found')
-        }
-
         return await this.usersService.addPermisson(permissonDto);
-
     }
 
     async removePermisson(permissonDto: PermissonDto): Promise<User> {
-
-        if (!Types.ObjectId.isValid(permissonDto.userId)) {
-            throw new NotFoundException('User not found')
-        }
-        const user: User = await this.usersService.findOne({ _id: permissonDto.userId });
-        if (!user) {
-            throw new NotFoundException('User not found')
-        }
-
         return await this.usersService.removePermisson(permissonDto);
+    }
 
+    async getCollections(): Promise<string[]> {
+        const collections = await this.connection.db.listCollections().toArray();
+        return collections.map((collection) => collection.name);
     }
 }

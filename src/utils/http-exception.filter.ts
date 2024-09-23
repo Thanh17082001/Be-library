@@ -1,8 +1,9 @@
-import { ExceptionFilter, Catch, ArgumentsHost, HttpException } from '@nestjs/common';
+import { ExceptionFilter, Catch, ArgumentsHost, HttpException, Logger } from '@nestjs/common';
 import { Request, Response } from 'express';
 
 @Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(HttpExceptionFilter.name);
   catch(exception: HttpException, host: ArgumentsHost) {
     console.log('Exception caught in filter');
 
@@ -17,6 +18,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
     } else if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
       message = (exceptionResponse as { message: string }).message;
     }
+    // Ghi log chi tiết lỗi
+    this.logger.error(
+      `Error: ${exception.message}, Status: ${status}, Path: ${request.url} }`,
+    );
     response
       .status(status)
       .json({
@@ -24,7 +29,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
         timestamp: new Date().toISOString(),
         path: request.url,
         message: status === 500 ? 'Server Error' : message, // Including the message in the response
-        errorDetails: exception.stack || '',
+        errorDetails: process.env.NODE_ENV === 'development'? exception.stack.split('\n') || '' : '',
       });
   }
 }

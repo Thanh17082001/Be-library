@@ -11,11 +11,14 @@ import { RoleModule } from './role/role.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './auth/auth.guard';
 import { TokenModule } from './token/token.module';
+import { LibraryModule } from './library/library.module';
+import { GroupModule } from './group/group.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       envFilePath: `.env.${process.env.NODE_ENV || 'development'}`,
+      // envFilePath: process.env.NODE_ENV ? `.env.${process.env.NODE_ENV}` : '.env',
       isGlobal: true,
     }),
     ExampleModule,
@@ -31,6 +34,8 @@ import { TokenModule } from './token/token.module';
     CaslModule,
     RoleModule,
     TokenModule,
+    LibraryModule,
+    GroupModule,
   ],
   controllers: [AppController],
   providers: [AppService, {

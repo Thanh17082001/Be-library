@@ -3,13 +3,26 @@ import { IsBoolean, IsOptional, IsString } from "class-validator";
 import { Types } from "mongoose";
 
 export class BaseDto{
-    @ApiProperty({example:'66ed2fc6e3b5647c22c588c8'})
+
+    @ApiProperty({ example: null })
+    @IsOptional()
+    @IsString()
+    groupId: Types.ObjectId | null;
+
+    @ApiProperty({ example: null })
+    @IsOptional()
+    @IsString()
+    libraryId: Types.ObjectId | null;
+
+
+
+    @ApiProperty({example:null})
     @IsOptional() 
     @IsString()
     createBy: Types.ObjectId | null;
 
 
-    @ApiProperty({ example: false,description:'Giáo viên thấy cá nhân hoặc cho mọi người trong cùng một thư viên thấy' })
+    @ApiProperty({ example: false })
     @IsOptional()
     @IsBoolean()
     isPublic: boolean | null;

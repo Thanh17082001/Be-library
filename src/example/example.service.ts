@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common';
 import { CreateExampleDto } from './dto/create-example.dto';
 import { UpdateExampleDto } from './dto/update-example.dto';
-import { InjectModel } from '@nestjs/mongoose';
 import { Example } from './entities/example.entity';
-import { Model, ObjectId } from 'mongoose';
+import { Injectable, NotFoundException, BadRequestException, HttpException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, ObjectId, Types } from 'mongoose';
 import { PageOptionsDto } from 'src/utils/page-option-dto';
 import { ItemDto, PageDto } from 'src/utils/page.dto';
 import { PageMetaDto } from 'src/utils/page.metadata.dto';
@@ -56,11 +56,33 @@ export class ExampleService {
     return new ItemDto(await this.exampleModel.findById(id));
   }
 
-  update(id: number, updateExampleDto: UpdateExampleDto) {
-    return `This action updates a #${id} example`;
+  async update(id: string, updateExampleDto: UpdateExampleDto):Promise<Example> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid id')
+    }
+
+    const exits: Example = await this.exampleModel.findOne({
+      name: updateExampleDto.name,       // Tìm theo tên
+      _id: { $ne: new Types.ObjectId(id) }  // Loại trừ ID hiện tại
+    });
+    if (!exits) {
+      throw new BadRequestException('name already exists');
+    }
+    const resource: Example = await this.exampleModel.findById(new Types.ObjectId(id));
+    if (!resource) {
+      throw new NotFoundException('Resource not found');
+    }
+    return this.exampleModel.findByIdAndUpdate(id, updateExampleDto, { returnDocument: 'after' });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} example`;
+  async remove(id: string):Promise<Example> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid id')
+    }
+    const resource: Example = await this.exampleModel.findById(new Types.ObjectId(id));
+    if (!resource) {
+      throw new NotFoundException('Resource not found');
+    }
+    return await this.exampleModel.findByIdAndDelete(new Types.ObjectId(id))
   }
 }

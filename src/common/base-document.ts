@@ -5,6 +5,12 @@ import { Document, Types } from 'mongoose';
 export class BaseDocument extends Document {
     @Prop({default: null})
     createBy: Types.ObjectId | null;
+
+    @Prop({ default: null })
+    groupId: Types.ObjectId | null;
+
+    @Prop()
+    libraryId: Types.ObjectId;
     
     @Prop({ default: false })
     isPulic: boolean;

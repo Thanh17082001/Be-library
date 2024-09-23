@@ -8,7 +8,7 @@ export class PermissonDto{
     @IsString()
     userId: string;
 
-    @ApiProperty({example:{action:'read', resource:'test'}})
+    @ApiProperty({ example: [{ action: 'read', resource: 'test' }]})
     @IsOptional()
-    permisson:Permission
+    permissons:Permission[]
 }
