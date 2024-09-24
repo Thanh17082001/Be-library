@@ -13,6 +13,7 @@ import { AuthGuard } from './auth/auth.guard';
 import { TokenModule } from './token/token.module';
 import { LibraryModule } from './library/library.module';
 import { GroupModule } from './group/group.module';
+import { MaterialModule } from './material/material.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { GroupModule } from './group/group.module';
     TokenModule,
     LibraryModule,
     GroupModule,
+    MaterialModule,
   ],
   controllers: [AppController],
   providers: [AppService, {

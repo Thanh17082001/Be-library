@@ -1,4 +1,5 @@
 import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
+import { Types } from 'mongoose';
 import { BaseDocument } from 'src/common/base-document';
 
 export type Permission={
@@ -8,6 +9,9 @@ export type Permission={
 
 @Schema()
 export class User extends BaseDocument {
+
+    @Prop({ type: [{ type: Types.ObjectId, ref: 'Library' }] })
+    libraryId: Types.ObjectId;
 
     @Prop({ required: true, unique: true })
     username: string;
