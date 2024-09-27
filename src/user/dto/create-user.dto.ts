@@ -1,10 +1,10 @@
-import {ApiProperty} from '@nestjs/swagger';
+import {ApiProperty, OmitType} from '@nestjs/swagger';
 import {Type} from 'class-transformer';
 import {IsDate, IsEmail, IsEnum, IsNotEmpty, IsString} from 'class-validator';
 import {BaseDocument} from 'src/common/base-document';
 import {BaseDto} from 'src/common/base.dto';
 
-export class CreateUserDto extends BaseDto {
+export class CreateUserDto extends OmitType(BaseDto, ['isPublic'] as const) {
   @ApiProperty({example: 'string@gmail.com'})
   @IsString()
   email: string;
@@ -31,8 +31,6 @@ export class CreateUserDto extends BaseDto {
   @IsString()
   address: string;
 
-  @ApiProperty()
-  @IsString()
   avatar: string;
 
   @ApiProperty()
@@ -44,4 +42,7 @@ export class CreateUserDto extends BaseDto {
   @IsEnum(['nam', 'nữ', 'khác'])
   @IsString()
   gender: string;
+
+  @ApiProperty({type: 'file', format: 'file', required: false})
+  file?: Express.Multer.File;
 }

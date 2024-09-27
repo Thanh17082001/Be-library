@@ -8,13 +8,19 @@ import {LoggingInterceptor} from './interception/logging.interceptor';
 import {TransformInterceptor} from './interception/transform.interceptor';
 import {WinstonModule} from 'nest-winston';
 import {winstonLoggerConfig} from './logger/winston-logger.config';
-import {CorsOptions} from '@nestjs/common/interfaces/external/cors-options.interface';
+import * as express from 'express';
+import {join} from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: WinstonModule.createLogger(winstonLoggerConfig),
   });
   app.useGlobalFilters(new HttpExceptionFilter());
+
+  //static file
+  app.use(express.static(join(__dirname, '..', 'public')));
+  app.use(express.json({limit: '1024mb'}));
+  app.use(express.urlencoded({limit: '1024mb', extended: true}));
 
   // Cấu hình CORS
   app.enableCors();

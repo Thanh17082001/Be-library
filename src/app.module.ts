@@ -18,10 +18,15 @@ import {CategoryModule} from './category/category.module';
 import {ShelvesModule} from './shelves/shelves.module';
 import {PublisherModule} from './publisher/publisher.module';
 import {AuthorModule} from './author/author.module';
-import { PublicationModule } from './publication/publication.module';
+import {PublicationModule} from './publication/publication.module';
+import {ServeStaticModule} from '@nestjs/serve-static';
+import {join} from 'path';
 
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'),
+    }),
     ConfigModule.forRoot({
       envFilePath: `.env.${process.env.NODE_ENV || 'development'}`,
       // envFilePath: process.env.NODE_ENV ? `.env.${process.env.NODE_ENV}` : '.env',

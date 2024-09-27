@@ -8,12 +8,22 @@ import {PermissonDto} from './dto/permisson.to';
 import {PageOptionsDto} from 'src/utils/page-option-dto';
 import {ItemDto, PageDto} from 'src/utils/page.dto';
 import {PageMetaDto} from 'src/utils/page.metadata.dto';
+import * as bcrypt from 'bcrypt';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class UserService {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
   async create(createUserDto: CreateUserDto): Promise<User> {
-    return await this.userModel.create(createUserDto);
+    const password = await bcrypt.hash(createUserDto.password, 10);
+    const user: CreateUserDto = {
+      ...createUserDto,
+      password: password,
+    };
+    const result = await this.userModel.create(user);
+    result.password = undefined;
+    return result;
   }
 
   async findAll(pageOptions: PageOptionsDto, query: Partial<User>): Promise<PageDto<User>> {
@@ -56,7 +66,7 @@ export class UserService {
     return new PageDto(results, pageMetaDto);
   }
 
-  async findById(id: ObjectId): Promise<ItemDto<User>> {
+  async findById(id: Types.ObjectId): Promise<ItemDto<User>> {
     return new ItemDto(await this.userModel.findById(id));
   }
 
@@ -70,15 +80,21 @@ export class UserService {
     }
 
     const exits: User = await this.userModel.findOne({
-      fullname: updateDto.fullname, // Tìm theo tên
+      email: updateDto.email, // Tìm theo tên
       _id: {$ne: new Types.ObjectId(id)}, // Loại trừ ID hiện tại
     });
     if (exits) {
-      throw new BadRequestException('name already exists');
+      throw new BadRequestException('email already exists');
     }
     const resource: User = await this.userModel.findById(new Types.ObjectId(id));
     if (!resource) {
       throw new NotFoundException('Resource not found');
+    }
+
+    if (updateDto.avatar) {
+      console.log(path.join(__dirname, '..', '..', 'public', resource.avatar));
+      const oldImagePath = path.join(__dirname, '..', '..', 'public', resource.avatar);
+      fs.unlinkSync(oldImagePath);
     }
     return this.userModel.findByIdAndUpdate(id, updateDto, {
       returnDocument: 'after',

@@ -51,4 +51,6 @@ export class User extends BaseDocument {
   isAdmin: boolean;
 }
 
-export const UserSchema = SchemaFactory.createForClass(User);
+const UserSchema = SchemaFactory.createForClass(User);
+UserSchema.remove(['isLink', 'isPublic', 'groupId']);
+export {UserSchema};

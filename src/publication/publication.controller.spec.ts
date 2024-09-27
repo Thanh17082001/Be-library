@@ -1,6 +1,6 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { PublicationController } from './publication.controller';
-import { PublicationService } from './publication.service';
+import {Test, TestingModule} from '@nestjs/testing';
+import {PublicationController} from './publication.controller';
+import {PublicationService} from './publication.service';
 
 describe('PublicationController', () => {
   let controller: PublicationController;

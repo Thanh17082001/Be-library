@@ -24,13 +24,7 @@ export class AuthService {
   ) {}
 
   async signUp(data: CreateUserDto): Promise<User> {
-    const password = await bcrypt.hash(data.password, 10);
-    const user: CreateUserDto = {
-      ...data,
-      password: password,
-    };
-
-    const newUser = await this.usersService.create(user);
+    const newUser = await this.usersService.create(data);
     return newUser;
   }
 
@@ -44,7 +38,6 @@ export class AuthService {
     if (!isPass) {
       throw new BadRequestException('Account or password is incorrect');
     }
-    console.log(process.env.TIMETOKEN);
     const payload = {...user, password: undefined};
     const accessToken = this.jwtService.sign(payload, {expiresIn: '5s'});
     const refreshToken = this.jwtService.sign({userId: user._id}, {expiresIn: '7d'});
