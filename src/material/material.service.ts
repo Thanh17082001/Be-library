@@ -1,28 +1,28 @@
-import { CreateMaterialDto } from './dto/create-material.dto';
-import { UpdateMaterialDto } from './dto/update-material.dto';
-import { Injectable, NotFoundException, BadRequestException, HttpException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, ObjectId, Types } from 'mongoose';
-import { PageOptionsDto } from 'src/utils/page-option-dto';
-import { ItemDto, PageDto } from 'src/utils/page.dto';
-import { PageMetaDto } from 'src/utils/page.metadata.dto';
-import { Material } from './entities/material.entity';
+import {CreateMaterialDto} from './dto/create-material.dto';
+import {UpdateMaterialDto} from './dto/update-material.dto';
+import {Injectable, NotFoundException, BadRequestException, HttpException} from '@nestjs/common';
+import {InjectModel} from '@nestjs/mongoose';
+import {Model, ObjectId, Types} from 'mongoose';
+import {PageOptionsDto} from 'src/utils/page-option-dto';
+import {ItemDto, PageDto} from 'src/utils/page.dto';
+import {PageMetaDto} from 'src/utils/page.metadata.dto';
+import {Material} from './entities/material.entity';
 
 @Injectable()
 export class MaterialService {
-  constructor(@InjectModel(Material.name) private exampleModel: Model<Material>) { }
+  constructor(@InjectModel(Material.name) private exampleModel: Model<Material>) {}
   async create(createDto: CreateMaterialDto): Promise<Material> {
     return await this.exampleModel.create(createDto);
   }
 
   async findAll(pageOptions: PageOptionsDto, query: Partial<Material>): Promise<PageDto<Material>> {
-    const { page, limit, skip, order, search } = pageOptions;
-    const pagination = ['page', 'limit', 'skip', 'order','search']
-    const mongoQuery: any = { isActive: 1 };
+    const {page, limit, skip, order, search} = pageOptions;
+    const pagination = ['page', 'limit', 'skip', 'order', 'search'];
+    const mongoQuery: any = {isActive: 1};
     // Thêm các điều kiện từ `query`
     if (!!query && Object.keys(query).length > 0) {
       const arrayQuery = Object.keys(query);
-      arrayQuery.forEach((key) => {
+      arrayQuery.forEach(key => {
         if (key && !pagination.includes(key)) {
           mongoQuery[key] = query[key];
         }
@@ -31,7 +31,7 @@ export class MaterialService {
 
     //search document
     if (search) {
-      mongoQuery.name = { $regex: new RegExp(search, 'i') };
+      mongoQuery.name = {$regex: new RegExp(search, 'i')};
     }
 
     // Thực hiện phân trang và sắp xếp
@@ -39,17 +39,19 @@ export class MaterialService {
       this.exampleModel
         .find()
         // .populate('aaaaaa')
-        .sort({ order: 1, createdAt: order === 'ASC' ? 1 : -1 })
+        .sort({order: 1, createdAt: order === 'ASC' ? 1 : -1})
         .skip(skip)
         .limit(limit)
         .lean()
-        .exec()
-      ,
+        .exec(),
       this.exampleModel.countDocuments(mongoQuery),
     ]);
 
-    const pageMetaDto = new PageMetaDto({ pageOptionsDto: pageOptions, itemCount });
-    return new PageDto(results, pageMetaDto)
+    const pageMetaDto = new PageMetaDto({
+      pageOptionsDto: pageOptions,
+      itemCount,
+    });
+    return new PageDto(results, pageMetaDto);
   }
 
   async findOne(id: ObjectId): Promise<ItemDto<Material>> {
@@ -58,7 +60,7 @@ export class MaterialService {
 
   async update(id: string, updateExampleDto: UpdateMaterialDto): Promise<Material> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new BadRequestException('Invalid id')
+      throw new BadRequestException('Invalid id');
     }
 
     // const exits: Material = await this.exampleModel.findOne({
@@ -72,17 +74,19 @@ export class MaterialService {
     if (!resource) {
       throw new NotFoundException('Resource not found');
     }
-    return this.exampleModel.findByIdAndUpdate(id, updateExampleDto, { returnDocument: 'after' });
+    return this.exampleModel.findByIdAndUpdate(id, updateExampleDto, {
+      returnDocument: 'after',
+    });
   }
 
   async remove(id: string): Promise<Material> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new BadRequestException('Invalid id')
+      throw new BadRequestException('Invalid id');
     }
     const resource: Material = await this.exampleModel.findById(new Types.ObjectId(id));
     if (!resource) {
       throw new NotFoundException('Resource not found');
     }
-    return await this.exampleModel.findByIdAndDelete(new Types.ObjectId(id))
+    return await this.exampleModel.findByIdAndDelete(new Types.ObjectId(id));
   }
 }

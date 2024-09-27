@@ -1,32 +1,31 @@
-import { ShelvesService } from './shelves.service';
-import { CreateShelfDto } from './dto/create-shelf.dto';
-import { UpdateShelfDto } from './dto/update-shelf.dto';
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Req } from '@nestjs/common';
-import { PageOptionsDto } from 'src/utils/page-option-dto';
-import { ItemDto, PageDto } from 'src/utils/page.dto';
-import { ApiTags } from '@nestjs/swagger';
-import { ObjectId, Types } from 'mongoose';
-import { Roles } from 'src/role/role.decorator';
-import { Role } from 'src/role/role.enum';
-import { RolesGuard } from 'src/role/role.guard';
-import { CaslGuard } from 'src/casl/casl.guard';
-import { CheckPolicies } from 'src/casl/check-policies.decorator';
-import { AppAbility } from 'src/casl/casl-ability.factory/casl-ability.factory';
-import { Action } from 'src/casl/casl.action';
-import { Request } from 'express';
-import { Public } from 'src/auth/auth.decorator';
-import { Shelves } from './entities/shelf.entity';
-
+import {ShelvesService} from './shelves.service';
+import {CreateShelfDto} from './dto/create-shelf.dto';
+import {UpdateShelfDto} from './dto/update-shelf.dto';
+import {Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Req} from '@nestjs/common';
+import {PageOptionsDto} from 'src/utils/page-option-dto';
+import {ItemDto, PageDto} from 'src/utils/page.dto';
+import {ApiTags} from '@nestjs/swagger';
+import {ObjectId, Types} from 'mongoose';
+import {Roles} from 'src/role/role.decorator';
+import {Role} from 'src/role/role.enum';
+import {RolesGuard} from 'src/role/role.guard';
+import {CaslGuard} from 'src/casl/casl.guard';
+import {CheckPolicies} from 'src/casl/check-policies.decorator';
+import {AppAbility} from 'src/casl/casl-ability.factory/casl-ability.factory';
+import {Action} from 'src/casl/casl.action';
+import {Request} from 'express';
+import {Public} from 'src/auth/auth.decorator';
+import {Shelves} from './entities/shelf.entity';
 
 @Controller('shelves')
 @ApiTags('shelves')
 export class ShelvesController {
-  constructor(private readonly shelvesService: ShelvesService) { }
+  constructor(private readonly shelvesService: ShelvesService) {}
 
   @Post()
   async create(@Body() createDto: CreateShelfDto, @Req() request: Request): Promise<Shelves> {
     const user = request['user'] ?? null;
-    return await this.shelvesService.create({ ...createDto });
+    return await this.shelvesService.create({...createDto});
   }
 
   @Get()
@@ -37,9 +36,8 @@ export class ShelvesController {
   // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test'), (ability: AppAbility) => ability.can(Action.Read, 'Shelves'))
   @Public()
   async findAll(@Query() query: Partial<CreateShelfDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Shelves>> {
-
-    const user = request['user'] ;
-    query.libraryId = user?.libraryId ?? null
+    const user = request['user'];
+    query.libraryId = user?.libraryId ?? null;
     return await this.shelvesService.findAll(pageOptionDto, query);
   }
 

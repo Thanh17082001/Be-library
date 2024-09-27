@@ -1,9 +1,9 @@
-import { Module } from '@nestjs/common';
-import { CaslAbilityFactory } from './casl-ability.factory/casl-ability.factory';
-import { CaslGuard } from './casl.guard';
+import {Module} from '@nestjs/common';
+import {CaslAbilityFactory} from './casl-ability.factory/casl-ability.factory';
+import {CaslGuard} from './casl.guard';
 
 @Module({
-    providers: [CaslAbilityFactory, CaslGuard],
-    exports: [CaslAbilityFactory, CaslGuard],
+  providers: [CaslAbilityFactory, CaslGuard],
+  exports: [CaslAbilityFactory, CaslGuard],
 })
 export class CaslModule {}

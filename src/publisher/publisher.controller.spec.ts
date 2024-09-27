@@ -1,6 +1,6 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { PublisherController } from './publisher.controller';
-import { PublisherService } from './publisher.service';
+import {Test, TestingModule} from '@nestjs/testing';
+import {PublisherController} from './publisher.controller';
+import {PublisherService} from './publisher.service';
 
 describe('PublisherController', () => {
   let controller: PublisherController;

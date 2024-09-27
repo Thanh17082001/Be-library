@@ -1,6 +1,6 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { LibraryController } from './library.controller';
-import { LibraryService } from './library.service';
+import {Test, TestingModule} from '@nestjs/testing';
+import {LibraryController} from './library.controller';
+import {LibraryService} from './library.service';
 
 describe('LibraryController', () => {
   let controller: LibraryController;

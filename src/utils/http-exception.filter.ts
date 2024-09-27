@@ -1,5 +1,5 @@
-import { ExceptionFilter, Catch, ArgumentsHost, HttpException, Logger } from '@nestjs/common';
-import { Request, Response } from 'express';
+import {ExceptionFilter, Catch, ArgumentsHost, HttpException, Logger} from '@nestjs/common';
+import {Request, Response} from 'express';
 
 @Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -16,20 +16,16 @@ export class HttpExceptionFilter implements ExceptionFilter {
     if (typeof exceptionResponse === 'string') {
       message = exceptionResponse;
     } else if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
-      message = (exceptionResponse as { message: string }).message;
+      message = (exceptionResponse as {message: string}).message;
     }
     // Ghi log chi tiết lỗi
-    this.logger.error(
-      `Error: ${exception.message}, Status: ${status}, Path: ${request.url} }`,
-    );
-    response
-      .status(status)
-      .json({
-        statusCode: status,
-        timestamp: new Date().toISOString(),
-        path: request.url,
-        message: status === 500 ? 'Server Error' : message, // Including the message in the response
-        errorDetails: process.env.NODE_ENV === 'development'? exception.stack.split('\n') || '' : '',
-      });
+    this.logger.error(`Error: ${exception.message}, Status: ${status}, Path: ${request.url} }`);
+    response.status(status).json({
+      statusCode: status,
+      timestamp: new Date().toISOString(),
+      path: request.url,
+      message: status === 500 ? 'Server Error' : message, // Including the message in the response
+      errorDetails: process.env.NODE_ENV === 'development' ? exception.stack.split('\n') || '' : '',
+    });
   }
 }

@@ -1,5 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { PublisherService } from './publisher.service';
+import {Test, TestingModule} from '@nestjs/testing';
+import {PublisherService} from './publisher.service';
 
 describe('PublisherService', () => {
   let service: PublisherService;

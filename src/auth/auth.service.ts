@@ -1,91 +1,110 @@
-import { PartialType } from '@nestjs/swagger';
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import { Connection, Model, ObjectId, Types } from 'mongoose';
-import { CreateUserDto } from 'src/user/dto/create-user.dto';
-import { User } from 'src/user/entities/user.entity';
-import { UserService } from 'src/user/user.service';
-import * as bcrypt from "bcrypt";
-import { JwtService } from '@nestjs/jwt';
-import { TokenService } from 'src/token/token.service';
-import { RefreshTokenDto } from 'src/token/dto/refresh-token.dto';
+import {PartialType} from '@nestjs/swagger';
+import {BadRequestException, Injectable, NotFoundException, UnauthorizedException} from '@nestjs/common';
+import {InjectConnection, InjectModel} from '@nestjs/mongoose';
+import {Connection, Model, ObjectId, Types} from 'mongoose';
+import {CreateUserDto} from 'src/user/dto/create-user.dto';
+import {User} from 'src/user/entities/user.entity';
+import {UserService} from 'src/user/user.service';
+import * as bcrypt from 'bcrypt';
+import {JwtService} from '@nestjs/jwt';
+import {TokenService} from 'src/token/token.service';
+import {RefreshTokenDto} from 'src/token/dto/refresh-token.dto';
 
-import { Cron } from '@nestjs/schedule';
-import { PermissonDto } from 'src/user/dto/permisson.to';
-import { LoginDto } from 'src/user/dto/login.dto';
+import {Cron} from '@nestjs/schedule';
+import {PermissonDto} from 'src/user/dto/permisson.to';
+import {LoginDto} from 'src/user/dto/login.dto';
 
 @Injectable()
 export class AuthService {
-    constructor(private usersService: UserService, private tokenService: TokenService, private jwtService: JwtService, @InjectConnection() private readonly connection: Connection) { }
-    
-    async signUp(data: CreateUserDto): Promise<User> {
-        const password = await bcrypt.hash(data.password, 10)
-        const user: CreateUserDto = {
-            ...data,
-            password: password
-        }
-        
-        const newUser = await this.usersService.create(user);
-        return newUser;
+  constructor(
+    private usersService: UserService,
+    private tokenService: TokenService,
+    private jwtService: JwtService,
+    @InjectConnection() private readonly connection: Connection
+  ) {}
+
+  async signUp(data: CreateUserDto): Promise<User> {
+    const password = await bcrypt.hash(data.password, 10);
+    const user: CreateUserDto = {
+      ...data,
+      password: password,
+    };
+
+    const newUser = await this.usersService.create(user);
+    return newUser;
+  }
+
+  async logIn(data: LoginDto): Promise<any> {
+    const user = await this.usersService.findOne({username: data.username});
+    console.log(user);
+    if (!user) {
+      throw new NotFoundException('Account or password is incorrect');
+    }
+    const isPass = await bcrypt.compare(data.password, user.password);
+    if (!isPass) {
+      throw new BadRequestException('Account or password is incorrect');
+    }
+    console.log(process.env.TIMETOKEN);
+    const payload = {...user, password: undefined};
+    const accessToken = this.jwtService.sign(payload, {expiresIn: '5s'});
+    const refreshToken = this.jwtService.sign({userId: user._id}, {expiresIn: '7d'});
+    await this.tokenService.create({
+      userId: new Types.ObjectId(user._id.toString()),
+      refreshToken: refreshToken,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
+    return {
+      ...payload,
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+    };
+  }
+
+  async refreshToken(refreshTokenDto: RefreshTokenDto): Promise<any> {
+    const token = await this.tokenService.findOne({
+      refreshToken: refreshTokenDto.refreshToken,
+    });
+    if (!token || new Date() > token.expiresAt) {
+      throw new BadRequestException('Refresh token is valid or not exist');
     }
 
-    async logIn(data: LoginDto): Promise<any>{
-        const user = await this.usersService.findOne({ username: data.username });
-        console.log(user);
-        if (!user) {
-            throw new NotFoundException('Account or password is incorrect');
-        }
-        const isPass = await bcrypt.compare(data.password, user.password);
-        if (!isPass) {
-            throw new BadRequestException('Account or password is incorrect');
-        }
-        const payload = { ...user, password: undefined };
-        const accessToken = this.jwtService.sign(payload, { expiresIn: '1d' });
-        const refreshToken = this.jwtService.sign({ userId: user._id }, { expiresIn: '7d' });
-        await this.tokenService.create({
-            userId: new Types.ObjectId(user._id.toString()),
-            refreshToken: refreshToken,
-            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-        })
-        return {
-            ...payload,
-            accessToken: accessToken,
-            refreshToken: refreshToken
-        } ;
-    }
+    await this.tokenService.remove({_id: token._id});
 
-    async refreshToken(refreshTokenDto: RefreshTokenDto): Promise<any> {
-        const token = await this.tokenService.findOne({ refreshToken: refreshTokenDto.refreshToken });
-        if (!token || new Date() > token.expiresAt) {
-            throw new BadRequestException('Refresh token không hợp lệ hoặc đã hết hạn');
-        }
+    // Tạo access token mới
+    const user = await this.usersService.findOne({_id: token.userId});
+    const payload = {...user, password: undefined};
+    const newAccessToken = await this.jwtService.signAsync(payload, {
+      expiresIn: '5s',
+    });
 
-        // Tạo access token mới
-        const user = await this.usersService.findOne({ _id: token.userId });
-        const payload = { ...user, password: undefined };
-        const newAccessToken = await this.jwtService.signAsync(payload);
+    const refreshToken = this.jwtService.sign({userId: user._id}, {expiresIn: '7d'});
+    await this.tokenService.create({
+      userId: new Types.ObjectId(user._id.toString()),
+      refreshToken: refreshToken,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
 
-        return { ...payload,accessToken: newAccessToken };
-    }
+    return {...payload, accessToken: newAccessToken, refreshToken};
+  }
 
-    @Cron('0 0 * * *') // Chạy mỗi ngày lúc 00:00
-    async cleanExpiredTokens() {
-        const result = await this.tokenService.remove({
-            createdAt: { $lt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }, // Thay đổi thời gian theo yêu cầu
-        });
-        console.log(`Deleted ${result} expired tokens.`);
-    }
+  @Cron('0 0 * * *') // Chạy mỗi ngày lúc 00:00
+  async cleanExpiredTokens() {
+    const result = await this.tokenService.remove({
+      createdAt: {$lt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)}, // Thay đổi thời gian theo yêu cầu
+    });
+    console.log(`Deleted ${result} expired tokens.`);
+  }
 
-    async addPermisson(permissonDto: PermissonDto): Promise<User>{
-        return await this.usersService.addPermisson(permissonDto);
-    }
+  async addPermisson(permissonDto: PermissonDto): Promise<User> {
+    return await this.usersService.addPermisson(permissonDto);
+  }
 
-    async removePermisson(permissonDto: PermissonDto): Promise<User> {
-        return await this.usersService.removePermisson(permissonDto);
-    }
+  async removePermisson(permissonDto: PermissonDto): Promise<User> {
+    return await this.usersService.removePermisson(permissonDto);
+  }
 
-    async getCollections(): Promise<string[]> {
-        const collections = await this.connection.db.listCollections().toArray();
-        return collections.map((collection) => collection.name);
-    }
+  async getCollections(): Promise<string[]> {
+    const collections = await this.connection.db.listCollections().toArray();
+    return collections.map(collection => collection.name);
+  }
 }
