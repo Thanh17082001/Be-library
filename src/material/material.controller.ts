@@ -36,8 +36,8 @@ export class MaterialController {
   @UseGuards(CaslGuard) // chặn permisson (CRUD)
   // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test'), (ability: AppAbility) => ability.can(Action.Read, 'Material'))
   findAll(@Query() query: Partial<CreateMaterialDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Material>> {
-    const user = request['user'] ?? null;
-    query.libraryId = user?.libraryId
+    const user = request['user'] 
+    query.libraryId = user?.libraryId ?? null;
     return this.materialService.findAll(pageOptionDto, query);
   }
 

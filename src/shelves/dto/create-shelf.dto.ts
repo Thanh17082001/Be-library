@@ -1,8 +1,9 @@
-import { ApiProperty } from "@nestjs/swagger";
+
+import { ApiProperty, OmitType } from "@nestjs/swagger";
 import { IsNotEmpty, IsString } from "class-validator";
 import { BaseDto } from "src/common/base.dto";
 
-export class CreateExampleDto extends BaseDto {
+export class CreateShelfDto extends OmitType(BaseDto, ['isPublic', 'groupId'] as const) {
     @ApiProperty()
     @IsString()
     name: string;
@@ -11,3 +12,4 @@ export class CreateExampleDto extends BaseDto {
     @IsString()
     description: string;
 }
+

@@ -14,6 +14,10 @@ import { TokenModule } from './token/token.module';
 import { LibraryModule } from './library/library.module';
 import { GroupModule } from './group/group.module';
 import { MaterialModule } from './material/material.module';
+import { CategoryModule } from './category/category.module';
+import { ShelvesModule } from './shelves/shelves.module';
+import { PublisherModule } from './publisher/publisher.module';
+import { AuthorModule } from './author/author.module';
 
 @Module({
   imports: [
@@ -38,6 +42,10 @@ import { MaterialModule } from './material/material.module';
     LibraryModule,
     GroupModule,
     MaterialModule,
+    CategoryModule,
+    ShelvesModule,
+    PublisherModule,
+    AuthorModule,
   ],
   controllers: [AppController],
   providers: [AppService, {

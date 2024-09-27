@@ -17,7 +17,7 @@ export class ExampleService {
 
   async findAll(pageOptions: PageOptionsDto, query: Partial<Example>): Promise<PageDto<Example>> {
     const { page, limit, skip, order, search } = pageOptions;
-    const pagination = ['page','limit', 'skip','order']
+    const pagination = ['page','limit', 'skip','order', 'search']
     const mongoQuery: any = { isActive: 1 };
     // Thêm các điều kiện từ `query`
     if (!!query && Object.keys(query).length > 0) {
@@ -29,7 +29,9 @@ export class ExampleService {
       });
     }
 
+
     //search document
+    console.log(search);
     if (search) {
       mongoQuery.name = { $regex: new RegExp(search, 'i') }; 
     }
@@ -37,7 +39,7 @@ export class ExampleService {
     // Thực hiện phân trang và sắp xếp
     const [results, itemCount] = await Promise.all([
       this.exampleModel
-        .find()
+        .find(mongoQuery)
         // .populate('aaaaaa')
         .sort({ order: 1, createdAt: order === 'ASC' ? 1 : -1 }) 
         .skip(skip) 
@@ -45,7 +47,7 @@ export class ExampleService {
         .lean()
         .exec()
         ,
-      this.exampleModel.countDocuments(), 
+      this.exampleModel.countDocuments(mongoQuery), 
     ]);
 
     const pageMetaDto = new PageMetaDto({ pageOptionsDto: pageOptions, itemCount });
@@ -56,26 +58,26 @@ export class ExampleService {
     return new ItemDto(await this.exampleModel.findById(id));
   }
 
-  async update(id: string, updateExampleDto: UpdateExampleDto):Promise<Example> {
+  async update(id: string, updateDto: UpdateExampleDto):Promise<Example> {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid id')
     }
 
     const exits: Example = await this.exampleModel.findOne({
-      name: updateExampleDto.name,       // Tìm theo tên
+      name: updateDto.name,       // Tìm theo tên
       _id: { $ne: new Types.ObjectId(id) }  // Loại trừ ID hiện tại
     });
-    if (!exits) {
+    if (exits) {
       throw new BadRequestException('name already exists');
     }
     const resource: Example = await this.exampleModel.findById(new Types.ObjectId(id));
     if (!resource) {
       throw new NotFoundException('Resource not found');
     }
-    return this.exampleModel.findByIdAndUpdate(id, updateExampleDto, { returnDocument: 'after' });
+    return this.exampleModel.findByIdAndUpdate(id, updateDto, { returnDocument: 'after' });
   }
 
-  async remove(id: string):Promise<Example> {
+  async remove(id: string): Promise<Example> {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid id')
     }
@@ -84,5 +86,24 @@ export class ExampleService {
       throw new NotFoundException('Resource not found');
     }
     return await this.exampleModel.findByIdAndDelete(new Types.ObjectId(id))
+  }
+
+
+  async removes(ids: string[]): Promise<Array<Example>> {
+    const arrResult: Example[] = []
+
+    for (let i = 0; i < ids.length; i++) {
+      const id = new Types.ObjectId(ids[i])
+      if (!Types.ObjectId.isValid(id)) {
+        throw new BadRequestException('Invalid id')
+      }
+      const resource: Example = await this.exampleModel.findById(id);
+      if (!resource) {
+        throw new NotFoundException('Resource not found');
+      }
+      const result = await this.exampleModel.findByIdAndDelete(id)
+      arrResult.push(result)
+    }
+    return arrResult;
   }
 }

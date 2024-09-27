@@ -9,7 +9,7 @@ export class Material extends BaseDocument {
     name: string;
 
     @Prop({ default: '' })
-    desciption: string;
+    description: string;
 }
 
 export const MaterialSchema = SchemaFactory.createForClass(Material);

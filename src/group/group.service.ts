@@ -15,13 +15,14 @@ export class GroupService {
   async create(createDto: CreateGroupDto): Promise<Group> {
     if (!Types.ObjectId.isValid(createDto.mainLibrary)) {
       createDto.mainLibrary = null
+      throw new BadRequestException('Invalid id or miss mainLibrary')
     }
     return await this.groupModel.create(createDto);
   }
 
   async findAll(pageOptions: PageOptionsDto, query: Partial<Group>): Promise<PageDto<Group>> {
     const { page, limit, skip, order, search } = pageOptions;
-    const pagination = ['page', 'limit', 'skip', 'order']
+    const pagination = ['page', 'limit', 'skip', 'order','search']
     const mongoQuery: any = { isActive: 1 };
     // Thêm các điều kiện từ `query`
     if (!!query && Object.keys(query).length > 0) {
@@ -49,7 +50,7 @@ export class GroupService {
         .lean()
         .exec()
       ,
-      this.groupModel.countDocuments(),
+      this.groupModel.countDocuments(mongoQuery),
     ]);
 
     const pageMetaDto = new PageMetaDto({ pageOptionsDto: pageOptions, itemCount });
@@ -68,7 +69,9 @@ export class GroupService {
       name: updateGroupDto.name,       // Tìm theo tên
       _id: { $ne: new Types.ObjectId(id) }  // Loại trừ ID hiện tại
     });
-    if (!exits) {
+    console.log(exits);
+
+    if (exits) {
       throw new NotFoundException('name already exists');
     }
     const resource: Group = await this.groupModel.findById(new Types.ObjectId(id));

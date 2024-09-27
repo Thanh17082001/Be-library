@@ -10,5 +10,5 @@ export class CreateMaterialDto extends BaseDto {
 
     @ApiProperty()
     @IsString()
-    desciption: string;
+    description: string;
 }

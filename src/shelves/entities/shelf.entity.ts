@@ -1,13 +1,14 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { OmitType } from '@nestjs/swagger';
 import { BaseDocument } from 'src/common/base-document';
 
 
 @Schema()
-export class Example extends BaseDocument {
+export class Shelves extends BaseDocument {
     @Prop({ required: true })
     name: string;
     @Prop({ default: '' })
     description: string;
 }
 
-export const ExampleSchema = SchemaFactory.createForClass(Example);
+export const ShelvesSchema = SchemaFactory.createForClass(Shelves);

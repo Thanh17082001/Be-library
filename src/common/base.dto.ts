@@ -27,4 +27,5 @@ export class BaseDto{
     @IsBoolean()
     isPublic: boolean | null;
 
+
 }

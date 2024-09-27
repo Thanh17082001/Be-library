@@ -1,7 +1,7 @@
-import { ExampleService } from './example.service';
-import { CreateExampleDto } from './dto/create-example.dto';
-import { UpdateExampleDto } from './dto/update-example.dto';
-import { Example } from './entities/example.entity';
+import { CategoryService } from './category.service';
+import { CreateCategoryDto } from './dto/create-category.dto';
+import { UpdateCategoryDto } from './dto/update-category.dto';
+
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Req } from '@nestjs/common';
 import { PageOptionsDto } from 'src/utils/page-option-dto';
 import { ItemDto, PageDto } from 'src/utils/page.dto';
@@ -16,18 +16,18 @@ import { AppAbility } from 'src/casl/casl-ability.factory/casl-ability.factory';
 import { Action } from 'src/casl/casl.action';
 import { Request } from 'express';
 import { Public } from 'src/auth/auth.decorator';
+import { Category } from './entities/category.entity';
 
 
-@Controller('example')
-@ApiTags('example')
-@Public()
-export class ExampleController {
-  constructor(private readonly exampleService: ExampleService) {}
+@Controller('category')
+@ApiTags('category')
+export class CategoryController {
+  constructor(private readonly categoryService: CategoryService) { }
 
   @Post()
-  async create(@Body() createDto: CreateExampleDto, @Req() request: Request):Promise<Example> {
+  async create(@Body() createDto: CreateCategoryDto, @Req() request: Request):Promise<Category> {
     const user = request['user'] ?? null;
-    return await this.exampleService.create({ ...createDto});
+    return await this.categoryService.create({ ...createDto});
   }
 
   @Get()
@@ -37,30 +37,25 @@ export class ExampleController {
   // @UseGuards(CaslGuard) // chặn permisson (CRUD)
   // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test'), (ability: AppAbility) => ability.can(Action.Read, 'example'))
   @Public()
-  async findAll(@Query() query: Partial<CreateExampleDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Example>> {
+  async findAll(@Query() query: Partial<CreateCategoryDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Category>> {
 
-    const user = request['user'];
-    query.libraryId=user?.libraryId ?? null
-    return await this.exampleService.findAll(pageOptionDto, query);
+    const user = request['user'] ;
+    query.libraryId = user?.libraryId ?? null
+    return await this.categoryService.findAll(pageOptionDto, query);
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: ObjectId):Promise<ItemDto<Example>> {
-    return await this.exampleService.findOne(id);
+  async findOne(@Param('id') id: ObjectId):Promise<ItemDto<Category>> {
+    return await this.categoryService.findOne(id);
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateDto: UpdateExampleDto):Promise<Example> {
-    return await this.exampleService.update(id, updateDto);
-  }
-
-  @Delete('selected')
-  async removes(@Body() ids: string[]): Promise<Array<Example>> {
-    return await this.exampleService.removes(ids);
+  async update(@Param('id') id: string, @Body() updateDto: UpdateCategoryDto):Promise<Category> {
+    return await this.categoryService.update(id, updateDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.exampleService.remove(id);
+  async remove(@Param('id') id: string):Promise<Category> {
+    return await this.categoryService.remove(id);
   }
 }

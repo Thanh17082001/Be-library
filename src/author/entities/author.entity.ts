@@ -3,11 +3,11 @@ import { BaseDocument } from 'src/common/base-document';
 
 
 @Schema()
-export class Example extends BaseDocument {
+export class Author extends BaseDocument {
     @Prop({ required: true })
     name: string;
     @Prop({ default: '' })
     description: string;
 }
 
-export const ExampleSchema = SchemaFactory.createForClass(Example);
+export const AuthorSchema = SchemaFactory.createForClass(Author);

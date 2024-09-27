@@ -13,7 +13,7 @@ export class BaseDocument extends Document {
     libraryId: Types.ObjectId;
     
     @Prop({ default: false })
-    isPulic: boolean;
+    isPublic: boolean;
 
     @Prop({ default: false })
     isLink: boolean;
