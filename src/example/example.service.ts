@@ -30,7 +30,6 @@ export class ExampleService {
     }
 
     //search document
-    console.log(search);
     if (search) {
       mongoQuery.name = {$regex: new RegExp(search, 'i')};
     }

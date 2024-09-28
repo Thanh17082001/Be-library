@@ -37,7 +37,7 @@ export class LibraryService {
     // Thực hiện phân trang và sắp xếp
     const [results, itemCount] = await Promise.all([
       this.libraryModel
-        .find()
+        .find(mongoQuery)
         // .populate('aaaaaa')
         .sort({order: 1, createdAt: order === 'ASC' ? 1 : -1})
         .skip(skip)

@@ -142,7 +142,7 @@ export class UserService {
       {_id: new Types.ObjectId(permissonDto.userId)},
       {
         $addToSet: {
-          permissions: permissonDto.permissons,
+          permissions: { $each: permissonDto.permissons },
         },
       },
       {
@@ -164,7 +164,7 @@ export class UserService {
       {_id: new Types.ObjectId(permissonDto.userId)},
       {
         $pull: {
-          permissions: permissonDto.permissons,
+          permissions: { $each: permissonDto.permissons },
         },
       },
       {

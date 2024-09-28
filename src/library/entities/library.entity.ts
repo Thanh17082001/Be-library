@@ -23,3 +23,7 @@ export class Library extends BaseDocument {
 }
 
 export const LibrarySchema = SchemaFactory.createForClass(Library);
+
+LibrarySchema.index({name: 1}); // Index cho tên
+LibrarySchema.index({email: 1}); // Index cho email
+LibrarySchema.index({phoneNumber: 1}); // Index cho số điện thoại

@@ -73,7 +73,7 @@ export class GroupService {
     // Thực hiện phân trang và sắp xếp
     const [results, itemCount] = await Promise.all([
       this.groupModel
-        .find()
+        .find(mongoQuery)
         .populate('librarys')
         .populate('mainLibrary')
         .sort({order: 1, createdAt: order === 'ASC' ? 1 : -1})

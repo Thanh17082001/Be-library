@@ -14,6 +14,7 @@ export class CreatePublicationDto extends OmitType(BaseDto, ['groupId']) {
   priviewImage: string;
 
   path: string;
+  images: string[];
 
   @ApiProperty()
   @IsString()

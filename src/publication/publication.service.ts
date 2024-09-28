@@ -7,6 +7,10 @@ import {PageOptionsDto} from 'src/utils/page-option-dto';
 import {ItemDto, PageDto} from 'src/utils/page.dto';
 import {PageMetaDto} from 'src/utils/page.metadata.dto';
 import {Publication} from './entities/publication.entity';
+import * as pdfPoppler from 'pdf-poppler';
+import {promises as fs} from 'fs';
+import * as path from 'path';
+import sharp from 'sharp';
 
 @Injectable()
 export class PublicationService {
@@ -107,5 +111,33 @@ export class PublicationService {
       arrResult.push(result);
     }
     return arrResult;
+  }
+
+  async convertPdfToImages(pdfPath: string): Promise<string[]> {
+    try {
+      const outputDir = path.join(__dirname, '../../public/images-convert');
+      // const outputFiles: string[] = [];
+
+      // Đảm bảo thư mục đầu ra tồn tại
+      await fs.mkdir(outputDir, {recursive: true});
+      const existingFiles = new Set(await fs.readdir(outputDir));
+
+      // Thiết lập tùy chọn cho việc chuyển đổi
+      const options = {
+        format: 'png',
+        out_dir: outputDir,
+        out_prefix: path.basename(pdfPath, path.extname(pdfPath)),
+        page: null, // Chuyển đổi tất cả các trang
+      };
+      // Chuyển đổi PDF thành hình ảnh
+      await pdfPoppler.convert(pdfPath, options);
+      // Lấy danh sách các tệp đã chuyển đổi
+      const newFiles = await fs.readdir(outputDir);
+      const outputFiles = newFiles.filter(file => file.endsWith('.png') && !existingFiles.has(file)).map(file => `images-convert/${file}`);
+      return outputFiles;
+    } catch (error) {
+      console.error('Error converting PDF to images:', error);
+      throw new Error('Failed to convert PDF to images');
+    }
   }
 }

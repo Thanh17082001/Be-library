@@ -27,15 +27,17 @@ export class PublicationController {
 
   @Post()
   @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('file', {storage: storage('image'), ...multerOptions}))
-  async create(@UploadedFile() file: Express.Multer.File, @Body() createDto: CreatePublicationDto, @Req() request: Request): Promise<Publication> {
+  @UseInterceptors(FileInterceptor('file', {storage: storage('pdf'), ...multerOptions}))
+  async create(@UploadedFile() file: Express.Multer.File, @Body() createDto: CreatePublicationDto, @Req() request: Request): Promise<any> {
     const user = request['user'] ?? null;
-    createDto.priviewImage = file ? `/image/${file.filename}` : '';
+    const images = await this.publicationService.convertPdfToImages(file.path);
+    createDto.images = images;
+    createDto.priviewImage = images? images[0] : null;
 
     createDto.createBy = user?._id ?? null;
     createDto.libraryId = user?.libraryId ?? null;
 
-    createDto.path = `/image/${file.filename}`;
+    createDto.path = `/pdf/${file.filename}`;
 
     return await this.publicationService.create({...createDto});
   }

@@ -15,3 +15,5 @@ export class Group extends BaseDocument {
 }
 
 export const GroupSchema = SchemaFactory.createForClass(Group);
+
+GroupSchema.index({name: 1});

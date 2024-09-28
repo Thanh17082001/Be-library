@@ -20,22 +20,25 @@ export class Publication extends BaseDocument {
   shelverQuantity: number;
   @Prop({enum: ['trên kệ', 'thanh lý', 'bị hư hại', 'có sẵn', 'không có sẵn'], default: 'có sẵn'})
   status: string;
-  @Prop({enum: ['ấn phẩn cứng', 'tài liệu điện tử']})
+  @Prop({enum: ['ấn phẩn cứng', 'ấn phẩm mềm']})
   type: string;
 
-  @Prop({type: Types.ObjectId, ref: 'category', required: true})
+  @Prop({default: []})
+  images: string[];
+
+  @Prop({type: Types.ObjectId, ref: 'category'})
   categoryId: Types.ObjectId;
 
-  @Prop({type: Types.ObjectId, ref: 'author', required: true})
+  @Prop({type: Types.ObjectId, ref: 'author'})
   authorId: Types.ObjectId;
 
-  @Prop({type: Types.ObjectId, ref: 'shelves', required: true})
+  @Prop({type: Types.ObjectId, ref: 'shelves'})
   shelvesId: Types.ObjectId;
 
-  @Prop({type: Types.ObjectId, ref: 'publisher', required: true})
+  @Prop({type: Types.ObjectId, ref: 'publisher'})
   publisherId: Types.ObjectId;
 
-  @Prop({type: Types.ObjectId, ref: 'material', required: true})
+  @Prop({type: Types.ObjectId, ref: 'material'})
   materialId: Types.ObjectId;
 }
 
