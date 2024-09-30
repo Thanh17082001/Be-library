@@ -20,7 +20,9 @@ $ npm run start:prod
 
 ## Author
 Nguyễn Thiên Thanh
+Email: thanhdev082001@gmail.com
+
 
 ## Technology used
-Back end framework: nest js,
+Back end framework: NestJs,
 Database: MongoDB,
