@@ -21,6 +21,9 @@ export class User extends BaseDocument {
   @Prop()
   password: string;
 
+  @Prop()
+  passwordFirst: string;
+
   @Prop({required: true})
   fullname: string;
 
@@ -40,12 +43,12 @@ export class User extends BaseDocument {
   gender: string;
 
   @Prop({
-    default: [{action: 'read', resource: 'test'}], // Người dùng có thể có nhiều quyền
+    default: [], // Người dùng có thể có nhiều quyền
   })
   permissions: Permission[];
 
-  @Prop({default: 'student'}) // Vai trò của người dùng
-  role: string;
+  @Prop({ref: 'RoleS'}) // Vai trò của người dùng
+  roleId: Types.ObjectId;
 
   @Prop({default: false}) // Vai trò của người dùng
   isAdmin: boolean;

@@ -1,6 +1,7 @@
 import {ApiProperty, OmitType} from '@nestjs/swagger';
 import {Type} from 'class-transformer';
 import {IsDate, IsEmail, IsEnum, IsNotEmpty, IsString} from 'class-validator';
+import {Types} from 'mongoose';
 import {BaseDocument} from 'src/common/base-document';
 import {BaseDto} from 'src/common/base.dto';
 
@@ -9,14 +10,20 @@ export class CreateUserDto extends OmitType(BaseDto, ['isPublic'] as const) {
   @IsString()
   email: string;
 
-  @ApiProperty()
-  @IsString()
-  @IsNotEmpty()
+  // @ApiProperty()
+  // @IsString()
+  // @IsNotEmpty()
   password: string;
+
+  passwordFirst: string;
 
   @ApiProperty()
   @IsString()
-  @IsNotEmpty()
+  roleId: Types.ObjectId;
+
+  // @ApiProperty()
+  // @IsString()
+  // @IsNotEmpty()
   username: string;
 
   @ApiProperty()

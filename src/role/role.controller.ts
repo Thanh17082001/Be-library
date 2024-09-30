@@ -1,30 +1,30 @@
 import {RoleService} from './role.service';
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Req } from '@nestjs/common';
-import { PageOptionsDto } from 'src/utils/page-option-dto';
-import { ItemDto, PageDto } from 'src/utils/page.dto';
-import { ApiTags } from '@nestjs/swagger';
-import { ObjectId, Types } from 'mongoose';
-import { Roles } from 'src/role/role.decorator';
-import { RolesGuard } from 'src/role/role.guard';
-import { CaslGuard } from 'src/casl/casl.guard';
-import { CheckPolicies } from 'src/casl/check-policies.decorator';
-import { AppAbility } from 'src/casl/casl-ability.factory/casl-ability.factory';
-import { Action } from 'src/casl/casl.action';
-import { Request } from 'express';
-import { Public } from 'src/auth/auth.decorator';
-import { CreateRoleDto } from './dto/create-role.dto';
-import { RoleS } from './entities/role.entity';
-import { PermissonDto } from 'src/user/dto/permisson.to';
-import { User } from 'src/user/entities/user.entity';
-import { PermissonRoleDto } from './dto/permisson-role.dto';
-import { Role } from './role.enum';
-import { permission } from 'process';
+import {Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Req} from '@nestjs/common';
+import {PageOptionsDto} from 'src/utils/page-option-dto';
+import {ItemDto, PageDto} from 'src/utils/page.dto';
+import {ApiTags} from '@nestjs/swagger';
+import {ObjectId, Types} from 'mongoose';
+import {Roles} from 'src/role/role.decorator';
+import {RolesGuard} from 'src/role/role.guard';
+import {CaslGuard} from 'src/casl/casl.guard';
+import {CheckPolicies} from 'src/casl/check-policies.decorator';
+import {AppAbility} from 'src/casl/casl-ability.factory/casl-ability.factory';
+import {Action} from 'src/casl/casl.action';
+import {Request} from 'express';
+import {Public} from 'src/auth/auth.decorator';
+import {CreateRoleDto} from './dto/create-role.dto';
+import {RoleS} from './entities/role.entity';
+import {PermissonDto} from 'src/user/dto/permisson.to';
+import {User} from 'src/user/entities/user.entity';
+import {PermissonRoleDto} from './dto/permisson-role.dto';
+import {Role} from './role.enum';
+import {permission} from 'process';
 
 @Controller('role')
 @ApiTags('role')
-  @Public()
+@Public()
 export class RoleController {
-  constructor(private readonly roleService: RoleService) { }
+  constructor(private readonly roleService: RoleService) {}
 
   // @Post()
   // async create() {
@@ -35,7 +35,7 @@ export class RoleController {
   //       name: roles[i],
   //       permissions:[]
   //     }
-      
+
   //    await this.roleService.create({ ...createDto });
   //   }
   // }
@@ -61,6 +61,4 @@ export class RoleController {
   async removePermisson(@Body() permissonDto: PermissonRoleDto): Promise<RoleS> {
     return await this.roleService.removePermisson(permissonDto);
   }
-
-
 }

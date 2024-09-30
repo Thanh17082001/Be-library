@@ -32,7 +32,7 @@ export class PublicationController {
     const user = request['user'] ?? null;
     const images = await this.publicationService.convertPdfToImages(file.path);
     createDto.images = images;
-    createDto.priviewImage = images? images[0] : null;
+    createDto.priviewImage = images ? images[0] : null;
 
     createDto.createBy = user?._id ?? null;
     createDto.libraryId = user?.libraryId ?? null;

@@ -6,8 +6,7 @@ export const storage = (folder: string) =>
   diskStorage({
     destination: (req, file, cb) => {
       // Đường dẫn động được truyền từ controller thông qua biến folder
-      console.log(path.join(__dirname, '..', '..', 'public'));
-
+      // ngoài thư mục dist
       const uploadPath = path.join(__dirname, '..', '..', 'public', folder);
       // Tạo thư mục nếu nó không tồn tại
       if (!existsSync(uploadPath)) {

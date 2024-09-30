@@ -15,13 +15,21 @@ export class CaslAbilityFactory {
     }
 
     if (!user?.permissions || !Array.isArray(user.permissions)) {
-      throw new ForbiddenException('Invalid permissions');
+      throw new ForbiddenException('Không có quyền truy cập');
     }
 
     user.permissions.forEach(permission => {
       // Kiểm tra xem action và resource có hợp lệ không
       if (permission.action && permission.resource) {
-        can(permission.action as Action, permission.resource as Subjects);
+        if (permission.action == 'manage') {
+          can(Action.Create, permission.resource as Subjects);
+          can(Action.Read, permission.resource as Subjects);
+          can(Action.Update, permission.resource as Subjects);
+          can(Action.Delete, permission.resource as Subjects);
+        } else {
+          // Chỉ gán action cụ thể cho resource
+          can(permission.action as Action, permission.resource as Subjects);
+        }
       }
     });
 

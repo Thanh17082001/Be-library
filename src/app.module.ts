@@ -21,6 +21,8 @@ import {AuthorModule} from './author/author.module';
 import {PublicationModule} from './publication/publication.module';
 import {ServeStaticModule} from '@nestjs/serve-static';
 import {join} from 'path';
+import * as mongoose from 'mongoose';
+import * as mongooseDelete from 'mongoose-delete';
 
 @Module({
   imports: [
@@ -32,14 +34,21 @@ import {join} from 'path';
       // envFilePath: process.env.NODE_ENV ? `.env.${process.env.NODE_ENV}` : '.env',
       isGlobal: true,
     }),
-    ExampleModule,
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        uri: configService.get<string>('MONGODB_URI'),
-      }),
+      useFactory: async (configService: ConfigService) => {
+        const uri = configService.get<string>('MONGODB_URI');
+
+        // Đăng ký plugin mongoose-delete toàn cục
+        mongoose.plugin(mongooseDelete, {deletedAt: true, overrideMethods: 'all'});
+
+        return {
+          uri, // URI kết nối đến MongoDB
+        };
+      },
       inject: [ConfigService],
     }),
+    ExampleModule,
     UserModule,
     AuthModule,
     CaslModule,

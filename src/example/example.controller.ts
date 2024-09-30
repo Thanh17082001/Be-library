@@ -25,6 +25,8 @@ export class ExampleController {
   @Post()
   async create(@Body() createDto: CreateExampleDto, @Req() request: Request): Promise<Example> {
     const user = request['user'] ?? null;
+    createDto.libraryId = user?.libraryId ?? null;
+    createDto.groupId = user?.groupId ?? null;
     return await this.exampleService.create({...createDto});
   }
 
@@ -41,8 +43,8 @@ export class ExampleController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: ObjectId): Promise<ItemDto<Example>> {
-    return await this.exampleService.findOne(id);
+  async findOne(@Param('id') id: string): Promise<ItemDto<Example>> {
+    return await this.exampleService.findOne(new Types.ObjectId(id));
   }
 
   @Patch(':id')
@@ -50,13 +52,33 @@ export class ExampleController {
     return await this.exampleService.update(id, updateDto);
   }
 
+  @Patch('restore/:id')
+  async restoreById(@Param('id') id: string): Promise<Example> {
+    return this.exampleService.restoreById(id);
+  }
+
   @Delete('selected')
   async removes(@Body() ids: string[]): Promise<Array<Example>> {
     return await this.exampleService.removes(ids);
   }
 
+  @Get('deleted/:id')
+  async findOneDeleted(@Param('id') id: string): Promise<ItemDto<Example>> {
+    return await this.exampleService.findByIdDeleted(new Types.ObjectId(id));
+  }
+  @Get('/deleted')
+  async findAllDeleted(@Query() query: Partial<CreateExampleDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Example>> {
+    const user = request['user'];
+    query.libraryId = user?.libraryId ?? null;
+    return await this.exampleService.findDeleted(pageOptionDto, query);
+  }
+
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.exampleService.remove(id);
+  }
+  @Patch('restore')
+  async restoreByIds(@Body('ids') ids: string[]): Promise<Example[]> {
+    return this.exampleService.restoreByIds(ids);
   }
 }
