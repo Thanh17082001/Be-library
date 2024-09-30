@@ -38,7 +38,7 @@ export class UserService {
       ...createUserDto,
       permissions: role.permissions,
       roleId: new Types.ObjectId(roleId),
-      avatar: createUserDto.avatar != '' ? createUserDto.avatar : '/avatar/avt-default-men.jpg',
+      avatar: createUserDto.avatar != '' ? createUserDto.avatar : '/avatar/68e1d8178e17d7d962ec9db4fae3eabc.jpg',
       passwordFirst: createUserDto.password,
       password: password,
     };
