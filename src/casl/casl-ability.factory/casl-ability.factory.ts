@@ -21,7 +21,7 @@ export class CaslAbilityFactory {
     user.permissions.forEach(permission => {
       // Kiểm tra xem action và resource có hợp lệ không
       if (permission.action && permission.resource) {
-        if (permission.action == 'manage') {
+        if (permission.action == Action.Manage) {
           can(Action.Create, permission.resource as Subjects);
           can(Action.Read, permission.resource as Subjects);
           can(Action.Update, permission.resource as Subjects);
