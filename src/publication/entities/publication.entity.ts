@@ -42,7 +42,6 @@ export class Publication extends BaseDocument {
   materialId: Types.ObjectId;
 }
 
-const PublicationSchema = SchemaFactory.createForClass(Publication);
-PublicationSchema.remove(['isLink', 'groupId']);
+const PublicationSchema = SchemaFactory.createForClass(Publication).index({name: 1}).remove(['isLink', 'groupId']);
 
 export {PublicationSchema};

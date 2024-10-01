@@ -196,17 +196,6 @@ export class UserService {
     return new ItemDto(await this.userModel.findOneDeleted({_id: new Types.ObjectId(id)}));
   }
 
-  async restoreById(id: string): Promise<User> {
-    const restoredDocument = await this.userModel.restore({_id: id});
-
-    // Kiểm tra xem tài liệu đã được khôi phục hay không
-    if (!restoredDocument) {
-      throw new NotFoundException(`Document with id ${id} not found`);
-    }
-
-    return restoredDocument;
-  }
-
   async restoreByIds(ids: string[]): Promise<User[]> {
     const restoredDocuments = await this.userModel.restore({_id: {$in: ids}});
 
@@ -214,6 +203,7 @@ export class UserService {
     if (!restoredDocuments || restoredDocuments.length === 0) {
       throw new NotFoundException(`No documents found for the provided IDs`);
     }
+    await this.userModel.updateMany({_id: {$in: ids}}, {$set: {deleted: false}});
 
     return restoredDocuments;
   }
@@ -231,7 +221,7 @@ export class UserService {
       {_id: new Types.ObjectId(permissonDto.userId)},
       {
         $addToSet: {
-          permissions: {$each: permissonDto.permissons},
+          permissions: {$each: permissonDto.permissions},
         },
       },
       {
@@ -253,7 +243,7 @@ export class UserService {
       {_id: new Types.ObjectId(permissonDto.userId)},
       {
         $pull: {
-          permissions: {$each: permissonDto.permissons},
+          permissions: {$each: permissonDto.permissions},
         },
       },
       {

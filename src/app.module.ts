@@ -21,6 +21,8 @@ import {AuthorModule} from './author/author.module';
 import {PublicationModule} from './publication/publication.module';
 import {ServeStaticModule} from '@nestjs/serve-static';
 import {join} from 'path';
+import {LoanshipModule} from './loanship/loanship.module';
+import {AssetModule} from './asset/asset.module';
 import * as mongoose from 'mongoose';
 import * as mongooseDelete from 'mongoose-delete';
 
@@ -40,7 +42,7 @@ import * as mongooseDelete from 'mongoose-delete';
         const uri = configService.get<string>('MONGODB_URI');
 
         // Đăng ký plugin mongoose-delete toàn cục
-        mongoose.plugin(mongooseDelete, {deletedAt: true, overrideMethods: 'all'});
+        mongoose.plugin(mongooseDelete, {deletedAt: true, overrideMethods: 'all', deleteBy: true});
 
         return {
           uri, // URI kết nối đến MongoDB
@@ -62,6 +64,8 @@ import * as mongooseDelete from 'mongoose-delete';
     PublisherModule,
     AuthorModule,
     PublicationModule,
+    LoanshipModule,
+    AssetModule,
   ],
   controllers: [AppController],
   providers: [

@@ -26,6 +26,9 @@ export class BaseDocument extends Document {
 
   @Prop({default: true})
   isActive: boolean;
+
+  @Prop({default: ''})
+  note: string;
 }
 
 export const BaseDocumentSchema = SchemaFactory.createForClass(BaseDocument);

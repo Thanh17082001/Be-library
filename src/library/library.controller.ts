@@ -4,7 +4,7 @@ import {UpdateLibraryDto} from './dto/update-library.dto';
 
 import {Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Req} from '@nestjs/common';
 import {PageOptionsDto} from 'src/utils/page-option-dto';
-import {PageDto} from 'src/utils/page.dto';
+import {ItemDto, PageDto} from 'src/utils/page.dto';
 import {ApiTags} from '@nestjs/swagger';
 import {ObjectId, Types} from 'mongoose';
 import {Roles} from 'src/role/role.decorator';
@@ -39,18 +39,49 @@ export class LibraryController {
     return this.libraryService.findAll(pageOptionDto, query);
   }
 
+  @Get('/deleted')
+  async findAllDeleted(@Query() query: Partial<CreateLibraryDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Library>> {
+    const user = request['user'];
+    return await this.libraryService.findDeleted(pageOptionDto, query);
+  }
+
+  @Get('deleted/:id')
+  async findOneDeleted(@Param('id') id: string): Promise<ItemDto<Library>> {
+    return await this.libraryService.findByIdDeleted(new Types.ObjectId(id));
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.libraryService.findOne(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateLibraryDto: UpdateLibraryDto) {
-    return this.libraryService.update(id, updateLibraryDto);
+  @Delete('selected')
+  deleteSelected(@Body() ids: string[]) {
+    return this.libraryService.deleteMultiple(ids);
+  }
+
+  @Delete('soft/selected')
+  async removes(@Body() ids: string[]): Promise<Array<Library>> {
+    return await this.libraryService.removes(ids);
+  }
+
+  @Delete('soft/:id')
+  remove(@Param('id') id: string) {
+    return this.libraryService.remove(id);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.libraryService.remove(id);
+  delete(@Param('id') id: string) {
+    return this.libraryService.delete(id);
+  }
+
+  @Patch('restore')
+  async restoreByIds(@Body() ids: string[]): Promise<Library[]> {
+    return this.libraryService.restoreByIds(ids);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateLibraryDto: UpdateLibraryDto) {
+    return this.libraryService.update(id, updateLibraryDto);
   }
 }

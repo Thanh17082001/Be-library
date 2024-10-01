@@ -4,7 +4,7 @@ import {UpdateGroupDto} from './dto/update-group.dto';
 
 import {Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Req} from '@nestjs/common';
 import {PageOptionsDto} from 'src/utils/page-option-dto';
-import {PageDto} from 'src/utils/page.dto';
+import {ItemDto, PageDto} from 'src/utils/page.dto';
 import {ApiTags} from '@nestjs/swagger';
 import {ObjectId, Types} from 'mongoose';
 import {Roles} from 'src/role/role.decorator';
@@ -40,19 +40,49 @@ export class GroupController {
   findAll(@Query() query: Partial<CreateGroupDto>, @Query() pageOptionDto: PageOptionsDto): Promise<PageDto<Group>> {
     return this.groupService.findAll(pageOptionDto, query);
   }
+  @Get('/deleted')
+  async findAllDeleted(@Query() query: Partial<CreateGroupDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Group>> {
+    const user = request['user'];
+    return await this.groupService.findDeleted(pageOptionDto, query);
+  }
+
+  @Get('deleted/:id')
+  async findOneDeleted(@Param('id') id: string): Promise<ItemDto<Group>> {
+    return await this.groupService.findByIdDeleted(new Types.ObjectId(id));
+  }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.groupService.findOne(id);
+  async findOne(@Param('id') id: string): Promise<ItemDto<Group>> {
+    return await this.groupService.findOne(id);
+  }
+
+  @Delete('soft/:id')
+  remove(@Param('id') id: string) {
+    return this.groupService.remove(id);
+  }
+
+  @Delete('selected')
+  deleteSelected(@Body() ids: string[]) {
+    return this.groupService.deleteMultiple(ids);
+  }
+
+  @Delete('soft/selected')
+  async removes(@Body() ids: string[]): Promise<Array<Group>> {
+    return await this.groupService.removes(ids);
+  }
+
+  @Delete(':id')
+  delete(@Param('id') id: string) {
+    return this.groupService.delete(id);
+  }
+
+  @Patch('restore')
+  async restoreByIds(@Body() ids: string[]): Promise<Group[]> {
+    return this.groupService.restoreByIds(ids);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateGroupDto: UpdateGroupDto) {
     return this.groupService.update(id, updateGroupDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.groupService.remove(id);
   }
 }

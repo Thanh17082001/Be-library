@@ -13,5 +13,5 @@ export class CreateGroupDto extends OmitType(BaseDto, ['libraryId', 'groupId']) 
 
   @ApiProperty({example: ['libraryId']})
   @IsArray()
-  librarys: Types.ObjectId[] | [];
+  libraries: Types.ObjectId[] | [];
 }

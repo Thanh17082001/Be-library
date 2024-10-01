@@ -9,4 +9,4 @@ export class Category extends BaseDocument {
   description: string;
 }
 
-export const CategorySchema = SchemaFactory.createForClass(Category);
+export const CategorySchema = SchemaFactory.createForClass(Category).index({name: 1});

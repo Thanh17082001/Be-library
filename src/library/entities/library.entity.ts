@@ -22,8 +22,4 @@ export class Library extends BaseDocument {
   managementAgency?: string | null;
 }
 
-export const LibrarySchema = SchemaFactory.createForClass(Library);
-
-LibrarySchema.index({name: 1}); // Index cho tên
-LibrarySchema.index({email: 1}); // Index cho email
-LibrarySchema.index({phoneNumber: 1}); // Index cho số điện thoại
+export const LibrarySchema = SchemaFactory.createForClass(Library).index({name: 1, email: 1, phoneNumber: 1});

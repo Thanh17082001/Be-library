@@ -41,18 +41,50 @@ export class ShelvesController {
     return await this.shelvesService.findAll(pageOptionDto, query);
   }
 
+  @Get('/deleted')
+  async findAllDeleted(@Query() query: Partial<CreateShelfDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Shelves>> {
+    const user = request['user'];
+    query.libraryId = user?.libraryId ?? null;
+    return await this.shelvesService.findDeleted(pageOptionDto, query);
+  }
+
+  @Get('deleted/:id')
+  async findOneDeleted(@Param('id') id: string): Promise<ItemDto<Shelves>> {
+    return await this.shelvesService.findByIdDeleted(new Types.ObjectId(id));
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: ObjectId): Promise<ItemDto<Shelves>> {
     return await this.shelvesService.findOne(id);
   }
 
-  @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateDto: UpdateShelfDto): Promise<Shelves> {
-    return await this.shelvesService.update(id, updateDto);
+  @Delete('soft/selected')
+  async removes(@Body() ids: string[]): Promise<Array<Shelves>> {
+    return await this.shelvesService.removes(ids);
+  }
+
+  @Delete('selected')
+  async deleteSelected(@Body() ids: string[]): Promise<Array<Shelves>> {
+    return await this.shelvesService.deleteMultiple(ids);
+  }
+
+  @Delete('soft/:id')
+  remove(@Param('id') id: string) {
+    return this.shelvesService.remove(id);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string): Promise<Shelves> {
-    return await this.shelvesService.remove(id);
+  delete(@Param('id') id: string) {
+    return this.shelvesService.delete(id);
+  }
+
+  @Patch('restore')
+  async restoreByIds(@Body() ids: string[]): Promise<Shelves[]> {
+    return this.shelvesService.restoreByIds(ids);
+  }
+
+  @Patch(':id')
+  async update(@Param('id') id: string, @Body() updateDto: UpdateShelfDto): Promise<Shelves> {
+    return await this.shelvesService.update(id, updateDto);
   }
 }

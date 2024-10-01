@@ -4,7 +4,7 @@ import {UpdateMaterialDto} from './dto/update-material.dto';
 
 import {Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Req} from '@nestjs/common';
 import {PageOptionsDto} from 'src/utils/page-option-dto';
-import {PageDto} from 'src/utils/page.dto';
+import {ItemDto, PageDto} from 'src/utils/page.dto';
 import {ApiTags} from '@nestjs/swagger';
 import {ObjectId, Types} from 'mongoose';
 import {Roles} from 'src/role/role.decorator';
@@ -43,18 +43,50 @@ export class MaterialController {
     return this.materialService.findAll(pageOptionDto, query);
   }
 
+  @Get('/deleted')
+  async findAllDeleted(@Query() query: Partial<CreateMaterialDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Material>> {
+    const user = request['user'];
+    query.libraryId = user?.libraryId ?? null;
+    return await this.materialService.findDeleted(pageOptionDto, query);
+  }
+
+  @Get('deleted/:id')
+  async findOneDeleted(@Param('id') id: string): Promise<ItemDto<Material>> {
+    return await this.materialService.findByIdDeleted(new Types.ObjectId(id));
+  }
+
   @Get(':id')
   findOne(@Param('id') id: ObjectId) {
     return this.materialService.findOne(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateMaterialDto: UpdateMaterialDto) {
-    return this.materialService.update(id, updateMaterialDto);
+  @Delete('selected')
+  deleteSelected(@Body() ids: string[]) {
+    return this.materialService.deleteMultiple(ids);
+  }
+
+  @Delete('soft/selected')
+  async removes(@Body() ids: string[]): Promise<Array<Material>> {
+    return await this.materialService.removes(ids);
+  }
+
+  @Delete('soft/:id')
+  remove(@Param('id') id: string) {
+    return this.materialService.remove(id);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.materialService.remove(id);
+  delete(@Param('id') id: string) {
+    return this.materialService.delete(id);
+  }
+
+  @Patch('restore')
+  async restoreByIds(@Body() ids: string[]): Promise<Material[]> {
+    return this.materialService.restoreByIds(ids);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateMaterialDto: UpdateMaterialDto) {
+    return this.materialService.update(id, updateMaterialDto);
   }
 }

@@ -9,5 +9,5 @@ export class PermissonRoleDto {
 
   @ApiProperty({example: [{action: 'read', resource: 'test'}]})
   @IsOptional()
-  permissons: Permission[];
+  permissions: Permission[];
 }

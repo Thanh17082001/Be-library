@@ -1,5 +1,4 @@
 import {Prop, Schema, SchemaFactory} from '@nestjs/mongoose';
-import {Types} from 'mongoose';
 import {BaseDocument} from 'src/common/base-document';
 
 @Schema()
@@ -11,4 +10,4 @@ export class Material extends BaseDocument {
   description: string;
 }
 
-export const MaterialSchema = SchemaFactory.createForClass(Material);
+export const MaterialSchema = SchemaFactory.createForClass(Material).index({name: 1});

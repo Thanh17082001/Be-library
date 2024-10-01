@@ -11,7 +11,7 @@ export class Group extends BaseDocument {
   mainLibrary: Types.ObjectId | null;
 
   @Prop({default: [], ref: 'Library'})
-  librarys: Types.ObjectId[] | [];
+  libraries: Types.ObjectId[] | [];
 }
 
 export const GroupSchema = SchemaFactory.createForClass(Group);

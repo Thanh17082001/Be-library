@@ -52,9 +52,36 @@ export class UserController {
     return await this.userService.findAll(pageOptionDto, query);
   }
 
+  @Get('/deleted')
+  async findAllDeleted(@Query() query: Partial<CreateUserDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<User>> {
+    const user = request['user'];
+    query.libraryId = user?.libraryId ?? null;
+    return await this.userService.findDeleted(pageOptionDto, query);
+  }
+
+  @Get('deleted/:id')
+  async findOneDeleted(@Param('id') id: string): Promise<ItemDto<User>> {
+    return await this.userService.findByIdDeleted(new Types.ObjectId(id));
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<ItemDto<User>> {
     return await this.userService.findById(new Types.ObjectId(id));
+  }
+
+  @Delete('selected')
+  async removes(@Body() ids: string[]): Promise<Array<User>> {
+    return await this.userService.removes(ids);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.userService.remove(id);
+  }
+
+  @Patch('restore')
+  async restoreByIds(@Body('ids') ids: string[]): Promise<User[]> {
+    return this.userService.restoreByIds(ids);
   }
 
   @Patch(':id')
@@ -66,35 +93,5 @@ export class UserController {
     }
 
     return await this.userService.update(id, updateDto);
-  }
-
-  @Patch('restore/:id')
-  async restoreById(@Param('id') id: string): Promise<User> {
-    return this.userService.restoreById(id);
-  }
-
-  @Delete('selected')
-  async removes(@Body() ids: string[]): Promise<Array<User>> {
-    return await this.userService.removes(ids);
-  }
-
-  @Get('deleted/:id')
-  async findOneDeleted(@Param('id') id: string): Promise<ItemDto<User>> {
-    return await this.userService.findByIdDeleted(new Types.ObjectId(id));
-  }
-  @Get('/deleted')
-  async findAllDeleted(@Query() query: Partial<CreateUserDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<User>> {
-    const user = request['user'];
-    query.libraryId = user?.libraryId ?? null;
-    return await this.userService.findDeleted(pageOptionDto, query);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.userService.remove(id);
-  }
-  @Patch('restore')
-  async restoreByIds(@Body('ids') ids: string[]): Promise<User[]> {
-    return this.userService.restoreByIds(ids);
   }
 }

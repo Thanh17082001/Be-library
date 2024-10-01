@@ -30,7 +30,6 @@ export class AuthService {
 
   async logIn(data: LoginDto): Promise<any> {
     const user = await this.usersService.findOne({username: data.username});
-    console.log(user);
     if (!user) {
       throw new NotFoundException('Account or password is incorrect');
     }
@@ -39,7 +38,7 @@ export class AuthService {
       throw new BadRequestException('Account or password is incorrect');
     }
     const payload = {...user, password: undefined};
-    const accessToken = this.jwtService.sign(payload, {expiresIn: '5s'});
+    const accessToken = this.jwtService.sign(payload, {expiresIn: '60m'});
     const refreshToken = this.jwtService.sign({userId: user._id}, {expiresIn: '7d'});
     await this.tokenService.create({
       userId: new Types.ObjectId(user._id.toString()),
@@ -67,7 +66,7 @@ export class AuthService {
     const user = await this.usersService.findOne({_id: token.userId});
     const payload = {...user, password: undefined};
     const newAccessToken = await this.jwtService.signAsync(payload, {
-      expiresIn: '5s',
+      expiresIn: '60m',
     });
 
     const refreshToken = this.jwtService.sign({userId: user._id}, {expiresIn: '7d'});

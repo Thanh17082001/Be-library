@@ -1,22 +1,23 @@
-import {CreateLibraryDto} from './dto/create-library.dto';
-import {UpdateLibraryDto} from './dto/update-library.dto';
-import {Library} from './entities/library.entity';
-import {Injectable, NotFoundException, BadRequestException} from '@nestjs/common';
+import {CreateAssetDto} from './dto/create-asset.dto';
+import {UpdateAssetDto} from './dto/update-asset.dto';
+
+import {Injectable, NotFoundException, BadRequestException, HttpException} from '@nestjs/common';
 import {InjectModel} from '@nestjs/mongoose';
 import {Model, ObjectId, Types} from 'mongoose';
 import {PageOptionsDto} from 'src/utils/page-option-dto';
 import {ItemDto, PageDto} from 'src/utils/page.dto';
 import {PageMetaDto} from 'src/utils/page.metadata.dto';
 import {SoftDeleteModel} from 'mongoose-delete';
+import {Asset} from './entities/asset.entity';
 
 @Injectable()
-export class LibraryService {
-  constructor(@InjectModel(Library.name) private libraryModel: SoftDeleteModel<Library>) {}
-  async create(createDto: CreateLibraryDto): Promise<Library> {
-    return await this.libraryModel.create(createDto);
+export class AssetService {
+  constructor(@InjectModel(Asset.name) private exampleModel: SoftDeleteModel<Asset>) {}
+  async create(createDto: CreateAssetDto): Promise<Asset> {
+    return await this.exampleModel.create(createDto);
   }
 
-  async findAll(pageOptions: PageOptionsDto, query: Partial<Library>): Promise<PageDto<Library>> {
+  async findAll(pageOptions: PageOptionsDto, query: Partial<Asset>): Promise<PageDto<Asset>> {
     const {page, limit, skip, order, search} = pageOptions;
     const pagination = ['page', 'limit', 'skip', 'order', 'search'];
     const mongoQuery: any = {isActive: 1};
@@ -37,7 +38,7 @@ export class LibraryService {
 
     // Thực hiện phân trang và sắp xếp
     const [results, itemCount] = await Promise.all([
-      this.libraryModel
+      this.exampleModel
         .find(mongoQuery)
         // .populate('aaaaaa')
         .sort({order: 1, createdAt: order === 'ASC' ? 1 : -1})
@@ -45,7 +46,7 @@ export class LibraryService {
         .limit(limit)
         .lean()
         .exec(),
-      this.libraryModel.countDocuments(mongoQuery),
+      this.exampleModel.countDocuments(mongoQuery),
     ]);
 
     const pageMetaDto = new PageMetaDto({
@@ -55,60 +56,61 @@ export class LibraryService {
     return new PageDto(results, pageMetaDto);
   }
 
-  async findOne(id: string): Promise<ItemDto<Library>> {
-    return new ItemDto(await this.libraryModel.findById(id));
+  async findOne(id: Types.ObjectId): Promise<ItemDto<Asset>> {
+    return new ItemDto(await this.exampleModel.findById(id));
   }
 
-  async update(id: string, updateLibraryDto: UpdateLibraryDto): Promise<Library> {
+  async update(id: string, updateDto: UpdateAssetDto): Promise<Asset> {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid id');
     }
-    const exits: Library = await this.libraryModel.findOne({
-      name: updateLibraryDto.name, // Tìm theo tên
-      _id: {$ne: new Types.ObjectId(id)}, // Loại trừ ID hiện tại
-    });
-    if (exits) {
-      throw new NotFoundException('name already exists');
-    }
-    const resource: Library = await this.libraryModel.findById(new Types.ObjectId(id));
+
+    // const exits: Asset = await this.exampleModel.findOne({
+    //   name: updateDto.name, // Tìm theo tên
+    //   _id: { $ne: new Types.ObjectId(id) }, // Loại trừ ID hiện tại
+    // });
+    // if (exits) {
+    //   throw new BadRequestException('name already exists');
+    // }
+    const resource: Asset = await this.exampleModel.findById(new Types.ObjectId(id));
     if (!resource) {
       throw new NotFoundException('Resource not found');
     }
-    return this.libraryModel.findByIdAndUpdate(id, updateLibraryDto, {
+    return this.exampleModel.findByIdAndUpdate(id, updateDto, {
       returnDocument: 'after',
     });
   }
 
-  async remove(id: string): Promise<Library> {
+  async remove(id: string): Promise<Asset> {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid id');
     }
-    const resource: Library = await this.libraryModel.findById(new Types.ObjectId(id));
+    const resource: Asset = await this.exampleModel.findById(new Types.ObjectId(id));
     if (!resource) {
       throw new NotFoundException('Resource not found');
     }
-    return await this.libraryModel?.deleteById(new Types.ObjectId(id));
+    return await this.exampleModel?.deleteById(new Types.ObjectId(id));
   }
 
-  async removes(ids: string[]): Promise<Array<Library>> {
-    const arrResult: Library[] = [];
+  async removes(ids: string[]): Promise<Array<Asset>> {
+    const arrResult: Asset[] = [];
 
     for (let i = 0; i < ids.length; i++) {
       const id = new Types.ObjectId(ids[i]);
       if (!Types.ObjectId.isValid(id)) {
         throw new BadRequestException('Invalid id');
       }
-      const resource: Library = await this.libraryModel.findById(id);
+      const resource: Asset = await this.exampleModel.findById(id);
       if (!resource) {
         throw new NotFoundException('Resource not found');
       }
-      const result = await this.libraryModel.deleteById(id);
+      const result = await this.exampleModel.deleteById(id);
       arrResult.push(result);
     }
     return arrResult;
   }
 
-  async findDeleted(pageOptions: PageOptionsDto, query: Partial<Library>): Promise<PageDto<Library>> {
+  async findDeleted(pageOptions: PageOptionsDto, query: Partial<Asset>): Promise<PageDto<Asset>> {
     const {page, limit, skip, order, search} = pageOptions;
     const pagination = ['page', 'limit', 'skip', 'order', 'search'];
     const mongoQuery: any = {}; // Điều kiện để tìm các tài liệu đã bị xóa mềm
@@ -130,14 +132,14 @@ export class LibraryService {
 
     // Thực hiện phân trang và sắp xếp
     const [results, itemCount] = await Promise.all([
-      this.libraryModel
+      this.exampleModel
         .findDeleted(mongoQuery) // Sử dụng phương thức `findDeleted` từ mongoose-delete
         .sort({order: 1, createdAt: order === 'ASC' ? 1 : -1})
         .skip(skip)
         .limit(limit)
         .lean()
         .exec(), // Nhớ gọi .exec() để thực hiện truy vấn
-      this.libraryModel.countDocumentsDeleted(mongoQuery), // Đếm số lượng tài liệu đã bị xóa
+      this.exampleModel.countDocumentsDeleted(mongoQuery), // Đếm số lượng tài liệu đã bị xóa
     ]);
 
     const pageMetaDto = new PageMetaDto({
@@ -148,36 +150,47 @@ export class LibraryService {
     return new PageDto(results, pageMetaDto);
   }
 
-  async findByIdDeleted(id: Types.ObjectId): Promise<ItemDto<Library>> {
-    return new ItemDto(await this.libraryModel.findOneDeleted({_id: new Types.ObjectId(id)}));
+  async findByIdDeleted(id: Types.ObjectId): Promise<ItemDto<Asset>> {
+    return new ItemDto(await this.exampleModel.findOneDeleted({_id: new Types.ObjectId(id)}));
   }
 
-  async restoreByIds(ids: string[]): Promise<Library[]> {
-    const restoredDocuments = await this.libraryModel.restore({_id: {$in: ids}});
+  async restoreById(id: string): Promise<Asset> {
+    const restoredDocument = await this.exampleModel.restore({_id: id});
+
+    // Kiểm tra xem tài liệu đã được khôi phục hay không
+    if (!restoredDocument) {
+      throw new NotFoundException(`Document with id ${id} not found`);
+    }
+
+    return restoredDocument;
+  }
+
+  async restoreByIds(ids: string[]): Promise<Asset[]> {
+    const restoredDocuments = await this.exampleModel.restore({_id: {$in: ids}});
 
     // Kiểm tra xem có tài liệu nào được khôi phục hay không
     if (!restoredDocuments || restoredDocuments.length === 0) {
       throw new NotFoundException(`No documents found for the provided IDs`);
     }
-
-    await this.libraryModel.updateMany({_id: {$in: ids}}, {$set: {deleted: false}});
+    await this.exampleModel.updateMany({_id: {$in: ids}}, {$set: {deleted: false}});
 
     return restoredDocuments;
   }
 
-  async delete(id: string): Promise<Library> {
+  async delete(id: string): Promise<Asset> {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid id');
     }
-    const resource: Library = await this.libraryModel.findById(new Types.ObjectId(id));
+    const resource: Asset = await this.exampleModel.findById(new Types.ObjectId(id));
     if (!resource) {
       throw new NotFoundException('Resource not found');
     }
-    return await this.libraryModel?.findByIdAndDelete(new Types.ObjectId(id));
+    return await this.exampleModel?.findByIdAndDelete(new Types.ObjectId(id));
   }
+
   async deleteMultiple(ids: string[]): Promise<any> {
     const objectIds = ids.map(id => new Types.ObjectId(id));
-    return await this.libraryModel.deleteMany({
+    return await this.exampleModel.deleteMany({
       _id: {$in: objectIds},
     });
   }

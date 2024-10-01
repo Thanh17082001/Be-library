@@ -15,4 +15,8 @@ export class BaseDto {
   @ApiProperty({example: false})
   @IsOptional()
   isPublic: boolean | null;
+
+  @ApiProperty({example: ''})
+  @IsOptional()
+  note: string;
 }

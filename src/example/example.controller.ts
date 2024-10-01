@@ -41,31 +41,6 @@ export class ExampleController {
     query.libraryId = user?.libraryId ?? null;
     return await this.exampleService.findAll(pageOptionDto, query);
   }
-
-  @Get(':id')
-  async findOne(@Param('id') id: string): Promise<ItemDto<Example>> {
-    return await this.exampleService.findOne(new Types.ObjectId(id));
-  }
-
-  @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateDto: UpdateExampleDto): Promise<Example> {
-    return await this.exampleService.update(id, updateDto);
-  }
-
-  @Patch('restore/:id')
-  async restoreById(@Param('id') id: string): Promise<Example> {
-    return this.exampleService.restoreById(id);
-  }
-
-  @Delete('selected')
-  async removes(@Body() ids: string[]): Promise<Array<Example>> {
-    return await this.exampleService.removes(ids);
-  }
-
-  @Get('deleted/:id')
-  async findOneDeleted(@Param('id') id: string): Promise<ItemDto<Example>> {
-    return await this.exampleService.findByIdDeleted(new Types.ObjectId(id));
-  }
   @Get('/deleted')
   async findAllDeleted(@Query() query: Partial<CreateExampleDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Example>> {
     const user = request['user'];
@@ -73,12 +48,43 @@ export class ExampleController {
     return await this.exampleService.findDeleted(pageOptionDto, query);
   }
 
-  @Delete(':id')
+  @Get('deleted/:id')
+  async findOneDeleted(@Param('id') id: string): Promise<ItemDto<Example>> {
+    return await this.exampleService.findByIdDeleted(new Types.ObjectId(id));
+  }
+
+  @Get(':id')
+  async findOne(@Param('id') id: string): Promise<ItemDto<Example>> {
+    return await this.exampleService.findOne(new Types.ObjectId(id));
+  }
+
+  @Delete('selected')
+  deleteSelected(@Body() ids: string[]) {
+    return this.exampleService.deleteMultiple(ids);
+  }
+
+  @Delete('soft/selected')
+  async removes(@Body() ids: string[]): Promise<Array<Example>> {
+    return await this.exampleService.removes(ids);
+  }
+
+  @Delete('soft/:id')
   remove(@Param('id') id: string) {
     return this.exampleService.remove(id);
   }
+
+  @Delete(':id')
+  delete(@Param('id') id: string) {
+    return this.exampleService.delete(id);
+  }
+
   @Patch('restore')
-  async restoreByIds(@Body('ids') ids: string[]): Promise<Example[]> {
+  async restoreByIds(@Body() ids: string[]): Promise<Example[]> {
     return this.exampleService.restoreByIds(ids);
+  }
+
+  @Patch(':id')
+  async update(@Param('id') id: string, @Body() updateDto: UpdateExampleDto): Promise<Example> {
+    return await this.exampleService.update(id, updateDto);
   }
 }

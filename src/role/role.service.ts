@@ -83,7 +83,7 @@ export class RoleService {
       {_id: new Types.ObjectId(permissonDto.roleId)},
       {
         $addToSet: {
-          permissions: {$each: permissonDto.permissons},
+          permissions: {$each: permissonDto.permissions},
         },
       },
       {
@@ -105,7 +105,7 @@ export class RoleService {
       {_id: new Types.ObjectId(permissonDto.roleId)},
       {
         $pull: {
-          permissions: {$each: permissonDto.permissons},
+          permissions: {$each: permissonDto.permissions},
         },
       },
       {

@@ -1,5 +1,6 @@
 import {Prop, Schema, SchemaFactory} from '@nestjs/mongoose';
 import {BaseDocument} from 'src/common/base-document';
+import * as mongooseDelete from 'mongoose-delete';
 
 @Schema()
 export class Author extends BaseDocument {
@@ -9,4 +10,10 @@ export class Author extends BaseDocument {
   description: string;
 }
 
-export const AuthorSchema = SchemaFactory.createForClass(Author);
+export const AuthorSchema = SchemaFactory.createForClass(Author)
+  .plugin(mongooseDelete, {
+    overrideMethods: 'all',
+    deletedAt: true,
+    // deletedBy: true,
+  })
+  .index({name: 1});

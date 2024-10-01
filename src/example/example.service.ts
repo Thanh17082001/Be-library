@@ -171,7 +171,26 @@ export class ExampleService {
     if (!restoredDocuments || restoredDocuments.length === 0) {
       throw new NotFoundException(`No documents found for the provided IDs`);
     }
+    await this.exampleModel.updateMany({_id: {$in: ids}}, {$set: {deleted: false}});
 
     return restoredDocuments;
+  }
+
+  async delete(id: string): Promise<Example> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid id');
+    }
+    const resource: Example = await this.exampleModel.findById(new Types.ObjectId(id));
+    if (!resource) {
+      throw new NotFoundException('Resource not found');
+    }
+    return await this.exampleModel?.findByIdAndDelete(new Types.ObjectId(id));
+  }
+
+  async deleteMultiple(ids: string[]): Promise<any> {
+    const objectIds = ids.map(id => new Types.ObjectId(id));
+    return await this.exampleModel.deleteMany({
+      _id: {$in: objectIds},
+    });
   }
 }

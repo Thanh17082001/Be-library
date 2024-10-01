@@ -54,23 +54,50 @@ export class PublicationController {
     return await this.publicationService.findAll(pageOptionDto, query);
   }
 
+  @Get('/deleted')
+  async findAllDeleted(@Query() query: Partial<CreatePublicationDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Publication>> {
+    const user = request['user'];
+    query.libraryId = user?.libraryId ?? null;
+    return await this.publicationService.findDeleted(pageOptionDto, query);
+  }
+
+  @Get('deleted/:id')
+  async findOneDeleted(@Param('id') id: string): Promise<ItemDto<Publication>> {
+    return await this.publicationService.findByIdDeleted(new Types.ObjectId(id));
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: ObjectId): Promise<ItemDto<Publication>> {
     return await this.publicationService.findOne(id);
   }
 
-  @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateDto: UpdatePublicationDto): Promise<Publication> {
-    return await this.publicationService.update(id, updateDto);
+  @Delete('selected')
+  deleteSelected(@Body() ids: string[]) {
+    return this.publicationService.deleteMultiple(ids);
   }
 
-  @Delete('selected')
+  @Delete('soft/selected')
   async removes(@Body() ids: string[]): Promise<Array<Publication>> {
     return await this.publicationService.removes(ids);
   }
 
-  @Delete(':id')
+  @Delete('soft/:id')
   remove(@Param('id') id: string) {
     return this.publicationService.remove(id);
+  }
+
+  @Delete(':id')
+  delete(@Param('id') id: string) {
+    return this.publicationService.delete(id);
+  }
+
+  @Patch('restore')
+  async restoreByIds(@Body() ids: string[]): Promise<Publication[]> {
+    return this.publicationService.restoreByIds(ids);
+  }
+
+  @Patch(':id')
+  async update(@Param('id') id: string, @Body() updateDto: UpdatePublicationDto): Promise<Publication> {
+    return await this.publicationService.update(id, updateDto);
   }
 }

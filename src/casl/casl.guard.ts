@@ -14,6 +14,9 @@ export class CaslGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
+    // if (user.isAdmin) {
+    //   return true;
+    // }
 
     // Tạo ability cho user
     const ability = this.caslAbilityFactory.createForUser(user);

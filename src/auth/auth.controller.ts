@@ -48,7 +48,7 @@ export class AuthController {
   }
 
   // @Public()
-  @Get('permissons')
+  @Get('permissions')
   async getPermisson(): Promise<string[]> {
     return [...Object.values(Action)];
   }

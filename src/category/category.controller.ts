@@ -34,7 +34,7 @@ export class CategoryController {
   // @UseGuards(RolesGuard) // chặn role (admin, student ,....)
   // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test')) // tên permisson và bảng cần chặn
   // @UseGuards(CaslGuard) // chặn permisson (CRUD)
-  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test'), (ability: AppAbility) => ability.can(Action.Read, 'example'))
+  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test'), (ability: AppAbility) => ability.can(Action.Read, 'Category'))
   @Public()
   async findAll(@Query() query: Partial<CreateCategoryDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Category>> {
     const user = request['user'];
@@ -42,18 +42,50 @@ export class CategoryController {
     return await this.categoryService.findAll(pageOptionDto, query);
   }
 
+  @Get('/deleted')
+  async findAllDeleted(@Query() query: Partial<CreateCategoryDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Category>> {
+    const user = request['user'];
+    query.libraryId = user?.libraryId ?? null;
+    return await this.categoryService.findDeleted(pageOptionDto, query);
+  }
+
+  @Get('deleted/:id')
+  async findOneDeleted(@Param('id') id: string): Promise<ItemDto<Category>> {
+    return await this.categoryService.findByIdDeleted(new Types.ObjectId(id));
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: ObjectId): Promise<ItemDto<Category>> {
     return await this.categoryService.findOne(id);
   }
 
-  @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateDto: UpdateCategoryDto): Promise<Category> {
-    return await this.categoryService.update(id, updateDto);
+  @Delete('selected')
+  deleteSelected(@Body() ids: string[]) {
+    return this.categoryService.deleteMultiple(ids);
+  }
+
+  @Delete('soft/selected')
+  async removes(@Body() ids: string[]): Promise<Array<Category>> {
+    return await this.categoryService.removes(ids);
+  }
+
+  @Delete('soft/:id')
+  remove(@Param('id') id: string) {
+    return this.categoryService.remove(id);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string): Promise<Category> {
-    return await this.categoryService.remove(id);
+  delete(@Param('id') id: string) {
+    return this.categoryService.delete(id);
+  }
+
+  @Patch('restore')
+  async restoreByIds(@Body() ids: string[]): Promise<Category[]> {
+    return this.categoryService.restoreByIds(ids);
+  }
+
+  @Patch(':id')
+  async update(@Param('id') id: string, @Body() updateDto: UpdateCategoryDto): Promise<Category> {
+    return await this.categoryService.update(id, updateDto);
   }
 }

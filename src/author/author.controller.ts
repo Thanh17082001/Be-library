@@ -19,6 +19,7 @@ import {Author} from './entities/author.entity';
 
 @Controller('author')
 @ApiTags('author')
+@Public()
 export class AuthorController {
   constructor(private readonly authorService: AuthorService) {}
 
@@ -34,11 +35,21 @@ export class AuthorController {
   // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test')) // tên permisson và bảng cần chặn
   // @UseGuards(CaslGuard) // chặn permisson (CRUD)
   // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test'), (ability: AppAbility) => ability.can(Action.Read, 'Author'))
-  @Public()
   async findAll(@Query() query: Partial<CreateAuthorDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Author>> {
     const user = request['user'];
     query.libraryId = user?.libraryId ?? null;
     return await this.authorService.findAll(pageOptionDto, query);
+  }
+  @Get('/deleted')
+  async findAllDeleted(@Query() query: Partial<CreateAuthorDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Author>> {
+    const user = request['user'];
+    query.libraryId = user?.libraryId ?? null;
+    return await this.authorService.findDeleted(pageOptionDto, query);
+  }
+
+  @Get('deleted/:id')
+  async findOneDeleted(@Param('id') id: string): Promise<ItemDto<Author>> {
+    return await this.authorService.findByIdDeleted(new Types.ObjectId(id));
   }
 
   @Get(':id')
@@ -46,13 +57,33 @@ export class AuthorController {
     return await this.authorService.findOne(id);
   }
 
-  @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateDto: UpdateAuthorDto): Promise<Author> {
-    return await this.authorService.update(id, updateDto);
+  @Delete('soft/selected')
+  async removes(@Body() ids: string[]): Promise<Array<Author>> {
+    return await this.authorService.removes(ids);
+  }
+
+  @Delete('selected')
+  deleteSelected(@Body() ids: string[]) {
+    return this.authorService.deleteMultiple(ids);
+  }
+
+  @Delete('soft/:id')
+  remove(@Param('id') id: string) {
+    return this.authorService.remove(id);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string): Promise<Author> {
-    return await this.authorService.remove(id);
+  delete(@Param('id') id: string) {
+    return this.authorService.delete(id);
+  }
+
+  @Patch('restore')
+  async restoreByIds(@Body() ids: string[]): Promise<Author[]> {
+    return this.authorService.restoreByIds(ids);
+  }
+
+  @Patch(':id')
+  async update(@Param('id') id: string, @Body() updateDto: UpdateAuthorDto): Promise<Author> {
+    return await this.authorService.update(id, updateDto);
   }
 }
