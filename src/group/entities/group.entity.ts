@@ -14,6 +14,6 @@ export class Group extends BaseDocument {
   libraries: Types.ObjectId[] | [];
 }
 
-export const GroupSchema = SchemaFactory.createForClass(Group);
+export const GroupSchema = SchemaFactory.createForClass(Group).remove(['groupId']);
 
 GroupSchema.index({name: 1});

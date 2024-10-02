@@ -25,7 +25,7 @@ export class LibraryService {
       const arrayQuery = Object.keys(query);
       arrayQuery.forEach(key => {
         if (key && !pagination.includes(key)) {
-          mongoQuery[key] = query[key];
+          mongoQuery[key] = query[key] || null;
         }
       });
     }
@@ -57,6 +57,10 @@ export class LibraryService {
 
   async findOne(id: string): Promise<ItemDto<Library>> {
     return new ItemDto(await this.libraryModel.findById(id));
+  }
+
+  async findById(id: string): Promise<Library> {
+    return await this.libraryModel.findById(new Types.ObjectId(id));
   }
 
   async update(id: string, updateLibraryDto: UpdateLibraryDto): Promise<Library> {

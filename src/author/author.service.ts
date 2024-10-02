@@ -13,6 +13,10 @@ import {SoftDeleteModel} from 'mongoose-delete';
 export class AuthorService {
   constructor(@InjectModel(Author.name) private exampleModel: SoftDeleteModel<Author>) {}
   async create(createDto: CreateAuthorDto): Promise<Author> {
+    const author: Author = await this.exampleModel.findOne({name: createDto.name, libraryId: createDto.libraryId});
+    if (author) {
+      throw new BadRequestException('name already exists');
+    }
     return await this.exampleModel.create(createDto);
   }
 
@@ -169,7 +173,7 @@ export class AuthorService {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid id');
     }
-    const resource: Author = await this.exampleModel.findById(new Types.ObjectId(id));
+    const resource: Author = await this.exampleModel.findOneDeleted({_id: new Types.ObjectId(id)});
     if (!resource) {
       throw new NotFoundException('Resource not found');
     }

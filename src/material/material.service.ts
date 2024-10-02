@@ -181,16 +181,24 @@ export class MaterialService {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid id');
     }
-    const resource: Material = await this.materialModel.findById(new Types.ObjectId(id));
+    const resource: Material = await this.materialModel.findOneDeleted(new Types.ObjectId(id));
     if (!resource) {
       throw new NotFoundException('Resource not found');
     }
     return await this.materialModel?.findByIdAndDelete(new Types.ObjectId(id));
   }
-  async deleteMultiple(ids: string[]): Promise<any> {
-    const objectIds = ids.map(id => new Types.ObjectId(id));
-    return await this.materialModel.deleteMany({
-      _id: {$in: objectIds},
-    });
+
+  async deletes(ids: string[]): Promise<any> {
+    for (let i = 0; i < ids.length; i++) {
+      const id = new Types.ObjectId(ids[i]);
+      if (!Types.ObjectId.isValid(id)) {
+        throw new BadRequestException('Invalid id');
+      }
+      const resource: Material = await this.materialModel.findOneDeleted({_id: new Types.ObjectId(id)});
+      if (!resource) {
+        throw new NotFoundException('Resource not found');
+      }
+      await this.materialModel?.findByIdAndDelete(new Types.ObjectId(id));
+    }
   }
 }

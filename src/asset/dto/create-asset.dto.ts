@@ -1,5 +1,5 @@
 import {ApiProperty, OmitType} from '@nestjs/swagger';
-import {IsString} from 'class-validator';
+import {IsNumber, IsString} from 'class-validator';
 import {BaseDto} from 'src/common/base.dto';
 
 export class CreateAssetDto extends OmitType(BaseDto, ['isPublic']) {
@@ -7,8 +7,22 @@ export class CreateAssetDto extends OmitType(BaseDto, ['isPublic']) {
   @IsString()
   name: string;
   @ApiProperty()
+  @IsNumber()
+  quantityUsed: number;
+  @ApiProperty()
+  @IsNumber()
+  quantityTotal: number;
+  @ApiProperty()
+  @IsNumber()
+  quantityWarehouse: number;
+  @ApiProperty()
+  @IsNumber()
+  quantityDamage: number;
+  @ApiProperty()
+  @IsNumber()
+  quantityLiquidation: number;
+  @ApiProperty()
   @IsString()
-  quantity: number;
   @ApiProperty()
   @IsString()
   description: string;

@@ -8,10 +8,10 @@ import {PageMetaDto} from 'src/utils/page.metadata.dto';
 import {RoleS} from './entities/role.entity';
 import {CreateRoleDto} from './dto/create-role.dto';
 import {UpdateRoleDto} from './dto/update-role.dto';
-import {PermissonDto} from 'src/user/dto/permisson.to';
+import {PermissonDto} from 'src/user/dto/permission.dto';
 import {User} from 'src/user/entities/user.entity';
 import {UserService} from 'src/user/user.service';
-import {PermissonRoleDto} from './dto/permisson-role.dto';
+import {PermissonRoleDto} from './dto/permission-role.dto';
 
 @Injectable()
 export class RoleService {
@@ -62,7 +62,7 @@ export class RoleService {
     return new PageDto(results, pageMetaDto);
   }
 
-  async findOne(id: ObjectId): Promise<ItemDto<RoleS>> {
+  async findOne(id: Types.ObjectId): Promise<ItemDto<RoleS>> {
     return new ItemDto(await this.roleModel.findById(id));
   }
 
@@ -70,20 +70,20 @@ export class RoleService {
     return await this.roleModel.findById(new Types.ObjectId(id));
   }
 
-  async addPermisson(permissonDto: PermissonRoleDto): Promise<RoleS> {
-    if (!Types.ObjectId.isValid(permissonDto.roleId)) {
+  async addPermisson(permissionDto: PermissonRoleDto): Promise<RoleS> {
+    if (!Types.ObjectId.isValid(permissionDto.roleId)) {
       throw new BadRequestException('role id not valid');
     }
 
-    const role: RoleS = await this.roleModel.findOne({_id: permissonDto.roleId});
+    const role: RoleS = await this.roleModel.findOne({_id: permissionDto.roleId});
     if (!role) {
       throw new NotFoundException('Role not found');
     }
     return await this.roleModel.findByIdAndUpdate(
-      {_id: new Types.ObjectId(permissonDto.roleId)},
+      {_id: new Types.ObjectId(permissionDto.roleId)},
       {
         $addToSet: {
-          permissions: {$each: permissonDto.permissions},
+          permissions: {$each: permissionDto.permissions},
         },
       },
       {
@@ -92,20 +92,20 @@ export class RoleService {
     );
   }
 
-  async removePermisson(permissonDto: PermissonRoleDto): Promise<RoleS> {
-    if (!Types.ObjectId.isValid(permissonDto.roleId)) {
+  async removePermisson(permissionDto: PermissonRoleDto): Promise<RoleS> {
+    if (!Types.ObjectId.isValid(permissionDto.roleId)) {
       throw new BadRequestException('role id not valid');
     }
 
-    const role: RoleS = await this.roleModel.findOne({_id: permissonDto.roleId});
+    const role: RoleS = await this.roleModel.findOne({_id: permissionDto.roleId});
     if (!role) {
       throw new NotFoundException('role not found');
     }
     return await this.roleModel.findByIdAndUpdate(
-      {_id: new Types.ObjectId(permissonDto.roleId)},
+      {_id: new Types.ObjectId(permissionDto.roleId)},
       {
         $pull: {
-          permissions: {$each: permissonDto.permissions},
+          permissions: {$each: permissionDto.permissions},
         },
       },
       {

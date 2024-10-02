@@ -7,7 +7,15 @@ export class Asset extends BaseDocument {
   @Prop({required: true})
   name: string;
   @Prop({default: 0})
-  quantity: number;
+  quantityUsed: number;
+  @Prop({default: 0})
+  quantityTotal: number;
+  @Prop({default: 0})
+  quantityWarehouse: number;
+  @Prop({default: 0})
+  quantityDamage: number;
+  @Prop({default: 0})
+  quantityLiquidation: number;
   @Prop({default: ''})
   description: string;
 }

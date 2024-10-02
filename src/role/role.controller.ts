@@ -14,9 +14,9 @@ import {Request} from 'express';
 import {Public} from 'src/auth/auth.decorator';
 import {CreateRoleDto} from './dto/create-role.dto';
 import {RoleS} from './entities/role.entity';
-import {PermissonDto} from 'src/user/dto/permisson.to';
+import {PermissonDto} from 'src/user/dto/permission.dto';
 import {User} from 'src/user/entities/user.entity';
-import {PermissonRoleDto} from './dto/permisson-role.dto';
+import {PermissonRoleDto} from './dto/permission-role.dto';
 import {Role} from './role.enum';
 import {permission} from 'process';
 
@@ -43,22 +43,22 @@ export class RoleController {
   @Get()
   // @Roles(Role.User) // tên role để chặn bên dưới
   // @UseGuards(RolesGuard) // chặn role (admin, student ,....)
-  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test')) // tên permisson và bảng cần chặn
-  // @UseGuards(CaslGuard) // chặn permisson (CRUD)
+  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test')) // tên permission và bảng cần chặn
+  // @UseGuards(CaslGuard) // chặn permission (CRUD)
   // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test'), (ability: AppAbility) => ability.can(Action.Read, 'example'))
   async findAll(@Query() query: Partial<CreateRoleDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<RoleS>> {
     return await this.roleService.findAll(pageOptionDto, query);
   }
 
   @Public()
-  @Post('add-permisson')
-  async addPermisson(@Body() permissonDto: PermissonRoleDto): Promise<RoleS> {
-    return await this.roleService.addPermisson(permissonDto);
+  @Post('add-permission')
+  async addPermisson(@Body() permissionDto: PermissonRoleDto): Promise<RoleS> {
+    return await this.roleService.addPermisson(permissionDto);
   }
 
   @Public()
-  @Delete('remove-permisson')
-  async removePermisson(@Body() permissonDto: PermissonRoleDto): Promise<RoleS> {
-    return await this.roleService.removePermisson(permissonDto);
+  @Delete('remove-permission')
+  async removePermisson(@Body() permissionDto: PermissonRoleDto): Promise<RoleS> {
+    return await this.roleService.removePermisson(permissionDto);
   }
 }

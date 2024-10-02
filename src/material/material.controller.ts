@@ -1,3 +1,4 @@
+import {diskStorage} from 'multer';
 import {MaterialService} from './material.service';
 import {CreateMaterialDto} from './dto/create-material.dto';
 import {UpdateMaterialDto} from './dto/update-material.dto';
@@ -23,19 +24,21 @@ export class MaterialController {
   constructor(private readonly materialService: MaterialService) {}
 
   @Post()
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Create, 'materials')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard)
   create(@Body() createMaterialDto: CreateMaterialDto, @Req() request: Request) {
     const user = request['user'] ?? null;
+    createMaterialDto.libraryId = user?.libraryId ?? null;
+    createMaterialDto.createBy = user?._id ?? null;
+    createMaterialDto.groupId = user?.groupId ?? null;
     return this.materialService.create({
       ...createMaterialDto,
-      createBy: new Types.ObjectId(user?._id.toString()),
     });
   }
 
   @Get()
-  @Roles(Role.Student) // tên role để chặn bên dưới
-  @UseGuards(RolesGuard) // chặn role (admin, student ,....)
-  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test')) // tên permisson và bảng cần chặn
-  @UseGuards(CaslGuard) // chặn permisson (CRUD)
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'materials')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test'), (ability: AppAbility) => ability.can(Action.Read, 'Material'))
   findAll(@Query() query: Partial<CreateMaterialDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Material>> {
     const user = request['user'];
@@ -62,7 +65,7 @@ export class MaterialController {
 
   @Delete('selected')
   deleteSelected(@Body() ids: string[]) {
-    return this.materialService.deleteMultiple(ids);
+    return this.materialService.deletes(ids);
   }
 
   @Delete('soft/selected')

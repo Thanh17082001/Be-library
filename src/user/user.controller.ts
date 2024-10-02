@@ -23,7 +23,8 @@ import {join} from 'path';
 
 @Controller('user')
 @ApiTags('user')
-@Public()
+@UseGuards(RolesGuard)
+@Roles(Role.Admin) // tên role để chặn bên dưới
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
@@ -42,10 +43,10 @@ export class UserController {
   @Get()
   // @Roles(Role.User) // tên role để chặn bên dưới
   // @UseGuards(RolesGuard) // chặn role (admin, student ,....)
-  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test')) // tên permisson và bảng cần chặn
-  // @UseGuards(CaslGuard) // chặn permisson (CRUD)
+  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test')) // tên permission và bảng cần chặn
+  // @UseGuards(CaslGuard) // chặn permission (CRUD)
   // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test'), (ability: AppAbility) => ability.can(Action.Read, 'User'))
-  @Public()
+  // @Public()
   async findAll(@Query() query: Partial<CreateUserDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<User>> {
     const user = request['user'];
     query.libraryId = user?.libraryId ?? null;

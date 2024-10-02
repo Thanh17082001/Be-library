@@ -181,7 +181,7 @@ export class CategoryService {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid id');
     }
-    const resource: Category = await this.categoryModel.findById(new Types.ObjectId(id));
+    const resource: Category = await this.categoryModel.findOneDeleted(new Types.ObjectId(id));
     if (!resource) {
       throw new NotFoundException('Resource not found');
     }

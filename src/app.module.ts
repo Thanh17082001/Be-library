@@ -53,7 +53,6 @@ import * as mongooseDelete from 'mongoose-delete';
     ExampleModule,
     UserModule,
     AuthModule,
-    CaslModule,
     RoleModule,
     TokenModule,
     LibraryModule,

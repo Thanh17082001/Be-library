@@ -68,7 +68,7 @@ export class PublisherService {
       name: updateDto.name, // Tìm theo tên
       _id: {$ne: new Types.ObjectId(id)}, // Loại trừ ID hiện tại
     });
-    if (!exits) {
+    if (exits) {
       throw new BadRequestException('name already exists');
     }
     const resource: Publisher = await this.publisherModel.findById(new Types.ObjectId(id));
@@ -170,10 +170,24 @@ export class PublisherService {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid id');
     }
-    const resource: Publisher = await this.publisherModel.findById(new Types.ObjectId(id));
+    const resource: Publisher = await this.publisherModel.findOneDeleted({_id: new Types.ObjectId(id)});
     if (!resource) {
       throw new NotFoundException('Resource not found');
     }
     return await this.publisherModel?.findByIdAndDelete(new Types.ObjectId(id));
+  }
+
+  async deletes(ids: string[]): Promise<any> {
+    for (let i = 0; i < ids.length; i++) {
+      const id = new Types.ObjectId(ids[i]);
+      if (!Types.ObjectId.isValid(id)) {
+        throw new BadRequestException('Invalid id');
+      }
+      const resource: Publisher = await this.publisherModel.findOneDeleted({_id: new Types.ObjectId(id)});
+      if (!resource) {
+        throw new NotFoundException('Resource not found');
+      }
+      await this.publisherModel?.findByIdAndDelete(new Types.ObjectId(id));
+    }
   }
 }

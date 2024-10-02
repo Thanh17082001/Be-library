@@ -168,7 +168,7 @@ export class ShelvesService {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid id');
     }
-    const resource: Shelves = await this.shelvesModel.findById(new Types.ObjectId(id));
+    const resource: Shelves = await this.shelvesModel.findOneDeleted(new Types.ObjectId(id));
     if (!resource) {
       throw new NotFoundException('Resource not found');
     }

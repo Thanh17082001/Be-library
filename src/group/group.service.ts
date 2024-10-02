@@ -109,15 +109,38 @@ export class GroupService {
       name: updateGroupDto.name, // Tìm theo tên
       _id: {$ne: new Types.ObjectId(id)}, // Loại trừ ID hiện tại
     });
-    console.log(exits);
 
     if (exits) {
       throw new NotFoundException('name already exists');
     }
     const resource: Group = await this.groupModel.findById(new Types.ObjectId(id));
+
+    
     if (!resource) {
       throw new NotFoundException('Resource not found');
     }
+    const librariesOld = resource.libraries
+
+    const librariesNew = updateGroupDto.libraries
+
+    const result = librariesOld.filter(item => !librariesNew.includes(item)); /// lấy ra phần tử bị loại
+
+    for (let i = 0; i < result.length; i++){
+      const library = await this.libraryService.findById(result[i].toString());
+      library.groupId = null;
+      await this.libraryService.update(result[i].toString(), {
+        ...library,
+      });
+    }
+
+    for (let i = 0; i < librariesNew.length; i++) {
+      const library = await this.libraryService.findById(librariesNew[i].toString());
+      library.groupId = new Types.ObjectId(id);
+      await this.libraryService.update(librariesNew[i].toString(), {
+        ...library,
+      });
+    }
+    
     return this.groupModel.findByIdAndUpdate(id, updateGroupDto, {
       returnDocument: 'after',
     });

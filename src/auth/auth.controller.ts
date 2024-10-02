@@ -1,23 +1,25 @@
-import {Body, Controller, Delete, Get, Post} from '@nestjs/common';
+import {Body, Controller, Delete, Get, Post, Req} from '@nestjs/common';
 import {AuthService} from './auth.service';
 import {CreateUserDto} from 'src/user/dto/create-user.dto';
 import {User} from 'src/user/entities/user.entity';
 import {Public} from './auth.decorator';
 import {ApiTags} from '@nestjs/swagger';
 import {RefreshTokenDto} from 'src/token/dto/refresh-token.dto';
-import {PermissonDto} from 'src/user/dto/permisson.to';
+import {PermissonDto} from 'src/user/dto/permission.dto';
 import {Action} from 'src/casl/casl.action';
 import {LoginDto} from 'src/user/dto/login.dto';
 import {Role} from 'src/role/role.enum';
+import {SignUpDto} from 'src/user/dto/sign-up.dto';
 
 @Controller('auth')
 @ApiTags('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
-  @Public()
   @Post('signup')
-  async signup(@Body() user: CreateUserDto): Promise<User> {
-    return await this.authService.signUp(user);
+  async signup(@Body() signupDto: SignUpDto, @Req() request: Request): Promise<User> {
+    const user = request['user'] ?? null;
+    signupDto.createBy = user?.userId ?? null;
+    return await this.authService.signUp(signupDto);
   }
   @Public()
   @Post('login')
@@ -30,15 +32,15 @@ export class AuthController {
     return await this.authService.refreshToken(refreshTokenDto);
   }
   @Public()
-  @Post('add-permisson')
-  async addPermisson(@Body() permissonDto: PermissonDto): Promise<User> {
-    return await this.authService.addPermisson(permissonDto);
+  @Post('add-permission')
+  async addPermisson(@Body() permissionDto: PermissonDto): Promise<User> {
+    return await this.authService.addPermisson(permissionDto);
   }
 
   @Public()
-  @Delete('remove-permisson')
-  async removePermisson(@Body() permissonDto: PermissonDto): Promise<User> {
-    return await this.authService.removePermisson(permissonDto);
+  @Delete('remove-permission')
+  async removePermisson(@Body() permissionDto: PermissonDto): Promise<User> {
+    return await this.authService.removePermisson(permissionDto);
   }
 
   @Public()

@@ -20,6 +20,7 @@ import {Category} from './entities/category.entity';
 
 @Controller('category')
 @ApiTags('category')
+@Public()
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
@@ -32,10 +33,9 @@ export class CategoryController {
   @Get()
   // @Roles(Role.User) // tên role để chặn bên dưới
   // @UseGuards(RolesGuard) // chặn role (admin, student ,....)
-  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test')) // tên permisson và bảng cần chặn
-  // @UseGuards(CaslGuard) // chặn permisson (CRUD)
+  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test')) // tên permission và bảng cần chặn
+  // @UseGuards(CaslGuard) // chặn permission (CRUD)
   // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test'), (ability: AppAbility) => ability.can(Action.Read, 'Category'))
-  @Public()
   async findAll(@Query() query: Partial<CreateCategoryDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Category>> {
     const user = request['user'];
     query.libraryId = user?.libraryId ?? null;

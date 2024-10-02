@@ -20,6 +20,7 @@ import {Publisher} from './entities/publisher.entity';
 
 @Controller('publisher')
 @ApiTags('publisher')
+@Public()
 export class PublisherController {
   constructor(private readonly publisherService: PublisherService) {}
 
@@ -32,8 +33,8 @@ export class PublisherController {
   @Get()
   // @Roles(Role.User) // tên role để chặn bên dưới
   // @UseGuards(RolesGuard) // chặn role (admin, student ,....)
-  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test')) // tên permisson và bảng cần chặn
-  // @UseGuards(CaslGuard) // chặn permisson (CRUD)
+  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test')) // tên permission và bảng cần chặn
+  // @UseGuards(CaslGuard) // chặn permission (CRUD)
   // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test'), (ability: AppAbility) => ability.can(Action.Read, 'Publisher'))
   @Public()
   async findAll(@Query() query: Partial<CreatePublisherDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Publisher>> {
@@ -64,6 +65,11 @@ export class PublisherController {
     return await this.publisherService.removes(ids);
   }
 
+  @Delete('selected')
+  async deletes(@Body() ids: string[]): Promise<Array<Publisher>> {
+    return await this.publisherService.deletes(ids);
+  }
+
   @Delete('soft/:id')
   remove(@Param('id') id: string) {
     return this.publisherService.remove(id);
@@ -75,7 +81,7 @@ export class PublisherController {
   }
 
   @Patch('restore')
-  async restoreByIds(@Body('ids') ids: string[]): Promise<Publisher[]> {
+  async restoreByIds(@Body() ids: string[]): Promise<Publisher[]> {
     return this.publisherService.restoreByIds(ids);
   }
 

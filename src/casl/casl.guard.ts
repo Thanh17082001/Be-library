@@ -11,15 +11,11 @@ export class CaslGuard implements CanActivate {
     private caslAbilityFactory: CaslAbilityFactory
   ) {}
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
-    // if (user.isAdmin) {
-    //   return true;
-    // }
-
     // Tạo ability cho user
-    const ability = this.caslAbilityFactory.createForUser(user);
+    const ability = await this.caslAbilityFactory.createForUser(user);
 
     // Lấy các policy từ metadata
     const policies = this.reflector.getAllAndOverride<Array<(ability: AppAbility) => boolean>>(CHECK_POLICIES_KEY, [context.getHandler(), context.getClass()]);
@@ -28,10 +24,11 @@ export class CaslGuard implements CanActivate {
       return true; // Nếu không có policy, cho phép truy cập
     }
 
+    // console.log(policies, 'policies');
     // Kiểm tra từng policy
     const isAllowed = policies.every(policy => policy(ability));
     if (!isAllowed) {
-      throw new ForbiddenException('Forbidden resource');
+      throw new ForbiddenException('Forbidden resource yyttttt');
     }
 
     return true;

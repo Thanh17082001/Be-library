@@ -4,7 +4,7 @@ import {UpdateUserDto} from './dto/update-user.dto';
 import {InjectModel} from '@nestjs/mongoose';
 import {User} from './entities/user.entity';
 import {Model, ObjectId, Types} from 'mongoose';
-import {PermissonDto} from './dto/permisson.to';
+import {PermissonDto} from './dto/permission.dto';
 import {PageOptionsDto} from 'src/utils/page-option-dto';
 import {ItemDto, PageDto} from 'src/utils/page.dto';
 import {PageMetaDto} from 'src/utils/page.metadata.dto';
@@ -94,7 +94,7 @@ export class UserService {
   }
 
   async findOne(data: any): Promise<User> {
-    return await this.userModel.findOne(data).lean();
+    return await this.userModel.findOne(data).populate('roleId').lean();
   }
 
   async update(id: string, updateDto: UpdateUserDto): Promise<User> {
@@ -114,7 +114,7 @@ export class UserService {
       throw new NotFoundException('Resource not found');
     }
 
-    if (updateDto.avatar) {
+    if (updateDto.avatar && resource.avatar) {
       const oldImagePath = path.join(__dirname, '..', '..', 'public', resource.avatar);
       fs.unlinkSync(oldImagePath);
     }
@@ -208,20 +208,20 @@ export class UserService {
     return restoredDocuments;
   }
 
-  async addPermisson(permissonDto: PermissonDto): Promise<User> {
-    if (!Types.ObjectId.isValid(permissonDto.userId)) {
+  async addPermisson(permissionDto: PermissonDto): Promise<User> {
+    if (!Types.ObjectId.isValid(permissionDto.userId)) {
       throw new BadRequestException('User id not valid');
     }
 
-    const user: User = await this.userModel.findOne({_id: permissonDto.userId});
+    const user: User = await this.userModel.findOne({_id: permissionDto.userId});
     if (!user) {
       throw new NotFoundException('User not found');
     }
     return await this.userModel.findByIdAndUpdate(
-      {_id: new Types.ObjectId(permissonDto.userId)},
+      {_id: new Types.ObjectId(permissionDto.userId)},
       {
         $addToSet: {
-          permissions: {$each: permissonDto.permissions},
+          permissions: {$each: permissionDto.permissions},
         },
       },
       {
@@ -230,20 +230,20 @@ export class UserService {
     );
   }
 
-  async removePermisson(permissonDto: PermissonDto): Promise<User> {
-    if (!Types.ObjectId.isValid(permissonDto.userId)) {
+  async removePermisson(permissionDto: PermissonDto): Promise<User> {
+    if (!Types.ObjectId.isValid(permissionDto.userId)) {
       throw new BadRequestException('User id not valid');
     }
 
-    const user: User = await this.userModel.findOne({_id: permissonDto.userId});
+    const user: User = await this.userModel.findOne({_id: permissionDto.userId});
     if (!user) {
       throw new NotFoundException('User not found');
     }
     return await this.userModel.findByIdAndUpdate(
-      {_id: new Types.ObjectId(permissonDto.userId)},
+      {_id: new Types.ObjectId(permissionDto.userId)},
       {
         $pull: {
-          permissions: {$each: permissonDto.permissions},
+          permissions: {$each: permissionDto.permissions},
         },
       },
       {

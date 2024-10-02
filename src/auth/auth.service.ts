@@ -11,8 +11,9 @@ import {TokenService} from 'src/token/token.service';
 import {RefreshTokenDto} from 'src/token/dto/refresh-token.dto';
 
 import {Cron} from '@nestjs/schedule';
-import {PermissonDto} from 'src/user/dto/permisson.to';
+import {PermissonDto} from 'src/user/dto/permission.dto';
 import {LoginDto} from 'src/user/dto/login.dto';
+import {SignUpDto} from 'src/user/dto/sign-up.dto';
 
 @Injectable()
 export class AuthService {
@@ -23,7 +24,7 @@ export class AuthService {
     @InjectConnection() private readonly connection: Connection
   ) {}
 
-  async signUp(data: CreateUserDto): Promise<User> {
+  async signUp(data: SignUpDto): Promise<User> {
     const newUser = await this.usersService.create(data);
     return newUser;
   }
@@ -87,12 +88,12 @@ export class AuthService {
     console.log(`Deleted ${result} expired tokens.`);
   }
 
-  async addPermisson(permissonDto: PermissonDto): Promise<User> {
-    return await this.usersService.addPermisson(permissonDto);
+  async addPermisson(permissionDto: PermissonDto): Promise<User> {
+    return await this.usersService.addPermisson(permissionDto);
   }
 
-  async removePermisson(permissonDto: PermissonDto): Promise<User> {
-    return await this.usersService.removePermisson(permissonDto);
+  async removePermisson(permissionDto: PermissonDto): Promise<User> {
+    return await this.usersService.removePermisson(permissionDto);
   }
 
   async getCollections(): Promise<string[]> {

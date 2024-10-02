@@ -19,13 +19,17 @@ import {Author} from './entities/author.entity';
 
 @Controller('author')
 @ApiTags('author')
-@Public()
+@UseGuards(RolesGuard)
+@Roles(Role.Admin)
 export class AuthorController {
   constructor(private readonly authorService: AuthorService) {}
 
   @Post()
   async create(@Body() createDto: CreateAuthorDto, @Req() request: Request): Promise<Author> {
     const user = request['user'] ?? null;
+    createDto.createBy = user?.userId ?? null;
+    createDto.libraryId = user?.libraryId ?? null;
+    createDto.groupId = user?.groupId ?? null;
     return await this.authorService.create({...createDto});
   }
 

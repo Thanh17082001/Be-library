@@ -29,20 +29,18 @@ export class AssetController {
     const user = request['user'] ?? null;
     createDto.libraryId = user?.libraryId ?? null;
     createDto.groupId = user?.groupId ?? null;
-    createDto.quantity = +createDto.quantity;
     return await this.assetService.create({...createDto});
   }
 
   @Get()
   // @Roles(Role.User) // tên role để chặn bên dưới
   // @UseGuards(RolesGuard) // chặn role (admin, student ,....)
-  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test')) // tên permisson và bảng cần chặn
-  // @UseGuards(CaslGuard) // chặn permisson (CRUD)
+  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test')) // tên permission và bảng cần chặn
+  // @UseGuards(CaslGuard) // chặn permission (CRUD)
   // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test'), (ability: AppAbility) => ability.can(Action.Read, 'Asset'))
   async findAll(@Query() query: Partial<CreateAssetDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Asset>> {
     const user = request['user'];
     query.libraryId = user?.libraryId ?? null;
-    query.quantity = +query.quantity;
     return await this.assetService.findAll(pageOptionDto, query);
   }
   @Get('/deleted')

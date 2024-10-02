@@ -1,6 +1,15 @@
 export enum Role {
-  Admin = 'quản trị viên',
-  Student = 'học sinh',
-  Teacher = 'giáo viên',
-  Owner = 'chủ nhóm liên thông',
+  SuperAdmin = 'SuperAdmin',
+  Admin = 'Admin',
+  Student = 'Student',
+  Teacher = 'Teacher',
+  Owner = 'Owner',
+}
+
+export enum Level {
+  SuperAdmin = 5,
+  Owner = 4,
+  Admin = 3,
+  Teacher = 2,
+  Student = 1,
 }

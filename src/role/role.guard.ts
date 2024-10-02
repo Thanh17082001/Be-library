@@ -1,6 +1,7 @@
+import {RoleService} from 'src/role/role.service';
 import {Injectable, CanActivate, ExecutionContext} from '@nestjs/common';
 import {Reflector} from '@nestjs/core';
-import {Role} from './role.enum';
+import {Level, Role} from './role.enum';
 import {ROLES_KEY} from './role.decorator';
 
 @Injectable()
@@ -9,19 +10,21 @@ export class RolesGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [context.getHandler(), context.getClass()]);
+    const levelRequired = Level[requiredRoles[0]] ?? null;
+    console.log(levelRequired);
     if (!requiredRoles) {
       return true;
     }
     const request = context.switchToHttp().getRequest();
     const user = request['user'];
-    if (user.isAdmin) {
+    if (user?.isAdmin) {
       return true;
     }
 
     if (!user) {
       return false;
     }
-    const isRole = requiredRoles.some(role => user.role == role);
-    return requiredRoles.some(role => user.role == role);
+    const isRole = requiredRoles.some(role => user.roleId.name == role);
+    return isRole;
   }
 }

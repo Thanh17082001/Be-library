@@ -9,9 +9,6 @@ export type Permission = {
 
 @Schema()
 export class User extends BaseDocument {
-  @Prop({type: [{type: Types.ObjectId, ref: 'Library'}]})
-  libraryId: Types.ObjectId;
-
   @Prop({required: true, unique: true})
   username: string;
 
@@ -42,10 +39,10 @@ export class User extends BaseDocument {
   @Prop({enum: ['nam', 'nữ', 'khác'], default: 'khác'})
   gender: string;
 
-  @Prop({
-    default: [], // Người dùng có thể có nhiều quyền
-  })
-  permissions: Permission[];
+  // @Prop({
+  //   default: [], // Người dùng có thể có nhiều quyền
+  // })
+  // permissions: Permission[];
 
   @Prop({ref: 'RoleS'}) // Vai trò của người dùng
   roleId: Types.ObjectId;
@@ -55,5 +52,5 @@ export class User extends BaseDocument {
 }
 
 const UserSchema = SchemaFactory.createForClass(User);
-UserSchema.remove(['isLink', 'isPublic', 'groupId']);
+UserSchema.remove(['isLink', 'isPublic']);
 export {UserSchema};
