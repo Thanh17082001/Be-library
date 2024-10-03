@@ -10,6 +10,9 @@ export class BaseDto {
   libraryId: Types.ObjectId | null;
 
   @IsOptional()
+  isLink: boolean | false;
+
+  @IsOptional()
   createBy: Types.ObjectId | null;
 
   @ApiProperty({example: false})

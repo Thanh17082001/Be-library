@@ -19,25 +19,36 @@ import {Publication} from './entities/publication.entity';
 import {FileInterceptor} from '@nestjs/platform-express';
 import {multerOptions, storage} from 'src/config/multer.config';
 
-@Controller('publication')
-@ApiTags('publication')
-@Public()
+@Controller('publications')
+@ApiTags('publications')
+// @Public()
 export class PublicationController {
   constructor(private readonly publicationService: PublicationService) {}
 
   @Post()
   @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('file', {storage: storage('pdf'), ...multerOptions}))
+  @UseInterceptors(FileInterceptor('file', {storage: storage('publication'), ...multerOptions}))
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Create, 'publications')) // tên permission và bảng cần chặn
+  // @UseGuards(CaslGuard) // chặn permission (CRUD)
   async create(@UploadedFile() file: Express.Multer.File, @Body() createDto: CreatePublicationDto, @Req() request: Request): Promise<any> {
     const user = request['user'] ?? null;
-    const images = await this.publicationService.convertPdfToImages(file.path);
+    let images = [];
+    createDto.path = '';
+    if (file) {
+      if (file.mimetype == 'application/pdf') {
+        images = await this.publicationService.convertPdfToImages(file?.path);
+      }
+      createDto.path = `/publication/${file.filename}`;
+    }
     createDto.images = images;
     createDto.priviewImage = images ? images[0] : null;
 
     createDto.createBy = user?._id ?? null;
     createDto.libraryId = user?.libraryId ?? null;
+    createDto.groupId = user?.groupId ?? null;
 
-    createDto.path = `/pdf/${file.filename}`;
+    createDto.quantity = +createDto.quantity;
+    createDto.shelvesQuantity = +createDto.shelvesQuantity;
 
     return await this.publicationService.create({...createDto});
   }

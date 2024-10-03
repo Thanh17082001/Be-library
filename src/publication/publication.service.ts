@@ -34,7 +34,6 @@ export class PublicationService {
     }
 
     //search document
-    console.log(search);
     if (search) {
       mongoQuery.name = {$regex: new RegExp(search, 'i')};
     }
@@ -68,13 +67,13 @@ export class PublicationService {
       throw new BadRequestException('Invalid id');
     }
 
-    const exits: Publication = await this.publicationModel.findOne({
-      name: updateDto.name, // Tìm theo tên
-      _id: {$ne: new Types.ObjectId(id)}, // Loại trừ ID hiện tại
-    });
-    if (exits) {
-      throw new BadRequestException('name already exists');
-    }
+    // const exits: Publication = await this.publicationModel.findOne({
+    //   name: updateDto.name, // Tìm theo tên
+    //   _id: {$ne: new Types.ObjectId(id)}, // Loại trừ ID hiện tại
+    // });
+    // if (exits) {
+    //   throw new BadRequestException('name already exists');
+    // }
     const resource: Publication = await this.publicationModel.findById(new Types.ObjectId(id));
     if (!resource) {
       throw new NotFoundException('Resource not found');

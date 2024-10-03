@@ -5,7 +5,6 @@ import {Request, Response} from 'express';
 export class HttpExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(HttpExceptionFilter.name);
   catch(exception: HttpException, host: ArgumentsHost) {
-    console.log('Exception caught in filter');
 
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();

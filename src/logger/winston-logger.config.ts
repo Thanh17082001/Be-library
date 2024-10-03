@@ -26,7 +26,7 @@ export const winstonLoggerConfig = {
         }),
         winston.format.json()
       ),
-      level: 'info', // Chỉ ghi log mức độ cao hơn warn trong production
+      level: 'error', // Chỉ ghi log mức độ cao hơn warn trong production
     }),
   ],
 };

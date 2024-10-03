@@ -39,6 +39,7 @@ export class ShelvesController {
   async findAll(@Query() query: Partial<CreateShelfDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Shelves>> {
     const user = request['user'];
     query.libraryId = user?.libraryId ?? null;
+    query.groupId = user?.groupId ?? null;
     return await this.shelvesService.findAll(pageOptionDto, query);
   }
 

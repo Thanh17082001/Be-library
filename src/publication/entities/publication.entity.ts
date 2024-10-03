@@ -17,10 +17,10 @@ export class Publication extends BaseDocument {
   @Prop({default: 0})
   quantity: number;
   @Prop({default: 0})
-  shelverQuantity: number;
+  shelvesQuantity: number;
   @Prop({enum: ['trên kệ', 'thanh lý', 'bị hư hại', 'có sẵn', 'không có sẵn'], default: 'có sẵn'})
   status: string;
-  @Prop({enum: ['ấn phẩn cứng', 'ấn phẩm mềm']})
+  @Prop({enum: ['ấn phẩm cứng', 'ấn phẩm mềm']})
   type: string;
 
   @Prop({default: []})
@@ -42,6 +42,6 @@ export class Publication extends BaseDocument {
   materialId: Types.ObjectId;
 }
 
-const PublicationSchema = SchemaFactory.createForClass(Publication).index({name: 1}).remove(['isLink', 'groupId']);
+const PublicationSchema = SchemaFactory.createForClass(Publication).index({name: 1}).remove([]);
 
 export {PublicationSchema};

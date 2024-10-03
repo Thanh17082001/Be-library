@@ -115,17 +115,16 @@ export class GroupService {
     }
     const resource: Group = await this.groupModel.findById(new Types.ObjectId(id));
 
-    
     if (!resource) {
       throw new NotFoundException('Resource not found');
     }
-    const librariesOld = resource.libraries
+    const librariesOld = resource.libraries;
 
-    const librariesNew = updateGroupDto.libraries
+    const librariesNew = updateGroupDto.libraries;
 
     const result = librariesOld.filter(item => !librariesNew.includes(item)); /// lấy ra phần tử bị loại
 
-    for (let i = 0; i < result.length; i++){
+    for (let i = 0; i < result.length; i++) {
       const library = await this.libraryService.findById(result[i].toString());
       library.groupId = null;
       await this.libraryService.update(result[i].toString(), {
@@ -140,7 +139,7 @@ export class GroupService {
         ...library,
       });
     }
-    
+
     return this.groupModel.findByIdAndUpdate(id, updateGroupDto, {
       returnDocument: 'after',
     });

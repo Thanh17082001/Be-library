@@ -10,4 +10,4 @@ export class Shelves extends BaseDocument {
   description: string;
 }
 
-export const ShelvesSchema = SchemaFactory.createForClass(Shelves).index({name: 1});
+export const ShelvesSchema = SchemaFactory.createForClass(Shelves).remove(['isPublic', 'isLink']).index({name: 1});
