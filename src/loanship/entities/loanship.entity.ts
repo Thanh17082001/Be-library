@@ -7,6 +7,7 @@ export class LoanSlipItem {
   publicationId: Types.ObjectId;
   name: string;
   quantityLoan: number;
+  position: string;
 }
 @Schema()
 export class LoanSlip extends BaseDocument {
@@ -22,14 +23,21 @@ export class LoanSlip extends BaseDocument {
   barcode: string;
   @Prop({default: false})
   isPrint: boolean;
+
+  @Prop({default: false})
+  isAgree: boolean;
+
+  @Prop({ default: false })
+  isReturn: boolean;
   @Prop({required: true, default: Date.now()})
-  maxLoanDuration: Date;
+  receiptDate: Date;
   @Prop({
     type: [
       {
         publicationId: {type: Types.ObjectId, ref: 'Publication'},
         name: String,
         quantityLoan: Number,
+        position: String,
         _id: false,
       },
     ],

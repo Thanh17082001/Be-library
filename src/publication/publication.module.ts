@@ -9,5 +9,6 @@ import {CaslModule} from 'src/casl/casl.module';
   imports: [MongooseModule.forFeature([{name: Publication.name, schema: PublicationSchema}]), CaslModule],
   controllers: [PublicationController],
   providers: [PublicationService],
+  exports: [PublicationService, MongooseModule],
 })
 export class PublicationModule {}

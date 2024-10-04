@@ -1,35 +1,35 @@
 import {LiquidationService} from './liquidation.service';
 import {CreateLiquidationDto} from './dto/create-liquidation.dto';
 import {UpdateLiquidationDto} from './dto/update-liquidation.dto';
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Req } from '@nestjs/common';
-import { PageOptionsDto } from 'src/utils/page-option-dto';
-import { ItemDto, PageDto } from 'src/utils/page.dto';
-import { ApiTags } from '@nestjs/swagger';
-import { ObjectId, Types } from 'mongoose';
-import { Roles } from 'src/role/role.decorator';
-import { Role } from 'src/role/role.enum';
-import { RolesGuard } from 'src/role/role.guard';
-import { CaslGuard } from 'src/casl/casl.guard';
-import { CheckPolicies } from 'src/casl/check-policies.decorator';
-import { AppAbility } from 'src/casl/casl-ability.factory/casl-ability.factory';
-import { Action } from 'src/casl/casl.action';
-import { Request } from 'express';
-import { Public } from 'src/auth/auth.decorator';
-import { Liquidation } from './entities/liquidation.entity';
+import {Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Req} from '@nestjs/common';
+import {PageOptionsDto} from 'src/utils/page-option-dto';
+import {ItemDto, PageDto} from 'src/utils/page.dto';
+import {ApiTags} from '@nestjs/swagger';
+import {ObjectId, Types} from 'mongoose';
+import {Roles} from 'src/role/role.decorator';
+import {Role} from 'src/role/role.enum';
+import {RolesGuard} from 'src/role/role.guard';
+import {CaslGuard} from 'src/casl/casl.guard';
+import {CheckPolicies} from 'src/casl/check-policies.decorator';
+import {AppAbility} from 'src/casl/casl-ability.factory/casl-ability.factory';
+import {Action} from 'src/casl/casl.action';
+import {Request} from 'express';
+import {Public} from 'src/auth/auth.decorator';
+import {Liquidation} from './entities/liquidation.entity';
 
 @Controller('liquidation')
 @ApiTags('liquidation')
 @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'liquidations')) // tên permission và bảng cần chặn
 @UseGuards(CaslGuard)
 export class LiquidationController {
-  constructor(private readonly liquidationService: LiquidationService) { }
+  constructor(private readonly liquidationService: LiquidationService) {}
 
   @Post()
   async create(@Body() createDto: CreateLiquidationDto, @Req() request: Request): Promise<Liquidation> {
     const user = request['user'] ?? null;
     createDto.libraryId = user?.libraryId ?? null;
     createDto.groupId = user?.groupId ?? null;
-    return await this.liquidationService.create({ ...createDto });
+    return await this.liquidationService.create({...createDto});
   }
 
   @Get()
@@ -90,4 +90,3 @@ export class LiquidationController {
     return await this.liquidationService.update(id, updateDto);
   }
 }
-

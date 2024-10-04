@@ -49,6 +49,15 @@ export class LoanshipController {
     query.libraryId = user?.libraryId ?? null;
     return await this.loanSlipService.findDeleted(pageOptionDto, query);
   }
+  @Get('approval/:id')
+  async loanApproval(@Param() id: string): Promise<LoanSlip> {
+    return this.loanSlipService.agreeToLoan(id);
+  }
+
+  @Get('return/:id')
+  async loanReturn(@Param() id: string): Promise<LoanSlip> {
+    return this.loanSlipService.returnToLoan(id);
+  }
 
   @Get('deleted/:id')
   async findOneDeleted(@Param('id') id: string): Promise<ItemDto<LoanSlip>> {

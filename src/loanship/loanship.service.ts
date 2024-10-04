@@ -8,12 +8,116 @@ import {ItemDto, PageDto} from 'src/utils/page.dto';
 import {PageMetaDto} from 'src/utils/page.metadata.dto';
 import {SoftDeleteModel} from 'mongoose-delete';
 import {LoanSlip} from './entities/loanship.entity';
+import {PublicationService} from 'src/publication/publication.service';
+import {generateBarcode} from 'src/common/genegrate-barcode';
 
 @Injectable()
 export class LoanshipService {
-  constructor(@InjectModel(LoanSlip.name) private loanSlipModel: SoftDeleteModel<LoanSlip>) {}
+  constructor(
+    @InjectModel(LoanSlip.name) private loanSlipModel: SoftDeleteModel<LoanSlip>,
+    private publicationService: PublicationService
+  ) {}
   async create(createDto: CreateLoanshipDto): Promise<LoanSlip> {
-    return await this.loanSlipModel.create(createDto);
+    createDto.barcode = generateBarcode();
+    const result = await this.loanSlipModel.create(createDto);
+    return result;
+  }
+  async agreeToLoan(id: string): Promise<any> {
+    const loan = await this.loanSlipModel.findById(new Types.ObjectId(id));
+    if (loan.isAgree) {
+      throw new BadRequestException('loan already agree');
+    }
+    if (!loan) {
+      throw new NotFoundException('Resource not found');
+    }
+    const publications = loan.publications;
+    const error = [];
+    for (let i = 0; i < publications.length; i++) {
+      const publicationId = publications[i].publicationId;
+      const publication = await this.publicationService.findById(publicationId);
+      let loanQuantityed = publication.shelvesQuantity - publications[i].quantityLoan;
+      let data = {};
+      console.log(publications[i].position);
+      if (publications[i].position == 'stock') {
+        console.log('object');
+        loanQuantityed = publication.quantity - publications[i].quantityLoan;
+        if (loanQuantityed <= 0) {
+          error.push({
+            publicationId: publicationId,
+            message: `Not enough quantity : ${publicationId}`,
+          });
+        }
+        data = {quantity: loanQuantityed};
+      } else {
+        if (loanQuantityed <= 0) {
+          error.push({
+            publicationId: publicationId,
+            message: `Not enough quantity: ${publicationId}`,
+          });
+        }
+        data = {shelvesQuantity: loanQuantityed};
+      }
+      if (error.length > 0) {
+        console.log(error);
+        throw new HttpException(error, 400);
+      }
+      await this.publicationService.update(publicationId.toString(), data);
+    }
+    return await this.loanSlipModel.findByIdAndUpdate(
+      new Types.ObjectId(id),
+      {isAgree: true, status: 'đã duyệt'},
+      {
+        returnDocument: 'after',
+      }
+    );
+  }
+
+  async returnToLoan(id: string): Promise<any> {
+    const loan = await this.loanSlipModel.findById(new Types.ObjectId(id));
+    if (loan.isReturn) {
+      throw new BadRequestException('books already return');
+    }
+    if (!loan) {
+      throw new NotFoundException('Resource not found');
+    }
+    const publications = loan.publications;
+    const error = [];
+    for (let i = 0; i < publications.length; i++) {
+      const publicationId = publications[i].publicationId;
+      const publication = await this.publicationService.findById(publicationId);
+      let loanQuantityed = publication.shelvesQuantity + publications[i].quantityLoan;
+      let data = {};
+      if (publications[i].position == 'stock') {
+        console.log('object');
+        loanQuantityed = publication.quantity + publications[i].quantityLoan;
+        if (loanQuantityed <= 0) {
+          error.push({
+            publicationId: publicationId,
+            message: `Not enough quantity : ${publicationId}`,
+          });
+        }
+        data = {quantity: loanQuantityed};
+      } else {
+        if (loanQuantityed <= 0) {
+          error.push({
+            publicationId: publicationId,
+            message: `Not enough quantity: ${publicationId}`,
+          });
+        }
+        data = {shelvesQuantity: loanQuantityed};
+      }
+      if (error.length > 0) {
+        throw new HttpException(error, 400);
+      }
+      await this.publicationService.update(publicationId.toString(), data);
+    }
+    return await this.loanSlipModel.findByIdAndUpdate(
+      new Types.ObjectId(id),
+      { isReturn: true, status: 'đã trả sách'},
+      {
+        returnDocument: 'after',
+      }
+    );
   }
 
   async findAll(pageOptions: PageOptionsDto, query: Partial<LoanSlip>): Promise<PageDto<LoanSlip>> {

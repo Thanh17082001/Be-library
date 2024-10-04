@@ -181,7 +181,7 @@ export class AssetService {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid id');
     }
-    const resource: Asset = await this.exampleModel.findById(new Types.ObjectId(id));
+    const resource: Asset = await this.exampleModel.findOneDeleted({_id: new Types.ObjectId(id)});
     if (!resource) {
       throw new NotFoundException('Resource not found');
     }

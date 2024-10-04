@@ -78,7 +78,7 @@ export class PublicationController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: ObjectId): Promise<ItemDto<Publication>> {
+  async findOne(@Param('id') id: Types.ObjectId): Promise<ItemDto<Publication>> {
     return await this.publicationService.findOne(id);
   }
 

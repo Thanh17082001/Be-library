@@ -34,6 +34,7 @@
     "bcrypt": "^5.1.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
+    "jsbarcode": "^3.11.6",
     "moment-timezone": "^0.5.45",
     "mongoose": "^8.6.3",
     "mongoose-delete": "^1.0.2",

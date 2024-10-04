@@ -7,7 +7,7 @@ export class CreatePublicationDto extends BaseDto {
   @ApiProperty()
   @IsString()
   name: string;
-  
+
   @ApiProperty()
   @IsString()
   barcode: string;

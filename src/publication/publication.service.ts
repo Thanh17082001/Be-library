@@ -58,8 +58,12 @@ export class PublicationService {
     return new PageDto(results, pageMetaDto);
   }
 
-  async findOne(id: ObjectId): Promise<ItemDto<Publication>> {
+  async findOne(id: Types.ObjectId): Promise<ItemDto<Publication>> {
     return new ItemDto(await this.publicationModel.findById(id));
+  }
+
+  async findById(id: Types.ObjectId): Promise<Publication> {
+    return await this.publicationModel.findById(id);
   }
 
   async update(id: string, updateDto: UpdatePublicationDto): Promise<Publication> {
@@ -199,7 +203,7 @@ export class PublicationService {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid id');
     }
-    const resource: Publication = await this.publicationModel.findById(new Types.ObjectId(id));
+    const resource: Publication = await this.publicationModel.findOneDeleted(new Types.ObjectId(id));
     if (!resource) {
       throw new NotFoundException('Resource not found');
     }

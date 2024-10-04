@@ -13,6 +13,9 @@ export class LoanSlipItem {
 
   @ApiProperty({type: Number, description: 'Số lượng ấn phẩm được mượn'})
   quantityLoan: number;
+
+  @ApiProperty({enum: ['stock', 'shelves'], default: 'shelves', description: 'vị trí sách được mượn'})
+  position: string = 'shelves';
 }
 
 export class CreateLoanshipDto extends OmitType(BaseDto, ['isPublic']) {
@@ -45,7 +48,7 @@ export class CreateLoanshipDto extends OmitType(BaseDto, ['isPublic']) {
   @ApiProperty()
   @IsDate()
   @Type(() => Date)
-  maxLoanDuration: Date;
+  receiptDate: Date;
 
   @ApiProperty({type: [LoanSlipItem]})
   @IsOptional()
