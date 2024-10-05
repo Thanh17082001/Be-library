@@ -16,6 +16,7 @@ import {generateRandomPassword} from 'src/common/generate-pass';
 import {RoleService} from 'src/role/role.service';
 import {RoleS} from 'src/role/entities/role.entity';
 import {SoftDeleteModel} from 'mongoose-delete';
+import {Role} from 'src/role/role.enum';
 
 @Injectable()
 export class UserService {
@@ -24,14 +25,15 @@ export class UserService {
     private roleService: RoleService
   ) {}
   async create(createUserDto: CreateUserDto): Promise<User> {
+    const roleEnum = Role.Student;
     createUserDto.username = generateUserName(createUserDto.fullname, createUserDto.birthday);
     createUserDto.password = generateRandomPassword(8);
     const password = await bcrypt.hash(createUserDto.password, 10);
 
     const roleId = createUserDto.roleId;
-    const role: RoleS = await this.roleService.findById(roleId.toString());
+    let role: RoleS = await this.roleService.findById(roleId.toString());
     if (!role) {
-      throw new NotFoundException('Role not found');
+      role = (await this.roleService.findOne({name: roleEnum})).result;
     }
 
     const user = {

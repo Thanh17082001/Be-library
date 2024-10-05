@@ -8,7 +8,7 @@ import {ItemDto, PageDto} from 'src/utils/page.dto';
 import {PageMetaDto} from 'src/utils/page.metadata.dto';
 import {Publication} from './entities/publication.entity';
 import * as pdfPoppler from 'pdf-poppler';
-import {promises as fs} from 'fs';
+import {unlinkSync, promises as fs} from 'fs';
 import * as path from 'path';
 import {SoftDeleteModel} from 'mongoose-delete';
 
@@ -28,6 +28,9 @@ export class PublicationService {
       const arrayQuery = Object.keys(query);
       arrayQuery.forEach(key => {
         if (key && !pagination.includes(key)) {
+          if (['categoryIds', 'authorIds', 'publisherIds', 'materialIds'].includes(key)) {
+            mongoQuery[key] = {$in: query[key]};
+          }
           mongoQuery[key] = query[key];
         }
       });
@@ -42,7 +45,11 @@ export class PublicationService {
     const [results, itemCount] = await Promise.all([
       this.publicationModel
         .find(mongoQuery)
-        // .populate('aaaaaa')
+        .populate('authorIds')
+        .populate('categoryIds')
+        .populate('publisherIds')
+        .populate('materialIds')
+        // .populate('shelvesId')
         .sort({order: 1, createdAt: order === 'ASC' ? 1 : -1})
         .skip(skip)
         .limit(limit)
@@ -71,16 +78,20 @@ export class PublicationService {
       throw new BadRequestException('Invalid id');
     }
 
-    // const exits: Publication = await this.publicationModel.findOne({
-    //   name: updateDto.name, // Tìm theo tên
-    //   _id: {$ne: new Types.ObjectId(id)}, // Loại trừ ID hiện tại
-    // });
-    // if (exits) {
-    //   throw new BadRequestException('name already exists');
-    // }
     const resource: Publication = await this.publicationModel.findById(new Types.ObjectId(id));
     if (!resource) {
       throw new NotFoundException('Resource not found');
+    }
+
+    if (updateDto.path && resource.path) {
+      const oldImagePath = path.join(__dirname, '..', '..', 'public', resource.path);
+      unlinkSync(oldImagePath);
+
+      for (let i = 0; i < resource.images.length; i++) {
+        const oldPath = path.join(__dirname, '..', '..', 'images-convert', resource.images[i]);
+
+        unlinkSync(oldPath);
+      }
     }
     return this.publicationModel.findByIdAndUpdate(id, updateDto, {
       returnDocument: 'after',
@@ -154,6 +165,9 @@ export class PublicationService {
       const arrayQuery = Object.keys(query);
       arrayQuery.forEach(key => {
         if (key && !pagination.includes(key)) {
+          if (['categoryIds', 'authorIds', 'publisherIds', 'materialIds'].includes(key)) {
+            mongoQuery[key] = {$in: query[key]};
+          }
           mongoQuery[key] = query[key];
         }
       });

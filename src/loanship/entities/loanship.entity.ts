@@ -27,7 +27,7 @@ export class LoanSlip extends BaseDocument {
   @Prop({default: false})
   isAgree: boolean;
 
-  @Prop({ default: false })
+  @Prop({default: false})
   isReturn: boolean;
   @Prop({required: true, default: Date.now()})
   receiptDate: Date;

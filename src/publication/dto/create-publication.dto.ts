@@ -33,30 +33,29 @@ export class CreatePublicationDto extends BaseDto {
   @IsString()
   type: string;
 
-  @ApiProperty({example: 'id'})
+  @ApiProperty({example: ['id1', 'id2'], description: 'Array of category IDs'})
+  @IsOptional()
+  categoryIds: Types.ObjectId[];
+
+  @ApiProperty({example: ['id1', 'id2']})
   @IsString()
   @IsOptional()
-  categoryId: Types.ObjectId;
+  authorIds: Types.ObjectId[];
 
   @ApiProperty({example: 'id'})
   @IsString()
   @IsOptional()
-  authorId: Types.ObjectId;
+  shelvesId: Types.ObjectId =null;
 
-  @ApiProperty({example: 'id'})
+  @ApiProperty({example: ['id1', 'id2']})
   @IsString()
   @IsOptional()
-  shelvesId: Types.ObjectId;
+  publisherIds: Types.ObjectId[];
 
-  @ApiProperty({example: 'id'})
+  @ApiProperty({example: ['id1', 'id2']})
   @IsString()
   @IsOptional()
-  publisherId: Types.ObjectId;
-
-  @ApiProperty({example: 'id'})
-  @IsString()
-  @IsOptional()
-  materialId: Types.ObjectId;
+  materialIds: Types.ObjectId[];
 
   @ApiProperty({type: 'file', format: 'file', required: false})
   file?: Express.Multer.File;

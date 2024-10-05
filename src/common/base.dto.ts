@@ -21,5 +21,5 @@ export class BaseDto {
 
   @ApiProperty({example: ''})
   @IsOptional()
-  note: string;
+  note: string = '';
 }

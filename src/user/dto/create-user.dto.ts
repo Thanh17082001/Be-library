@@ -5,7 +5,7 @@ import {Types} from 'mongoose';
 import {BaseDocument} from 'src/common/base-document';
 import {BaseDto} from 'src/common/base.dto';
 
-export class CreateUserDto extends OmitType(BaseDto, ['isPublic'] as const) {
+export class CreateUserDto extends OmitType(BaseDto, ['isPublic', 'isLink'] as const) {
   @ApiProperty({example: 'string@gmail.com'})
   @IsString()
   email: string;

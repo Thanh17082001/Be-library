@@ -29,7 +29,7 @@ export class PublicationController {
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file', {storage: storage('publication'), ...multerOptions}))
   @CheckPolicies((ability: AppAbility) => ability.can(Action.Create, 'publications')) // tên permission và bảng cần chặn
-  // @UseGuards(CaslGuard) // chặn permission (CRUD)
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   async create(@UploadedFile() file: Express.Multer.File, @Body() createDto: CreatePublicationDto, @Req() request: Request): Promise<any> {
     const user = request['user'] ?? null;
     let images = [];
@@ -49,6 +49,11 @@ export class PublicationController {
 
     createDto.quantity = +createDto.quantity;
     createDto.shelvesQuantity = +createDto.shelvesQuantity;
+
+    createDto.authorIds = createDto.authorIds ? JSON.parse(createDto.authorIds?.toString()) : [];
+    createDto.categoryIds = createDto.categoryIds ? JSON.parse(createDto.categoryIds?.toString()) : [];
+    createDto.publisherIds = createDto.publisherIds ? JSON.parse(createDto.publisherIds?.toString()) : [];
+    createDto.materialIds = createDto.materialIds ? JSON.parse(createDto.materialIds?.toString()) : [];
 
     return await this.publicationService.create({...createDto});
   }
@@ -108,7 +113,23 @@ export class PublicationController {
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateDto: UpdatePublicationDto): Promise<Publication> {
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file', {storage: storage('publication'), ...multerOptions}))
+  async update(@UploadedFile() file: Express.Multer.File, @Param('id') id: string, @Body() updateDto: UpdatePublicationDto): Promise<Publication> {
+    updateDto.authorIds = updateDto.authorIds ? JSON.parse(updateDto.authorIds?.toString()) : [];
+    updateDto.categoryIds = updateDto.categoryIds ? JSON.parse(updateDto.categoryIds?.toString()) : [];
+    updateDto.publisherIds = updateDto.publisherIds ? JSON.parse(updateDto.publisherIds?.toString()) : [];
+    updateDto.materialIds = updateDto.materialIds ? JSON.parse(updateDto.materialIds?.toString()) : [];
+    let images = [];
+    updateDto.path = '';
+    if (file) {
+      if (file.mimetype == 'application/pdf') {
+        images = await this.publicationService.convertPdfToImages(file?.path);
+      }
+      updateDto.path = `/publication/${file.filename}`;
+    }
+    updateDto.images = images;
+    updateDto.priviewImage = images ? images[0] : null;
     return await this.publicationService.update(id, updateDto);
   }
 }

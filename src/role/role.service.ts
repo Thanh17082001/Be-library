@@ -62,8 +62,8 @@ export class RoleService {
     return new PageDto(results, pageMetaDto);
   }
 
-  async findOne(id: Types.ObjectId): Promise<ItemDto<RoleS>> {
-    return new ItemDto(await this.roleModel.findById(id));
+  async findOne(data: object): Promise<ItemDto<RoleS>> {
+    return new ItemDto(await this.roleModel.findOne(data));
   }
 
   async findById(id: string): Promise<RoleS> {

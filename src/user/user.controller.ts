@@ -19,7 +19,9 @@ import {User} from './entities/user.entity';
 import {FileInterceptor} from '@nestjs/platform-express';
 import {multerOptions, storage} from 'src/config/multer.config';
 
-import {join} from 'path';
+import * as XLSX from 'xlsx';
+import {ExportExcel} from './dto/import-excel.dto';
+import {formatDate} from 'src/utils/format-date';
 
 @Controller('user')
 @ApiTags('user')
@@ -38,6 +40,48 @@ export class UserController {
     createDto.libraryId = user?.libraryId ?? null;
     createDto.groupId = user?.groupId ?? null;
     return await this.userService.create({...createDto});
+  }
+
+  @Post('import-excel')
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file'))
+  async importExcel(@UploadedFile() file: Express.Multer.File, @Req() request: Request, @Body() body: ExportExcel) {
+    const user = request['user'] ?? null;
+    const workbook = XLSX.read(file.buffer, {type: 'buffer'});
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const data = XLSX.utils.sheet_to_json(worksheet);
+    let users: Array<User> = [];
+    let errors: Array<{row: number; error: string}> = [];
+    for (let i = 0; i < data.length; i++) {
+      try {
+        const item = data[i];
+        const valuesItem = Object.values(item);
+        const createDto: CreateUserDto = {
+          fullname: valuesItem[1],
+          email: valuesItem[2],
+          phoneNumber: valuesItem[3],
+          address: valuesItem[4],
+          birthday: formatDate(valuesItem[5]),
+          gender: valuesItem[6],
+          username: '',
+          password: '',
+          libraryId: user?.libraryId ?? null,
+          groupId: user?.groupId ?? null,
+          passwordFirst: '',
+          avatar: '',
+          roleId: new Types.ObjectId(),
+          createBy: user?._id ?? null,
+          note: '',
+        };
+        // console.log(createDto);
+        const ressult = await this.userService.create({...createDto});
+        users.push(ressult);
+      } catch (error) {
+        errors.push({row: i + 1, error: error.message});
+      }
+    }
+    return {users, errors};
   }
 
   @Get()

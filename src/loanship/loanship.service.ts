@@ -113,7 +113,7 @@ export class LoanshipService {
     }
     return await this.loanSlipModel.findByIdAndUpdate(
       new Types.ObjectId(id),
-      { isReturn: true, status: 'đã trả sách'},
+      {isReturn: true, status: 'đã trả sách'},
       {
         returnDocument: 'after',
       }

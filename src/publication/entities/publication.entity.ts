@@ -26,20 +26,20 @@ export class Publication extends BaseDocument {
   @Prop({default: []})
   images: string[];
 
-  @Prop({type: Types.ObjectId, ref: 'category'})
-  categoryId: Types.ObjectId;
+  @Prop({type: [Types.ObjectId], ref: 'Category'})
+  categoryIds: Types.ObjectId[];
 
-  @Prop({type: Types.ObjectId, ref: 'author'})
-  authorId: Types.ObjectId;
+  @Prop({type: [Types.ObjectId], ref: 'Author'})
+  authorIds: Types.ObjectId[];
 
-  @Prop({type: Types.ObjectId, ref: 'shelves'})
+  @Prop({type: Types.ObjectId, ref: 'Shelves', default: null})
   shelvesId: Types.ObjectId;
 
-  @Prop({type: Types.ObjectId, ref: 'publisher'})
-  publisherId: Types.ObjectId;
+  @Prop({type: [Types.ObjectId], ref: 'Publisher'})
+  publisherIds: Types.ObjectId[];
 
-  @Prop({type: Types.ObjectId, ref: 'material'})
-  materialId: Types.ObjectId;
+  @Prop({type: [Types.ObjectId], ref: 'Material'})
+  materialIds: Types.ObjectId[];
 }
 
 const PublicationSchema = SchemaFactory.createForClass(Publication).index({name: 1}).remove([]);
