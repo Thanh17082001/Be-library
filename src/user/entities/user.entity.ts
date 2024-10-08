@@ -39,10 +39,8 @@ export class User extends BaseDocument {
   @Prop({enum: ['nam', 'nữ', 'khác'], default: 'khác'})
   gender: string;
 
-  // @Prop({
-  //   default: [], // Người dùng có thể có nhiều quyền
-  // })
-  // permissions: Permission[];
+  @Prop({unique: true})
+  barcode: string;
 
   @Prop({ref: 'RoleS'}) // Vai trò của người dùng
   roleId: Types.ObjectId;

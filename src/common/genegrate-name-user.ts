@@ -13,9 +13,11 @@ export function generateUserName(fullname: string, birthday: Date): string {
   // Chuyển đổi ngày sinh sang định dạng 'dd/mm/yyyy'
   const birthDate = new Date(birthday);
   const year = birthDate.getFullYear();
+  const month = String(birthDate.getMonth() + 1).padStart(2, '0');
+  const day = String(birthDate.getDate()).padStart(2, '0');
 
   // Kết hợp để tạo tên người dùng
-  return `${firstNameInitial}${removeVietnameseTones(lastName)}${year}`;
+  return `${firstNameInitial}${removeVietnameseTones(lastName)}${day}${month}${year}`;
 }
 
 function removeVietnameseTones(str) {

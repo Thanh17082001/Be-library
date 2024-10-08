@@ -45,7 +45,7 @@ export class CreatePublicationDto extends BaseDto {
   @ApiProperty({example: 'id'})
   @IsString()
   @IsOptional()
-  shelvesId: Types.ObjectId =null;
+  shelvesId: Types.ObjectId = null;
 
   @ApiProperty({example: ['id1', 'id2']})
   @IsString()

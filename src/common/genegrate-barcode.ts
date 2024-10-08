@@ -19,12 +19,16 @@ export function generateBarcode(): string {
   return canvas.toDataURL('image/png');
 }
 
-export function generateRandomData(length: number = 10): string {
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
-  const charactersLength = characters.length;
-  for (let i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
-  }
-  return result;
+export function generateRandomData(): string {
+  const date = new Date();
+  const timestamp = date.getTime(); // Lấy timestamp (millisecond từ 01/01/1970)
+
+  // Chuyển timestamp thành chuỗi và mã hóa base36 (sử dụng số và chữ cái)
+  // let randomString = timestamp.toString(36);
+
+  // // Đảo ngược chuỗi để thêm tính ngẫu nhiên
+  // randomString = randomString.split('').reverse().join('');
+
+  // Trả về chuỗi ngẫu nhiên
+  return timestamp.toString();
 }

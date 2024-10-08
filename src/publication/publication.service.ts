@@ -8,7 +8,7 @@ import {ItemDto, PageDto} from 'src/utils/page.dto';
 import {PageMetaDto} from 'src/utils/page.metadata.dto';
 import {Publication} from './entities/publication.entity';
 import * as pdfPoppler from 'pdf-poppler';
-import {unlinkSync, promises as fs} from 'fs';
+import { existsSync,unlinkSync, promises as fs} from 'fs';
 import * as path from 'path';
 import {SoftDeleteModel} from 'mongoose-delete';
 
@@ -16,6 +16,9 @@ import {SoftDeleteModel} from 'mongoose-delete';
 export class PublicationService {
   constructor(@InjectModel(Publication.name) private publicationModel: SoftDeleteModel<Publication>) {}
   async create(createDto: CreatePublicationDto): Promise<Publication> {
+    if (createDto.path == '') {
+      createDto.path = '/publication/publication-default.jpg';
+    }
     return await this.publicationModel.create(createDto);
   }
 
@@ -82,16 +85,26 @@ export class PublicationService {
     if (!resource) {
       throw new NotFoundException('Resource not found');
     }
-
+    // co file
     if (updateDto.path && resource.path) {
       const oldImagePath = path.join(__dirname, '..', '..', 'public', resource.path);
-      unlinkSync(oldImagePath);
+      if (existsSync(oldImagePath)) {
+        unlinkSync(oldImagePath);
+        
+      }
 
       for (let i = 0; i < resource.images.length; i++) {
-        const oldPath = path.join(__dirname, '..', '..', 'images-convert', resource.images[i]);
-
-        unlinkSync(oldPath);
+        const oldPath = path.join(__dirname, '..', '..', 'public', resource.images[i]);
+        if (existsSync(oldPath)) {
+          unlinkSync(oldPath);
+          
+        }
       }
+    }
+    else {
+      updateDto.path = resource.path;
+      updateDto.images = resource.images;
+      updateDto.priviewImage = resource.priviewImage;
     }
     return this.publicationModel.findByIdAndUpdate(id, updateDto, {
       returnDocument: 'after',

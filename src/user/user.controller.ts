@@ -22,6 +22,7 @@ import {multerOptions, storage} from 'src/config/multer.config';
 import * as XLSX from 'xlsx';
 import {ExportExcel} from './dto/import-excel.dto';
 import {formatDate} from 'src/utils/format-date';
+import {generateBarcode} from 'src/common/genegrate-barcode';
 
 @Controller('user')
 @ApiTags('user')
@@ -73,6 +74,7 @@ export class UserController {
           roleId: new Types.ObjectId(),
           createBy: user?._id ?? null,
           note: '',
+          barcode: '',
         };
         // console.log(createDto);
         const ressult = await this.userService.create({...createDto});
@@ -112,6 +114,11 @@ export class UserController {
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<ItemDto<User>> {
     return await this.userService.findById(new Types.ObjectId(id));
+  }
+
+  @Get('barcode/:barcode')
+  async findByBarcode(@Param('barcode') barcode: string): Promise<ItemDto<User>> {
+    return await this.userService.findByBarcode(barcode);
   }
 
   @Delete('selected')

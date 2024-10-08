@@ -40,6 +40,8 @@ export class CreateUserDto extends OmitType(BaseDto, ['isPublic', 'isLink'] as c
 
   avatar: string;
 
+  barcode: string;
+
   @ApiProperty()
   @IsDate()
   @Type(() => Date)

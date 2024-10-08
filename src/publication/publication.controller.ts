@@ -129,7 +129,10 @@ export class PublicationController {
       updateDto.path = `/publication/${file.filename}`;
     }
     updateDto.images = images;
-    updateDto.priviewImage = images ? images[0] : null;
+    updateDto.priviewImage = images ? images[0] : updateDto.path;
+
+    updateDto.quantity = +updateDto.quantity;
+    updateDto.shelvesQuantity = +updateDto.shelvesQuantity;
     return await this.publicationService.update(id, updateDto);
   }
 }

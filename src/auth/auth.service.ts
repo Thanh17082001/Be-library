@@ -25,7 +25,7 @@ export class AuthService {
   ) {}
 
   async signUp(data: SignUpDto): Promise<User> {
-    const newUser = await this.usersService.create(data);
+    const newUser = await this.usersService.create({...data, barcode: ''});
     return newUser;
   }
 
