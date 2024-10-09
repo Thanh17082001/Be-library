@@ -87,6 +87,9 @@ export class WarehouseReceiptService {
     if (!resource) {
       throw new NotFoundException('Resource not found');
     }
+    if (resource.isAccept) {
+      throw new HttpException('ware house receipt is accepted',400)
+    }
     return this.warehouseReceiptModel.findByIdAndUpdate(id, updateDto, {
       returnDocument: 'after',
     });
@@ -99,6 +102,9 @@ export class WarehouseReceiptService {
     const resource: WarehouseReceipt = await this.warehouseReceiptModel.findById(new Types.ObjectId(id));
     if (!resource) {
       throw new NotFoundException('Resource not found');
+    }
+    if (resource.isAccept) {
+      throw new HttpException('ware house receipt is accepted', 400)
     }
     return await this.warehouseReceiptModel?.deleteById(new Types.ObjectId(id));
   }
@@ -114,6 +120,9 @@ export class WarehouseReceiptService {
       const resource: WarehouseReceipt = await this.warehouseReceiptModel.findById(id);
       if (!resource) {
         throw new NotFoundException('Resource not found');
+      }
+      if (resource.isAccept) {
+        throw new HttpException('ware house receipt is accepted', 400)
       }
       const result = await this.warehouseReceiptModel.deleteById(id);
       arrResult.push(result);
@@ -195,6 +204,9 @@ export class WarehouseReceiptService {
     const resource: WarehouseReceipt = await this.warehouseReceiptModel.findOneDeleted(new Types.ObjectId(id));
     if (!resource) {
       throw new NotFoundException('Resource not found');
+    }
+    if (resource.isAccept) {
+      throw new HttpException('ware house receipt is accepted', 400)
     }
     return await this.warehouseReceiptModel?.findByIdAndDelete(new Types.ObjectId(id));
   }

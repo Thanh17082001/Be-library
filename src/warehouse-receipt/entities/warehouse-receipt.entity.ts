@@ -16,6 +16,8 @@ export class WarehouseReceipt extends BaseDocument {
     required: true,
   })
   publications: WarehouseReceiptItem[];
+  @Prop({default: false})
+  isAccept: boolean;
 }
 
 export const WarehouseReceiptSchema = SchemaFactory.createForClass(WarehouseReceipt)
