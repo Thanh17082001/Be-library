@@ -87,6 +87,11 @@ export class PublicationController {
     return await this.publicationService.findOne(id);
   }
 
+  @Get('barcode/:barcode')
+  async findByBarcode(@Param('barcode') barcode: string): Promise<ItemDto<Publication>> {
+    return await this.publicationService.findByBarcode(barcode);
+  }
+
   @Delete('selected')
   deleteSelected(@Body() ids: string[]) {
     return this.publicationService.deleteMultiple(ids);

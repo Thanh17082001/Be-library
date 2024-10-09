@@ -8,14 +8,14 @@ export class LoanSlipItem {
   @ApiProperty({type: String, description: 'ID của ấn phẩm (Publication)'})
   publicationId: Types.ObjectId;
 
-  @ApiProperty({type: String, description: 'Tên của ấn phẩm'})
-  name: string;
+  // @ApiProperty({type: String, description: 'Tên của ấn phẩm'})
+  // name: string;
 
   @ApiProperty({type: Number, description: 'Số lượng ấn phẩm được mượn'})
   quantityLoan: number;
 
-  @ApiProperty({enum: ['stock', 'shelves'], default: 'shelves', description: 'vị trí sách được mượn'})
-  position: string = 'shelves';
+  @ApiProperty({enum: ['trong kho', 'trên kệ'], default: 'trên kệ', description: 'vị trí sách được mượn'})
+  position: string = 'trên kệ';
 }
 
 export class CreateLoanshipDto extends OmitType(BaseDto, ['isPublic']) {

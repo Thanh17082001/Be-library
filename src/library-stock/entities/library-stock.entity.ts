@@ -14,8 +14,8 @@ export class LibraryStock extends BaseDocument {
   @Prop({required: true})
   quantity: number;
 
-  @Prop({enum: ['trong kho', 'trên kệ'], default: 'trong kho'})
-  status: string;
+  @Prop({required: true})
+  shelvesQuantity: number;
 }
 
 export const libraryStockSchema = SchemaFactory.createForClass(LibraryStock)

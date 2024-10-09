@@ -88,7 +88,6 @@ export class LoanshipService {
       let loanQuantityed = publication.shelvesQuantity + publications[i].quantityLoan;
       let data = {};
       if (publications[i].position == 'stock') {
-        console.log('object');
         loanQuantityed = publication.quantity + publications[i].quantityLoan;
         if (loanQuantityed <= 0) {
           error.push({

@@ -26,6 +26,7 @@ import {AssetModule} from './asset/asset.module';
 import {LibraryStockModule} from './library-stock/library-stock.module';
 import {LiquidationModule} from './liquidation/liquidation.module';
 import {SupplierModule} from './supplier/supplier.module';
+import {WarehouseReceiptModule} from './warehouse-receipt/warehouse-receipt.module';
 import * as mongoose from 'mongoose';
 import * as mongooseDelete from 'mongoose-delete';
 
@@ -71,6 +72,7 @@ import * as mongooseDelete from 'mongoose-delete';
     LibraryStockModule,
     LiquidationModule,
     SupplierModule,
+    WarehouseReceiptModule,
   ],
   controllers: [AppController],
   providers: [

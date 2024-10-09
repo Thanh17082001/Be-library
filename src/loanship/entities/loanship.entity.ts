@@ -5,7 +5,6 @@ import {Types} from 'mongoose';
 
 export class LoanSlipItem {
   publicationId: Types.ObjectId;
-  name: string;
   quantityLoan: number;
   position: string;
 }
@@ -35,7 +34,6 @@ export class LoanSlip extends BaseDocument {
     type: [
       {
         publicationId: {type: Types.ObjectId, ref: 'Publication'},
-        name: String,
         quantityLoan: Number,
         position: String,
         _id: false,

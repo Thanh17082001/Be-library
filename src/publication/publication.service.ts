@@ -8,7 +8,7 @@ import {ItemDto, PageDto} from 'src/utils/page.dto';
 import {PageMetaDto} from 'src/utils/page.metadata.dto';
 import {Publication} from './entities/publication.entity';
 import * as pdfPoppler from 'pdf-poppler';
-import { existsSync,unlinkSync, promises as fs} from 'fs';
+import {existsSync, unlinkSync, promises as fs} from 'fs';
 import * as path from 'path';
 import {SoftDeleteModel} from 'mongoose-delete';
 
@@ -72,6 +72,10 @@ export class PublicationService {
     return new ItemDto(await this.publicationModel.findById(id));
   }
 
+  async findByBarcode(barcode: string): Promise<ItemDto<Publication>> {
+    return new ItemDto(await this.publicationModel.findOne({barcode}));
+  }
+
   async findById(id: Types.ObjectId): Promise<Publication> {
     return await this.publicationModel.findById(id);
   }
@@ -90,18 +94,15 @@ export class PublicationService {
       const oldImagePath = path.join(__dirname, '..', '..', 'public', resource.path);
       if (existsSync(oldImagePath)) {
         unlinkSync(oldImagePath);
-        
       }
 
       for (let i = 0; i < resource.images.length; i++) {
         const oldPath = path.join(__dirname, '..', '..', 'public', resource.images[i]);
         if (existsSync(oldPath)) {
           unlinkSync(oldPath);
-          
         }
       }
-    }
-    else {
+    } else {
       updateDto.path = resource.path;
       updateDto.images = resource.images;
       updateDto.priviewImage = resource.priviewImage;
