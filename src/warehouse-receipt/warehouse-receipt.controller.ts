@@ -2,35 +2,35 @@ import {WarehouseReceiptService} from './warehouse-receipt.service';
 import {CreateWarehouseReceiptDto} from './dto/create-warehouse-receipt.dto';
 import {UpdateWarehouseReceiptDto} from './dto/update-warehouse-receipt.dto';
 
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Req } from '@nestjs/common';
-import { PageOptionsDto } from 'src/utils/page-option-dto';
-import { ItemDto, PageDto } from 'src/utils/page.dto';
-import { ApiTags } from '@nestjs/swagger';
-import { ObjectId, Types } from 'mongoose';
-import { Roles } from 'src/role/role.decorator';
-import { Role } from 'src/role/role.enum';
-import { RolesGuard } from 'src/role/role.guard';
-import { CaslGuard } from 'src/casl/casl.guard';
-import { CheckPolicies } from 'src/casl/check-policies.decorator';
-import { AppAbility } from 'src/casl/casl-ability.factory/casl-ability.factory';
-import { Action } from 'src/casl/casl.action';
-import { Request } from 'express';
-import { Public } from 'src/auth/auth.decorator';
-import { WarehouseReceipt } from './entities/warehouse-receipt.entity';
+import {Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Req} from '@nestjs/common';
+import {PageOptionsDto} from 'src/utils/page-option-dto';
+import {ItemDto, PageDto} from 'src/utils/page.dto';
+import {ApiTags} from '@nestjs/swagger';
+import {ObjectId, Types} from 'mongoose';
+import {Roles} from 'src/role/role.decorator';
+import {Role} from 'src/role/role.enum';
+import {RolesGuard} from 'src/role/role.guard';
+import {CaslGuard} from 'src/casl/casl.guard';
+import {CheckPolicies} from 'src/casl/check-policies.decorator';
+import {AppAbility} from 'src/casl/casl-ability.factory/casl-ability.factory';
+import {Action} from 'src/casl/casl.action';
+import {Request} from 'express';
+import {Public} from 'src/auth/auth.decorator';
+import {WarehouseReceipt} from './entities/warehouse-receipt.entity';
 
 @Controller('warehouse-receipt')
 @ApiTags('warehouse-receipt')
 @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'WarehouseReceipts')) // tên permission và bảng cần chặn
 @UseGuards(CaslGuard)
 export class WarehouseReceiptController {
-  constructor(private readonly warehouseReceiptService: WarehouseReceiptService) { }
+  constructor(private readonly warehouseReceiptService: WarehouseReceiptService) {}
 
   @Post()
   async create(@Body() createDto: CreateWarehouseReceiptDto, @Req() request: Request): Promise<WarehouseReceipt> {
     const user = request['user'] ?? null;
     createDto.libraryId = user?.libraryId ?? null;
     createDto.groupId = user?.groupId ?? null;
-    return await this.warehouseReceiptService.create({ ...createDto });
+    return await this.warehouseReceiptService.create({...createDto});
   }
 
   @Get()
@@ -59,6 +59,11 @@ export class WarehouseReceiptController {
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<ItemDto<WarehouseReceipt>> {
     return await this.warehouseReceiptService.findOne(new Types.ObjectId(id));
+  }
+
+  @Get('accept/:id')
+  async acceptWarehouse(@Param('id') id: string): Promise<WarehouseReceipt> {
+    return await this.warehouseReceiptService.accept(id);
   }
 
   @Delete('selected')

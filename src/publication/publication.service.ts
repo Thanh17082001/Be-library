@@ -90,7 +90,7 @@ export class PublicationService {
       throw new NotFoundException('Resource not found');
     }
     // co file
-    if (updateDto.path && resource.path) {
+    if (updateDto.path) {
       const oldImagePath = path.join(__dirname, '..', '..', 'public', resource.path);
       if (existsSync(oldImagePath)) {
         unlinkSync(oldImagePath);

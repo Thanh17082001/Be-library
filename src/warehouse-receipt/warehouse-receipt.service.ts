@@ -1,39 +1,48 @@
 import {CreateWarehouseReceiptDto} from './dto/create-warehouse-receipt.dto';
 import {UpdateWarehouseReceiptDto} from './dto/update-warehouse-receipt.dto';
 
-import { Injectable, NotFoundException, BadRequestException, HttpException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Types } from 'mongoose';
-import { PageOptionsDto } from 'src/utils/page-option-dto';
-import { ItemDto, PageDto } from 'src/utils/page.dto';
-import { PageMetaDto } from 'src/utils/page.metadata.dto';
-import { SoftDeleteModel } from 'mongoose-delete';
-import { WarehouseReceipt } from './entities/warehouse-receipt.entity';
-import { PublicationService } from 'src/publication/publication.service';
-import { Publication } from 'src/publication/entities/publication.entity';
+import {Injectable, NotFoundException, BadRequestException, HttpException} from '@nestjs/common';
+import {InjectModel} from '@nestjs/mongoose';
+import {Types} from 'mongoose';
+import {PageOptionsDto} from 'src/utils/page-option-dto';
+import {ItemDto, PageDto} from 'src/utils/page.dto';
+import {PageMetaDto} from 'src/utils/page.metadata.dto';
+import {SoftDeleteModel} from 'mongoose-delete';
+import {WarehouseReceipt} from './entities/warehouse-receipt.entity';
+import {PublicationService} from 'src/publication/publication.service';
+import {Publication} from 'src/publication/entities/publication.entity';
 
 @Injectable()
 export class WarehouseReceiptService {
-  constructor(@InjectModel(WarehouseReceipt.name) private warehouseReceiptModel: SoftDeleteModel<WarehouseReceipt>, private readonly publicationService: PublicationService) { }
+  constructor(
+    @InjectModel(WarehouseReceipt.name) private warehouseReceiptModel: SoftDeleteModel<WarehouseReceipt>,
+    private readonly publicationService: PublicationService
+  ) {}
   async create(createDto: CreateWarehouseReceiptDto): Promise<WarehouseReceipt> {
-    
-    const result: WarehouseReceipt= await this.warehouseReceiptModel.create(createDto);
-    for (let i = 0; i < createDto.publications.length; i++) {
-      const item = createDto.publications[i];
-      item.publicationId = new Types.ObjectId(item.publicationId);
-      const publication: Publication = await this.publicationService.findById(item.publicationId)
-      if (!publication) {
-        throw new NotFoundException('Publication not found');
-      }
-      await this.publicationService.update(item.publicationId.toString(), { quantity: publication.quantity + item.quantity })
-    }
+    const result: WarehouseReceipt = await this.warehouseReceiptModel.create(createDto);
+
     return result;
   }
 
+  async accept(id: string): Promise<WarehouseReceipt> {
+    const warehouse: WarehouseReceipt = await this.warehouseReceiptModel.findById(new Types.ObjectId(id));
+    for (let i = 0; i < warehouse.publications.length; i++) {
+      const item = warehouse.publications[i];
+      item.publicationId = new Types.ObjectId(item.publicationId);
+      const publication: Publication = await this.publicationService.findById(item.publicationId);
+      if (!publication) {
+        throw new NotFoundException('Publication not found');
+      }
+      await this.publicationService.update(item.publicationId.toString(), {quantity: publication.quantity + item.quantity});
+    }
+    await this.warehouseReceiptModel.findByIdAndUpdate(id, {id, isAccept: true});
+    return warehouse;
+  }
+
   async findAll(pageOptions: PageOptionsDto, query: Partial<WarehouseReceipt>): Promise<PageDto<WarehouseReceipt>> {
-    const { page, limit, skip, order, search } = pageOptions;
+    const {page, limit, skip, order, search} = pageOptions;
     const pagination = ['page', 'limit', 'skip', 'order', 'search'];
-    const mongoQuery: any = { isActive: 1 };
+    const mongoQuery: any = {isActive: 1};
     // Thêm các điều kiện từ `query`
     if (!!query && Object.keys(query).length > 0) {
       const arrayQuery = Object.keys(query);
@@ -46,7 +55,7 @@ export class WarehouseReceiptService {
 
     //search document
     if (search) {
-      mongoQuery.name = { $regex: new RegExp(search, 'i') };
+      mongoQuery.name = {$regex: new RegExp(search, 'i')};
     }
 
     // Thực hiện phân trang và sắp xếp
@@ -54,7 +63,7 @@ export class WarehouseReceiptService {
       this.warehouseReceiptModel
         .find(mongoQuery)
         // .populate('aaaaaa')
-        .sort({ order: 1, createdAt: order === 'ASC' ? 1 : -1 })
+        .sort({order: 1, createdAt: order === 'ASC' ? 1 : -1})
         .skip(skip)
         .limit(limit)
         .lean()
@@ -82,6 +91,9 @@ export class WarehouseReceiptService {
     if (!resource) {
       throw new NotFoundException('Resource not found');
     }
+    if (resource.isAccept) {
+      throw new HttpException('ware house receipt is accepted',400)
+    }
     return this.warehouseReceiptModel.findByIdAndUpdate(id, updateDto, {
       returnDocument: 'after',
     });
@@ -94,6 +106,9 @@ export class WarehouseReceiptService {
     const resource: WarehouseReceipt = await this.warehouseReceiptModel.findById(new Types.ObjectId(id));
     if (!resource) {
       throw new NotFoundException('Resource not found');
+    }
+    if (resource.isAccept) {
+      throw new HttpException('ware house receipt is accepted', 400)
     }
     return await this.warehouseReceiptModel?.deleteById(new Types.ObjectId(id));
   }
@@ -110,6 +125,9 @@ export class WarehouseReceiptService {
       if (!resource) {
         throw new NotFoundException('Resource not found');
       }
+      if (resource.isAccept) {
+        throw new HttpException('ware house receipt is accepted', 400)
+      }
       const result = await this.warehouseReceiptModel.deleteById(id);
       arrResult.push(result);
     }
@@ -117,7 +135,7 @@ export class WarehouseReceiptService {
   }
 
   async findDeleted(pageOptions: PageOptionsDto, query: Partial<WarehouseReceipt>): Promise<PageDto<WarehouseReceipt>> {
-    const { page, limit, skip, order, search } = pageOptions;
+    const {page, limit, skip, order, search} = pageOptions;
     const pagination = ['page', 'limit', 'skip', 'order', 'search'];
     const mongoQuery: any = {}; // Điều kiện để tìm các tài liệu đã bị xóa mềm
 
@@ -133,14 +151,14 @@ export class WarehouseReceiptService {
 
     // Tìm kiếm tài liệu
     if (search) {
-      mongoQuery.name = { $regex: new RegExp(search, 'i') };
+      mongoQuery.name = {$regex: new RegExp(search, 'i')};
     }
 
     // Thực hiện phân trang và sắp xếp
     const [results, itemCount] = await Promise.all([
       this.warehouseReceiptModel
         .findDeleted(mongoQuery) // Sử dụng phương thức `findDeleted` từ mongoose-delete
-        .sort({ order: 1, createdAt: order === 'ASC' ? 1 : -1 })
+        .sort({order: 1, createdAt: order === 'ASC' ? 1 : -1})
         .skip(skip)
         .limit(limit)
         .lean()
@@ -157,11 +175,11 @@ export class WarehouseReceiptService {
   }
 
   async findByIdDeleted(id: Types.ObjectId): Promise<ItemDto<WarehouseReceipt>> {
-    return new ItemDto(await this.warehouseReceiptModel.findOneDeleted({ _id: new Types.ObjectId(id) }));
+    return new ItemDto(await this.warehouseReceiptModel.findOneDeleted({_id: new Types.ObjectId(id)}));
   }
 
   async restoreById(id: string): Promise<WarehouseReceipt> {
-    const restoredDocument = await this.warehouseReceiptModel.restore({ _id: id });
+    const restoredDocument = await this.warehouseReceiptModel.restore({_id: id});
 
     // Kiểm tra xem tài liệu đã được khôi phục hay không
     if (!restoredDocument) {
@@ -172,13 +190,13 @@ export class WarehouseReceiptService {
   }
 
   async restoreByIds(ids: string[]): Promise<WarehouseReceipt[]> {
-    const restoredDocuments = await this.warehouseReceiptModel.restore({ _id: { $in: ids } });
+    const restoredDocuments = await this.warehouseReceiptModel.restore({_id: {$in: ids}});
 
     // Kiểm tra xem có tài liệu nào được khôi phục hay không
     if (!restoredDocuments || restoredDocuments.length === 0) {
       throw new NotFoundException(`No documents found for the provided IDs`);
     }
-    await this.warehouseReceiptModel.updateMany({ _id: { $in: ids } }, { $set: { deleted: false } });
+    await this.warehouseReceiptModel.updateMany({_id: {$in: ids}}, {$set: {deleted: false}});
 
     return restoredDocuments;
   }
@@ -191,14 +209,16 @@ export class WarehouseReceiptService {
     if (!resource) {
       throw new NotFoundException('Resource not found');
     }
+    if (resource.isAccept) {
+      throw new HttpException('ware house receipt is accepted', 400)
+    }
     return await this.warehouseReceiptModel?.findByIdAndDelete(new Types.ObjectId(id));
   }
 
   async deleteMultiple(ids: string[]): Promise<any> {
     const objectIds = ids.map(id => new Types.ObjectId(id));
     return await this.warehouseReceiptModel.deleteMany({
-      _id: { $in: objectIds },
+      _id: {$in: objectIds},
     });
   }
 }
-
