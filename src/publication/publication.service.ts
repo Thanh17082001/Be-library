@@ -94,7 +94,7 @@ export class PublicationService {
     // co file
     if (updateDto.path) {
       const oldImagePath = path.join(__dirname, '..', '..', 'public', resource.path);
-      if (existsSync(oldImagePath)) {
+      if (existsSync(oldImagePath) && resource.path !== '/publication/publication-default.jpg') {
         unlinkSync(oldImagePath);
       }
 
