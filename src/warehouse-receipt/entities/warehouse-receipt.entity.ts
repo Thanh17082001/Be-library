@@ -13,9 +13,18 @@ export class WarehouseReceipt extends BaseDocument {
   @Prop({required: true})
   supplierId: Types.ObjectId;
   @Prop({
+    type: [
+      {
+        publicationId: {type: Types.ObjectId, ref: 'Publication'},
+        quantity: Number,
+        _id: false,
+      },
+    ],
     required: true,
   })
   publications: WarehouseReceiptItem[];
+  @Prop({default: false})
+  isAccept: boolean;
 }
 
 export const WarehouseReceiptSchema = SchemaFactory.createForClass(WarehouseReceipt)
