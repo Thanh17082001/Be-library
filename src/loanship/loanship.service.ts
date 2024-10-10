@@ -31,7 +31,6 @@ export class LoanshipService {
       });
     }
     createDto.publications = publications;
-    console.log(publications);
     const result = await this.loanSlipModel.create({...createDto});
     return result;
   }
@@ -183,14 +182,6 @@ export class LoanshipService {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid id');
     }
-
-    // const exits: LoanSlip = await this.loanSlipModel.findOne({
-    //   name: updateDto.name, // Tìm theo tên
-    //   _id: { $ne: new Types.ObjectId(id) }, // Loại trừ ID hiện tại
-    // });
-    // if (exits) {
-    //   throw new BadRequestException('name already exists');
-    // }
     const resource: LoanSlip = await this.loanSlipModel.findById(new Types.ObjectId(id));
     if (!resource) {
       throw new NotFoundException('Resource not found');

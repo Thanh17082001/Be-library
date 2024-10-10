@@ -8,11 +8,15 @@ import {ItemDto, PageDto} from 'src/utils/page.dto';
 import {PageMetaDto} from 'src/utils/page.metadata.dto';
 import {SoftDeleteModel} from 'mongoose-delete';
 import {Liquidation} from './entities/liquidation.entity';
+import { PublicationService } from 'src/publication/publication.service';
+import { Publication } from 'src/publication/entities/publication.entity';
 
 @Injectable()
 export class LiquidationService {
-  constructor(@InjectModel(Liquidation.name) private liquidationModel: SoftDeleteModel<Liquidation>) {}
+  constructor(@InjectModel(Liquidation.name) private liquidationModel: SoftDeleteModel<Liquidation>, private readonly publicationService: PublicationService) {}
   async create(createDto: CreateLiquidationDto): Promise<Liquidation> {
+    const publication: Publication = await this.publicationService.findById(new Types.ObjectId(createDto.publicationId))
+    await this.publicationService.update(createDto.publicationId.toString(), {quantity: publication.quantity - createDto.quantity})
     return await this.liquidationModel.create(createDto);
   }
 

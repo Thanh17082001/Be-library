@@ -31,8 +31,23 @@ export class WarehouseReceiptService {
     }
     createDto.publications = publications;
     const result: WarehouseReceipt = await this.warehouseReceiptModel.create(createDto);
-    
+
     return result;
+  }
+
+  async accept(id: string): Promise<WarehouseReceipt> {
+    const warehouse: WarehouseReceipt = await this.warehouseReceiptModel.findById(new Types.ObjectId(id));
+    for (let i = 0; i < warehouse.publications.length; i++) {
+      const item = warehouse.publications[i];
+      item.publicationId = new Types.ObjectId(item.publicationId);
+      const publication: Publication = await this.publicationService.findById(item.publicationId);
+      if (!publication) {
+        throw new NotFoundException('Publication not found');
+      }
+      await this.publicationService.update(item.publicationId.toString(), {quantity: publication.quantity + item.quantity});
+    }
+    await this.warehouseReceiptModel.findByIdAndUpdate(id, {id, isAccept: true});
+    return warehouse;
   }
 
   async findAll(pageOptions: PageOptionsDto, query: Partial<CreateWarehouseReceiptDto>): Promise<PageDto<WarehouseReceipt>> {

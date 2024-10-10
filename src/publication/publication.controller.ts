@@ -56,7 +56,7 @@ export class PublicationController {
       createDto.path = `/publication/${file.filename}`;
     }
     createDto.images = images;
-    createDto.priviewImage = images ? images[0] : '';
+    createDto.priviewImage = images.length>0 ? images[0] : '';
 
     createDto.createBy = user?._id ?? null;
     createDto.libraryId = user?.libraryId ?? null;
@@ -113,7 +113,7 @@ export class PublicationController {
           description: publication[3],
           libraryId: user?.libraryId ?? null,
           groupId: user?.groupId ?? null,
-          status: 'có sẵn',
+          status: 'không có sẵn',
           shelvesId: null,
           publisherIds,
           categoryIds,
@@ -217,7 +217,7 @@ export class PublicationController {
       updateDto.path = `/publication/${file.filename}`;
     }
     updateDto.images = images;
-    updateDto.priviewImage = images ? images[0] : updateDto.path;
+    updateDto.priviewImage = images.length>0 ? images[0] : updateDto.path;
 
     updateDto.quantity = +updateDto.quantity;
     updateDto.shelvesQuantity = +updateDto.shelvesQuantity;

@@ -61,10 +61,10 @@ export class WarehouseReceiptController {
     return await this.warehouseReceiptService.findOne(new Types.ObjectId(id));
   }
 
-  // @Get('accept/:id')
-  // async acceptWarehouse(@Param('id') id: string): Promise<WarehouseReceipt> {
-  //   return await this.warehouseReceiptService.accept(id);
-  // }
+  @Get('accept/:id')
+  async acceptWarehouse(@Param('id') id: string): Promise<WarehouseReceipt> {
+    return await this.warehouseReceiptService.accept(id);
+  }
 
   @Delete('selected')
   deleteSelected(@Body() ids: string[]) {
