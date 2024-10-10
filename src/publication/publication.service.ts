@@ -11,6 +11,7 @@ import * as pdfPoppler from 'pdf-poppler';
 import {existsSync, unlinkSync, promises as fs} from 'fs';
 import * as path from 'path';
 import {SoftDeleteModel} from 'mongoose-delete';
+import {UpdateQuantityShelves} from './dto/update-shelvesdto';
 
 @Injectable()
 export class PublicationService {
@@ -18,6 +19,7 @@ export class PublicationService {
   async create(createDto: CreatePublicationDto): Promise<Publication> {
     if (createDto.path == '') {
       createDto.path = '/publication/publication-default.jpg';
+      createDto.priviewImage = '/publication/publication-default.jpg';
     }
     return await this.publicationModel.create(createDto);
   }
@@ -77,7 +79,7 @@ export class PublicationService {
   }
 
   async findById(id: Types.ObjectId): Promise<Publication> {
-    return await this.publicationModel.findById(id);
+    return await this.publicationModel.findById(id).lean();
   }
 
   async update(id: string, updateDto: UpdatePublicationDto): Promise<Publication> {
@@ -110,6 +112,16 @@ export class PublicationService {
     return this.publicationModel.findByIdAndUpdate(id, updateDto, {
       returnDocument: 'after',
     });
+  }
+
+  async updateQuantityShelves(data: UpdateQuantityShelves): Promise<Publication> {
+    const id = new Types.ObjectId(data.id);
+    const publication = await this.publicationModel.findById(id);
+    if (!publication) {
+      throw new NotFoundException('Resource not found');
+    }
+
+    return await this.publicationModel.findByIdAndUpdate(id, {$inc: {quantity: -data.quantity, shelvesQuantity: data.quantity}});
   }
 
   async convertPdfToImages(pdfPath: string): Promise<string[]> {

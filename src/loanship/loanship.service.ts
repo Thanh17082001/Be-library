@@ -9,7 +9,7 @@ import {PageMetaDto} from 'src/utils/page.metadata.dto';
 import {SoftDeleteModel} from 'mongoose-delete';
 import {LoanSlip} from './entities/loanship.entity';
 import {PublicationService} from 'src/publication/publication.service';
-import {generateBarcode} from 'src/common/genegrate-barcode';
+import {generateRandomData} from 'src/common/genegrate-barcode';
 
 @Injectable()
 export class LoanshipService {
@@ -18,8 +18,21 @@ export class LoanshipService {
     private publicationService: PublicationService
   ) {}
   async create(createDto: CreateLoanshipDto): Promise<LoanSlip> {
-    createDto.barcode = generateBarcode();
-    const result = await this.loanSlipModel.create(createDto);
+    createDto.barcode = generateRandomData();
+    const publications = [];
+    for (let i = 0; i < createDto.publications.length; i++) {
+      const publicationId = createDto.publications[i].publicationId;
+      console.log(publicationId);
+      const publication = await this.publicationService.findById(publicationId);
+
+      publications.push({
+        ...createDto.publications[i],
+        ...publication,
+      });
+    }
+    createDto.publications = publications;
+    console.log(publications);
+    const result = await this.loanSlipModel.create({...createDto});
     return result;
   }
   async agreeToLoan(id: string): Promise<any> {
@@ -119,7 +132,7 @@ export class LoanshipService {
     );
   }
 
-  async findAll(pageOptions: PageOptionsDto, query: Partial<LoanSlip>): Promise<PageDto<LoanSlip>> {
+  async findAll(pageOptions: PageOptionsDto, query: Partial<CreateLoanshipDto>): Promise<PageDto<LoanSlip>> {
     const {page, limit, skip, order, search} = pageOptions;
     const pagination = ['page', 'limit', 'skip', 'order', 'search'];
     const mongoQuery: any = {isActive: 1};
@@ -142,7 +155,11 @@ export class LoanshipService {
     const [results, itemCount] = await Promise.all([
       this.loanSlipModel
         .find(mongoQuery)
-        .populate('publications.publicationId')
+        // .populate('publications.publicationId')
+        .populate({
+          path: 'userId',
+          select: ['-password', '-passwordFirst'],
+        })
         .sort({order: 1, createdAt: order === 'ASC' ? 1 : -1})
         .skip(skip)
         .limit(limit)
@@ -178,6 +195,13 @@ export class LoanshipService {
     if (!resource) {
       throw new NotFoundException('Resource not found');
     }
+
+    if (resource.isAgree) {
+      throw new BadRequestException('Resource is agree');
+    }
+    if (resource.isReturn) {
+      throw new BadRequestException('Resource is return');
+    }
     return this.loanSlipModel.findByIdAndUpdate(id, updateDto, {
       returnDocument: 'after',
     });
@@ -190,6 +214,13 @@ export class LoanshipService {
     const resource: LoanSlip = await this.loanSlipModel.findById(new Types.ObjectId(id));
     if (!resource) {
       throw new NotFoundException('Resource not found');
+    }
+
+    if (resource.isAgree) {
+      throw new BadRequestException('Resource is agree');
+    }
+    if (resource.isReturn) {
+      throw new BadRequestException('Resource is return');
     }
     return await this.loanSlipModel?.deleteById(new Types.ObjectId(id));
   }
@@ -206,13 +237,19 @@ export class LoanshipService {
       if (!resource) {
         throw new NotFoundException('Resource not found');
       }
+      if (resource.isAgree) {
+        throw new BadRequestException('Resource is agree');
+      }
+      if (resource.isReturn) {
+        throw new BadRequestException('Resource is return');
+      }
       const result = await this.loanSlipModel.deleteById(id);
       arrResult.push(result);
     }
     return arrResult;
   }
 
-  async findDeleted(pageOptions: PageOptionsDto, query: Partial<LoanSlip>): Promise<PageDto<LoanSlip>> {
+  async findDeleted(pageOptions: PageOptionsDto, query: Partial<CreateLoanshipDto>): Promise<PageDto<LoanSlip>> {
     const {page, limit, skip, order, search} = pageOptions;
     const pagination = ['page', 'limit', 'skip', 'order', 'search'];
     const mongoQuery: any = {}; // Điều kiện để tìm các tài liệu đã bị xóa mềm
@@ -276,6 +313,13 @@ export class LoanshipService {
     const resource: LoanSlip = await this.loanSlipModel.findById(new Types.ObjectId(id));
     if (!resource) {
       throw new NotFoundException('Resource not found');
+    }
+
+    if (resource.isAgree) {
+      throw new BadRequestException('Resource is agree');
+    }
+    if (resource.isReturn) {
+      throw new BadRequestException('Resource is return');
     }
     return await this.loanSlipModel?.findByIdAndDelete(new Types.ObjectId(id));
   }

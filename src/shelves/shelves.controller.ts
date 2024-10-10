@@ -19,23 +19,27 @@ import {Shelves} from './entities/shelf.entity';
 
 @Controller('shelves')
 @ApiTags('shelves')
-@Public()
+// @Public()
 export class ShelvesController {
   constructor(private readonly shelvesService: ShelvesService) {}
 
   @Post()
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'shelves')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   async create(@Body() createDto: CreateShelfDto, @Req() request: Request): Promise<Shelves> {
     const user = request['user'] ?? null;
+    createDto.libraryId = user?.libraryId ?? null;
+    createDto.groupId = user?.groupId ?? null;
     return await this.shelvesService.create({...createDto});
   }
 
   @Get()
   // @Roles(Role.User) // tên role để chặn bên dưới
   // @UseGuards(RolesGuard) // chặn role (admin, student ,....)
-  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test')) // tên permission và bảng cần chặn
-  // @UseGuards(CaslGuard) // chặn permission (CRUD)
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'shelves')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test'), (ability: AppAbility) => ability.can(Action.Read, 'Shelves'))
-  @Public()
+  // @Public()
   async findAll(@Query() query: Partial<CreateShelfDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Shelves>> {
     const user = request['user'];
     query.libraryId = user?.libraryId ?? null;

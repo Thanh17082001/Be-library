@@ -13,6 +13,7 @@ import {SoftDeleteModel} from 'mongoose-delete';
 export class PublisherService {
   constructor(@InjectModel(Publisher.name) private publisherModel: SoftDeleteModel<Publisher>) {}
   async create(createDto: CreatePublisherDto): Promise<Publisher> {
+    createDto.name = createDto.name.toLowerCase();
     return await this.publisherModel.create(createDto);
   }
 
@@ -59,6 +60,15 @@ export class PublisherService {
     return new ItemDto(await this.publisherModel.findById(id));
   }
 
+  async findByName(names: Array<string>): Promise<Array<Types.ObjectId>> {
+    const resources = await this.publisherModel
+      .find({name: {$in: names}}, '_id') // Chỉ lấy trường _id
+      .lean(); // Trả về dữ liệu đơn giản, không phải mongoose document
+
+    // Trả về mảng các ObjectId
+    return resources.map(item => item._id);
+  }
+
   async update(id: string, updateDto: UpdatePublisherDto): Promise<Publisher> {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid id');
@@ -74,6 +84,10 @@ export class PublisherService {
     const resource: Publisher = await this.publisherModel.findById(new Types.ObjectId(id));
     if (!resource) {
       throw new NotFoundException('Resource not found');
+    }
+
+    if (updateDto.name) {
+      updateDto.name = updateDto.name.toLowerCase();
     }
     return this.publisherModel.findByIdAndUpdate(id, updateDto, {
       returnDocument: 'after',

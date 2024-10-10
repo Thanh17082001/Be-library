@@ -26,7 +26,7 @@ export class CreatePublicationDto extends BaseDto {
   @ApiProperty()
   @IsOptional()
   shelvesQuantity: number = 0;
-  @ApiProperty({enum: ['trên kệ', 'thanh lý', 'bị hư hại', 'có sẵn', 'không có sẵn']})
+  @ApiProperty({enum: ['thanh lý', 'bị hư hại', 'có sẵn', 'không có sẵn']})
   @IsString()
   status: string;
   @ApiProperty({enum: ['ấn phẩm cứng', 'ấn phẩm mềm']})

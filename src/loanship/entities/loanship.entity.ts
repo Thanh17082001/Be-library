@@ -2,8 +2,9 @@ import {Prop, Schema, SchemaFactory} from '@nestjs/mongoose';
 import {BaseDocument} from 'src/common/base-document';
 import * as mongooseDelete from 'mongoose-delete';
 import {Types} from 'mongoose';
+import {Publication} from 'src/publication/entities/publication.entity';
 
-export class LoanSlipItem {
+export class LoanSlipItem extends Publication {
   publicationId: Types.ObjectId;
   quantityLoan: number;
   position: string;
@@ -31,14 +32,6 @@ export class LoanSlip extends BaseDocument {
   @Prop({required: true, default: Date.now()})
   receiptDate: Date;
   @Prop({
-    type: [
-      {
-        publicationId: {type: Types.ObjectId, ref: 'Publication'},
-        quantityLoan: Number,
-        position: String,
-        _id: false,
-      },
-    ],
     required: true,
   })
   publications: LoanSlipItem[];

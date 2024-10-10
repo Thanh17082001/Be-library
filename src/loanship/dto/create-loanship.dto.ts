@@ -37,8 +37,8 @@ export class CreateLoanshipDto extends OmitType(BaseDto, ['isPublic']) {
   @IsString()
   status: string;
 
-  @ApiProperty()
-  @IsString()
+  // @ApiProperty()
+  // @IsString()
   barcode: string;
 
   @ApiProperty()

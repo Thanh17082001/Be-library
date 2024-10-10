@@ -13,6 +13,7 @@ import {SoftDeleteModel} from 'mongoose-delete';
 export class CategoryService {
   constructor(@InjectModel(Category.name) private categoryModel: SoftDeleteModel<Category>) {}
   async create(createDto: CreateCategoryDto): Promise<Category> {
+    createDto.name = createDto.name.toLowerCase();
     return await this.categoryModel.create(createDto);
   }
 
@@ -59,6 +60,15 @@ export class CategoryService {
     return new ItemDto(await this.categoryModel.findById(id));
   }
 
+  async findByName(names: Array<string>): Promise<Array<Types.ObjectId>> {
+    const resources = await this.categoryModel
+      .find({name: {$in: names}}) // Chỉ lấy trường _id
+      .lean(); // Trả về dữ liệu đơn giản, không phải mongoose document
+    console.log(names);
+    // Trả về mảng các ObjectId
+    return resources.map(item => item._id);
+  }
+
   async update(id: string, updateCategoryDto: UpdateCategoryDto): Promise<Category> {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid id');
@@ -74,6 +84,9 @@ export class CategoryService {
     const resource: Category = await this.categoryModel.findById(new Types.ObjectId(id));
     if (!resource) {
       throw new NotFoundException('Resource not found');
+    }
+    if (updateCategoryDto.name) {
+      updateCategoryDto.name = updateCategoryDto.name.toLowerCase();
     }
     return this.categoryModel.findByIdAndUpdate(id, updateCategoryDto, {
       returnDocument: 'after',

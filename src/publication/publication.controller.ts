@@ -19,11 +19,26 @@ import {Publication} from './entities/publication.entity';
 import {FileInterceptor} from '@nestjs/platform-express';
 import {multerOptions, storage} from 'src/config/multer.config';
 
+import * as XLSX from 'xlsx';
+import {ImportExcel} from './dto/import-excel.dto';
+import {AuthorService} from 'src/author/author.service';
+import {Category} from 'src/category/entities/category.entity';
+import {CategoryService} from 'src/category/category.service';
+import {PublisherService} from 'src/publisher/publisher.service';
+import {MaterialService} from 'src/material/material.service';
+import {UpdateQuantityShelves} from './dto/update-shelvesdto';
+
 @Controller('publications')
 @ApiTags('publications')
 // @Public()
 export class PublicationController {
-  constructor(private readonly publicationService: PublicationService) {}
+  constructor(
+    private readonly publicationService: PublicationService,
+    private readonly authorService: AuthorService,
+    private readonly categoryService: CategoryService,
+    private readonly publisherService: PublisherService,
+    private readonly materialService: MaterialService
+  ) {}
 
   @Post()
   @ApiConsumes('multipart/form-data')
@@ -41,7 +56,7 @@ export class PublicationController {
       createDto.path = `/publication/${file.filename}`;
     }
     createDto.images = images;
-    createDto.priviewImage = images ? images[0] : null;
+    createDto.priviewImage = images ? images[0] : '';
 
     createDto.createBy = user?._id ?? null;
     createDto.libraryId = user?.libraryId ?? null;
@@ -56,6 +71,69 @@ export class PublicationController {
     createDto.materialIds = createDto.materialIds ? JSON.parse(createDto.materialIds?.toString()) : [];
 
     return await this.publicationService.create({...createDto});
+  }
+
+  @Post('import-excel')
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file'))
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Create, 'publications')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
+  async importExcel(@UploadedFile() file: Express.Multer.File, @Req() request: Request, @Body() body: ImportExcel): Promise<any> {
+    const user = request['user'] ?? null;
+    const workbook = XLSX.read(file.buffer, {type: 'buffer'});
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const data = XLSX.utils.sheet_to_json(worksheet);
+    let publications: Array<Publication> = [];
+    let errors: Array<{row: number; error: string}> = [];
+
+    for (let i = 0; i < data.length; i++) {
+      try {
+        let categoryIds = [];
+        let authorIds = [];
+        let publisherIds = [];
+        let materialIds = [];
+
+        const item = data[i];
+        const publication = Object.values(item);
+        console.log(publication[6].split(',').map(item => item.toLowerCase().trim()));
+        categoryIds = await this.categoryService.findByName(publication[5].split(',').map(item => item.toLowerCase().trim()));
+        authorIds = await this.authorService.findByName(publication[6].split(',').map(item => item.toLowerCase().trim()));
+        publisherIds = await this.publisherService.findByName(publication[7].split(',').map(item => item.toLowerCase().trim()));
+        materialIds = await this.materialService.findByName(publication[8].split(',').map(item => item.toLowerCase().trim()));
+        console.log(publication[6].split(',').map(item => item.toLowerCase()));
+        const createDto: CreatePublicationDto = {
+          name: publication[1],
+          barcode: publication[2],
+          quantity: 0,
+          shelvesQuantity: 0,
+          path: '',
+          priviewImage: '',
+          images: [],
+          description: publication[3],
+          libraryId: user?.libraryId ?? null,
+          groupId: user?.groupId ?? null,
+          status: 'có sẵn',
+          shelvesId: null,
+          publisherIds,
+          categoryIds,
+          authorIds,
+          materialIds,
+          isLink: false,
+          isPublic: true,
+          type: publication[4],
+          createBy: user?._id ?? null,
+          note: '',
+        };
+        console.log(createDto);
+        const ressult = await this.publicationService.create({...createDto});
+        publications.push(ressult);
+      } catch (error) {
+        errors.push({row: i + 1, error: error.message});
+      }
+
+      return {publications, errors};
+    }
   }
 
   @Get()
@@ -115,6 +193,11 @@ export class PublicationController {
   @Patch('restore')
   async restoreByIds(@Body() ids: string[]): Promise<Publication[]> {
     return this.publicationService.restoreByIds(ids);
+  }
+
+  @Patch('shelves-quantity')
+  async updateQuantityShelves(@Body() data: UpdateQuantityShelves): Promise<Publication> {
+    return this.publicationService.updateQuantityShelves(data);
   }
 
   @Patch(':id')

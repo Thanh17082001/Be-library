@@ -13,6 +13,7 @@ import {SoftDeleteModel} from 'mongoose-delete';
 export class MaterialService {
   constructor(@InjectModel(Material.name) private materialModel: SoftDeleteModel<Material>) {}
   async create(createDto: CreateMaterialDto): Promise<Material> {
+    createDto.name = createDto.name.toLowerCase();
     return await this.materialModel.create(createDto);
   }
 
@@ -59,6 +60,15 @@ export class MaterialService {
     return new ItemDto(await this.materialModel.findById(id));
   }
 
+  async findByName(names: Array<string>): Promise<Array<Types.ObjectId>> {
+    const resources = await this.materialModel
+      .find({name: {$in: names}}, '_id') // Chỉ lấy trường _id
+      .lean(); // Trả về dữ liệu đơn giản, không phải mongoose document
+
+    // Trả về mảng các ObjectId
+    return resources.map(item => item._id);
+  }
+
   async update(id: string, updateExampleDto: UpdateMaterialDto): Promise<Material> {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid id');
@@ -74,6 +84,9 @@ export class MaterialService {
     const resource: Material = await this.materialModel.findById(new Types.ObjectId(id));
     if (!resource) {
       throw new NotFoundException('Resource not found');
+    }
+    if (updateExampleDto.name) {
+      updateExampleDto.name = updateExampleDto.name.toLowerCase();
     }
     return this.materialModel.findByIdAndUpdate(id, updateExampleDto, {
       returnDocument: 'after',

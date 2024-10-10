@@ -20,7 +20,7 @@ import {FileInterceptor} from '@nestjs/platform-express';
 import {multerOptions, storage} from 'src/config/multer.config';
 
 import * as XLSX from 'xlsx';
-import {ExportExcel} from './dto/import-excel.dto';
+import {ImportExcel} from './dto/import-excel.dto';
 import {formatDate} from 'src/utils/format-date';
 import {generateBarcode} from 'src/common/genegrate-barcode';
 
@@ -46,7 +46,7 @@ export class UserController {
   @Post('import-excel')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))
-  async importExcel(@UploadedFile() file: Express.Multer.File, @Req() request: Request, @Body() body: ExportExcel) {
+  async importExcel(@UploadedFile() file: Express.Multer.File, @Req() request: Request, @Body() body: ImportExcel) {
     const user = request['user'] ?? null;
     const workbook = XLSX.read(file.buffer, {type: 'buffer'});
     const sheetName = workbook.SheetNames[0];

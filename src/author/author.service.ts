@@ -17,6 +17,7 @@ export class AuthorService {
     if (author) {
       throw new BadRequestException('name already exists');
     }
+    createDto.name = createDto.name.toLowerCase();
     return await this.exampleModel.create(createDto);
   }
 
@@ -63,6 +64,15 @@ export class AuthorService {
     return new ItemDto(await this.exampleModel.findById(id));
   }
 
+  async findByName(names: Array<string>): Promise<Array<Types.ObjectId>> {
+    const resources = await this.exampleModel
+      .find({name: {$in: names}}) // Chỉ lấy trường _id
+      .lean(); // Trả về dữ liệu đơn giản, không phải mongoose document
+
+    // Trả về mảng các ObjectId
+    return resources.map(item => item._id);
+  }
+
   async update(id: string, updateDto: UpdateAuthorDto): Promise<Author> {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid id');
@@ -78,6 +88,9 @@ export class AuthorService {
     const resource: Author = await this.exampleModel.findById(new Types.ObjectId(id));
     if (!resource) {
       throw new NotFoundException('Resource not found');
+    }
+    if (updateDto.name) {
+      updateDto.name = updateDto.name.toLowerCase();
     }
     return this.exampleModel.findByIdAndUpdate(id, updateDto, {
       returnDocument: 'after',

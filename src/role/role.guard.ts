@@ -10,8 +10,6 @@ export class RolesGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [context.getHandler(), context.getClass()]);
-    const levelRequired = Level[requiredRoles[0]] ?? null;
-    console.log(levelRequired);
     if (!requiredRoles) {
       return true;
     }
@@ -24,7 +22,7 @@ export class RolesGuard implements CanActivate {
     if (!user) {
       return false;
     }
-    const isRole = requiredRoles.some(role => user.roleId.name == role);
+    const isRole = requiredRoles?.some(role => user.roleId.name == role);
     return isRole;
   }
 }
