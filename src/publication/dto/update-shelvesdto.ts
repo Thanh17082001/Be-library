@@ -15,3 +15,13 @@ export class UpdateQuantityShelves {
   @IsNumber()
   quantity: number = 0;
 }
+
+export class UpdateQuantityStock {
+  @ApiProperty({example: 'id'})
+  @IsString()
+  id: Types.ObjectId;
+
+  @ApiProperty()
+  @IsNumber()
+  quantity: number = 0;
+}

@@ -35,7 +35,7 @@ export class LiquidationController {
   @Get()
   // @Roles(Role.Student) // tên role để chặn bên dưới
   // @UseGuards(RolesGuard) // chặn role (admin, student ,....)
-  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'Liquidation')) // tên permission và bảng cần chặn
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'liquidations')) // tên permission và bảng cần chặn
   @UseGuards(CaslGuard) // chặn permission (CRUD)
   // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test'), (ability: AppAbility) => ability.can(Action.Read, 'Liquidation'))
   async findAll(@Query() query: Partial<CreateLiquidationDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Liquidation>> {

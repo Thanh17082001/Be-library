@@ -11,11 +11,18 @@ import * as pdfPoppler from 'pdf-poppler';
 import {existsSync, unlinkSync, promises as fs} from 'fs';
 import * as path from 'path';
 import {SoftDeleteModel} from 'mongoose-delete';
-import {UpdateQuantityShelves} from './dto/update-shelvesdto';
+import {UpdateQuantityShelves, UpdateQuantityStock} from './dto/update-shelvesdto';
+import {LoanshipService} from 'src/loanship/loanship.service';
+import {LoanSlip} from 'src/loanship/entities/loanship.entity';
+import {Liquidation} from 'src/liquidation/entities/liquidation.entity';
 
 @Injectable()
 export class PublicationService {
-  constructor(@InjectModel(Publication.name) private publicationModel: SoftDeleteModel<Publication>) {}
+  constructor(
+    @InjectModel(Publication.name) private publicationModel: SoftDeleteModel<Publication>,
+    @InjectModel(LoanSlip.name) private loanSlipModel: SoftDeleteModel<LoanSlip>,
+    @InjectModel(Liquidation.name) private liquidationModel: SoftDeleteModel<Liquidation>
+  ) {}
   async create(createDto: CreatePublicationDto): Promise<Publication> {
     if (createDto.path == '') {
       createDto.path = '/publication/publication-default.jpg';
@@ -54,7 +61,7 @@ export class PublicationService {
         .populate('categoryIds')
         .populate('publisherIds')
         .populate('materialIds')
-        // .populate('shelvesId')
+        .populate('shelvesId')
         .sort({order: 1, createdAt: order === 'ASC' ? 1 : -1})
         .skip(skip)
         .limit(limit)
@@ -63,11 +70,71 @@ export class PublicationService {
       this.publicationModel.countDocuments(mongoQuery),
     ]);
 
+    const publicationIds = results.map(result => result._id.toString());
+    // console.log(publicationIds);
+
+    const loans = await this.loanSlipModel.aggregate([
+      {$unwind: '$publications'}, // Tách từng phần tử trong mảng publications
+      {$match: {'publications.publicationId': {$in: publicationIds}, isAgree: true}}, // Lọc những phiếu mượn có publicationId trong danh sách
+      {
+        $group: {
+          _id: '$publications.publicationId', // Gom nhóm theo publicationId
+          totalQuantityLoan: {$sum: '$publications.quantityLoan'}, // Tính tổng quantityLoan cho từng cuốn sách
+        },
+      },
+    ]);
+
+    // Tính số lượng thanh lý và hư hỏng
+    const liquidations = await this.liquidationModel.aggregate([
+      {
+        //lọc bản ghi trong resouce chỉ giữ lại bản ghi có publiccationId nằm trong array publicationIds
+        $match: {
+          publicationId: {$in: publicationIds},
+        },
+      },
+      {
+        //nhóm các record theo pubID và status sau đó tính tổng
+        $group: {
+          _id: {
+            publicationId: '$publicationId',
+            status: '$status', // Tính theo status
+          },
+          totalQuantity: {$sum: '$quantity'}, // Tính tổng số lượng
+        },
+      },
+    ]);
+
+    // Tạo map để lưu số lượng thanh lý và hư hỏng cho từng publicationId
+    const liquidationMap = liquidations.reduce((map, liquidation) => {
+      const {publicationId, status} = liquidation._id;
+      if (!map[publicationId.toString()]) {
+        map[publicationId.toString()] = {liquidation: 0, damaged: 0};
+      }
+      map[publicationId.toString()][status === 'thanh lý' ? 'liquidation' : 'damaged'] += liquidation.totalQuantity;
+      return map;
+    }, {});
+
+    console.log(liquidationMap);
+
+    // Tạo map để lưu số lượng mượn cho từng publicationId
+    const loansMap = loans.reduce((map, loan) => {
+      map[loan._id.toString()] = loan.totalQuantityLoan;
+      return map;
+    }, {});
+
+    // Gắn tổng số lượng mượn vào từng publication
+    const publicationsWithLoanCount = results.map(publication => ({
+      ...publication,
+      quantityLoan: loansMap[publication._id.toString()] ?? 0,
+      quantityLiquidation: liquidationMap[publication._id.toString()]?.liquidation ?? 0, // Nếu không có thì đặt là 0
+      quantityDamaged: liquidationMap[publication._id.toString()]?.damaged ?? 0, // Nếu không có thì đặt là 0
+    }));
+
     const pageMetaDto = new PageMetaDto({
       pageOptionsDto: pageOptions,
       itemCount,
     });
-    return new PageDto(results, pageMetaDto);
+    return new PageDto(publicationsWithLoanCount, pageMetaDto);
   }
 
   async findOne(id: Types.ObjectId): Promise<ItemDto<Publication>> {
@@ -121,7 +188,17 @@ export class PublicationService {
       throw new NotFoundException('Resource not found');
     }
 
-    return await this.publicationModel.findByIdAndUpdate(id, {$inc: {quantity: -data.quantity, shelvesQuantity: data.quantity}});
+    return await this.publicationModel.findByIdAndUpdate(id, {$inc: {quantity: -data.quantity, shelvesQuantity: data.quantity}, shelvesId: data.shelvesId});
+  }
+
+  async updateQuantityStock(data: UpdateQuantityStock): Promise<Publication> {
+    const id = new Types.ObjectId(data.id);
+    const publication = await this.publicationModel.findById(id);
+    if (!publication) {
+      throw new NotFoundException('Resource not found');
+    }
+
+    return await this.publicationModel.findByIdAndUpdate(id, {$inc: {quantity: +data.quantity, shelvesQuantity: -data.quantity}});
   }
 
   async convertPdfToImages(pdfPath: string): Promise<string[]> {

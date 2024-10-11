@@ -26,7 +26,7 @@ import {Category} from 'src/category/entities/category.entity';
 import {CategoryService} from 'src/category/category.service';
 import {PublisherService} from 'src/publisher/publisher.service';
 import {MaterialService} from 'src/material/material.service';
-import {UpdateQuantityShelves} from './dto/update-shelvesdto';
+import {UpdateQuantityShelves, UpdateQuantityStock} from './dto/update-shelvesdto';
 
 @Controller('publications')
 @ApiTags('publications')
@@ -56,7 +56,7 @@ export class PublicationController {
       createDto.path = `/publication/${file.filename}`;
     }
     createDto.images = images;
-    createDto.priviewImage = images.length>0 ? images[0] : '';
+    createDto.priviewImage = images.length > 0 ? images[0] : '';
 
     createDto.createBy = user?._id ?? null;
     createDto.libraryId = user?.libraryId ?? null;
@@ -96,7 +96,6 @@ export class PublicationController {
 
         const item = data[i];
         const publication = Object.values(item);
-        console.log(publication[6].split(',').map(item => item.toLowerCase().trim()));
         categoryIds = await this.categoryService.findByName(publication[5].split(',').map(item => item.toLowerCase().trim()));
         authorIds = await this.authorService.findByName(publication[6].split(',').map(item => item.toLowerCase().trim()));
         publisherIds = await this.publisherService.findByName(publication[7].split(',').map(item => item.toLowerCase().trim()));
@@ -125,7 +124,6 @@ export class PublicationController {
           createBy: user?._id ?? null,
           note: '',
         };
-        console.log(createDto);
         const ressult = await this.publicationService.create({...createDto});
         publications.push(ressult);
       } catch (error) {
@@ -200,6 +198,11 @@ export class PublicationController {
     return this.publicationService.updateQuantityShelves(data);
   }
 
+  @Patch('move-stock')
+  async updateQuantityStock(@Body() data: UpdateQuantityStock): Promise<Publication> {
+    return this.publicationService.updateQuantityStock(data);
+  }
+
   @Patch(':id')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file', {storage: storage('publication'), ...multerOptions}))
@@ -217,7 +220,7 @@ export class PublicationController {
       updateDto.path = `/publication/${file.filename}`;
     }
     updateDto.images = images;
-    updateDto.priviewImage = images.length>0 ? images[0] : updateDto.path;
+    updateDto.priviewImage = images.length > 0 ? images[0] : updateDto.path;
 
     updateDto.quantity = +updateDto.quantity;
     updateDto.shelvesQuantity = +updateDto.shelvesQuantity;

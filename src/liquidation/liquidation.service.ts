@@ -8,16 +8,33 @@ import {ItemDto, PageDto} from 'src/utils/page.dto';
 import {PageMetaDto} from 'src/utils/page.metadata.dto';
 import {SoftDeleteModel} from 'mongoose-delete';
 import {Liquidation} from './entities/liquidation.entity';
-import { PublicationService } from 'src/publication/publication.service';
-import { Publication } from 'src/publication/entities/publication.entity';
+import {PublicationService} from 'src/publication/publication.service';
+import {Publication} from 'src/publication/entities/publication.entity';
 
 @Injectable()
 export class LiquidationService {
-  constructor(@InjectModel(Liquidation.name) private liquidationModel: SoftDeleteModel<Liquidation>, private readonly publicationService: PublicationService) {}
+  constructor(
+    @InjectModel(Liquidation.name) private liquidationModel: SoftDeleteModel<Liquidation>,
+    private readonly publicationService: PublicationService
+  ) {}
   async create(createDto: CreateLiquidationDto): Promise<Liquidation> {
-    const publication: Publication = await this.publicationService.findById(new Types.ObjectId(createDto.publicationId))
-    await this.publicationService.update(createDto.publicationId.toString(), {quantity: publication.quantity - createDto.quantity})
-    return await this.liquidationModel.create(createDto);
+    const publication: Publication = await this.publicationService.findById(new Types.ObjectId(createDto.publicationId));
+    let data = {};
+    if (createDto.poistion.toLowerCase() == 'trong kho') {
+      if (publication.quantity - createDto.quantity < 0) {
+        throw new BadRequestException(`Số lượng ấn phẩm ${publication.name} không đủ`);
+      }
+      data = {quantity: publication.quantity - createDto.quantity};
+    } else {
+      if (publication.shelvesQuantity - createDto.quantity < 0) {
+        throw new BadRequestException(`Số lượng ấn phẩm ${publication.name} không đủ`);
+      }
+      data = {quantity: publication.shelvesQuantity - createDto.quantity};
+    }
+    const result = new this.liquidationModel(createDto);
+    await result.save();
+    await this.publicationService.update(createDto.publicationId.toString(), {quantity: publication.quantity - createDto.quantity});
+    return result;
   }
 
   async findAll(pageOptions: PageOptionsDto, query: Partial<Liquidation>): Promise<PageDto<Liquidation>> {
@@ -43,7 +60,7 @@ export class LiquidationService {
     const [results, itemCount] = await Promise.all([
       this.liquidationModel
         .find(mongoQuery)
-        // .populate('aaaaaa')
+        .populate('publicationId')
         .sort({order: 1, createdAt: order === 'ASC' ? 1 : -1})
         .skip(skip)
         .limit(limit)
