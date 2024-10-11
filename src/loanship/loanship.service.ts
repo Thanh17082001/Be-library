@@ -10,12 +10,13 @@ import {SoftDeleteModel} from 'mongoose-delete';
 import {LoanSlip} from './entities/loanship.entity';
 import {PublicationService} from 'src/publication/publication.service';
 import {generateRandomData} from 'src/common/genegrate-barcode';
+import {FilterDateDto} from './dto/fillter-date.dto';
 
 @Injectable()
 export class LoanshipService {
   constructor(
     @InjectModel(LoanSlip.name) private loanSlipModel: SoftDeleteModel<LoanSlip>,
-    private publicationService: PublicationService
+    private readonly publicationService: PublicationService
   ) {}
   async create(createDto: CreateLoanshipDto): Promise<LoanSlip> {
     createDto.barcode = generateRandomData();
@@ -43,41 +44,44 @@ export class LoanshipService {
       throw new NotFoundException('Resource not found');
     }
     const publications = loan.publications;
+    const publicationsUpdate = [];
     const error = [];
     for (let i = 0; i < publications.length; i++) {
       const publicationId = publications[i].publicationId;
       const publication = await this.publicationService.findById(publicationId);
       let loanQuantityed = publication.shelvesQuantity - publications[i].quantityLoan;
       let data = {};
-      console.log(publications[i].position);
-      if (publications[i].position == 'stock') {
-        console.log('object');
+      if (publications[i].position == 'trong kho') {
         loanQuantityed = publication.quantity - publications[i].quantityLoan;
         if (loanQuantityed <= 0) {
           error.push({
             publicationId: publicationId,
-            message: `Not enough quantity : ${publicationId}`,
+            message: `Not enough quantity : ${publication.name}`,
           });
         }
         data = {quantity: loanQuantityed};
       } else {
-        if (loanQuantityed <= 0) {
+        if (loanQuantityed < 0) {
           error.push({
             publicationId: publicationId,
-            message: `Not enough quantity: ${publicationId}`,
+            message: `Not enough quantity: ${publication.name}`,
           });
         }
         data = {shelvesQuantity: loanQuantityed};
       }
       if (error.length > 0) {
-        console.log(error);
-        throw new HttpException(error, 400);
+        throw new BadRequestException(error);
       }
-      await this.publicationService.update(publicationId.toString(), data);
+      const updatePublication = await this.publicationService.update(publicationId.toString(), data);
+      publicationsUpdate.push({
+        ...publications[i],
+        quantity: updatePublication.quantity,
+        shelvesQuantity: updatePublication.shelvesQuantity,
+      });
     }
     return await this.loanSlipModel.findByIdAndUpdate(
       new Types.ObjectId(id),
-      {isAgree: true, status: 'đã duyệt'},
+      {isAgree: true, status: 'đã duyệt', publications: publicationsUpdate},
       {
         returnDocument: 'after',
       }
@@ -149,6 +153,42 @@ export class LoanshipService {
     if (search) {
       mongoQuery.name = {$regex: new RegExp(search, 'i')};
     }
+
+    // Thực hiện phân trang và sắp xếp
+    const [results, itemCount] = await Promise.all([
+      this.loanSlipModel
+        .find(mongoQuery)
+        // .populate('publications.publicationId')
+        .populate({
+          path: 'userId',
+          select: ['-password', '-passwordFirst'],
+        })
+        .sort({order: 1, createdAt: order === 'ASC' ? 1 : -1})
+        .skip(skip)
+        .limit(limit)
+        .lean()
+        .exec(),
+      this.loanSlipModel.countDocuments(mongoQuery),
+    ]);
+
+    const pageMetaDto = new PageMetaDto({
+      pageOptionsDto: pageOptions,
+      itemCount,
+    });
+    return new PageDto(results, pageMetaDto);
+  }
+
+  async filterByDate(pageOptions: PageOptionsDto, query: Partial<FilterDateDto>): Promise<PageDto<LoanSlip>> {
+    const {page, limit, skip, order, search} = pageOptions;
+    const pagination = ['page', 'limit', 'skip', 'order', 'search'];
+    const mongoQuery: any = {
+      borrowDate: {
+        $gte: new Date(query.startDate.toString()), // Ngày bắt đầu
+        $lte: new Date(query.endDate.toString()), // Ngày kết thúc
+      },
+      libraryId: query.libraryId,
+      isActive: 1,
+    };
 
     // Thực hiện phân trang và sắp xếp
     const [results, itemCount] = await Promise.all([
@@ -320,5 +360,18 @@ export class LoanshipService {
     return await this.loanSlipModel.deleteMany({
       _id: {$in: objectIds},
     });
+  }
+
+  async totalPublication(publicationIds: string[]): Promise<any> {
+    return await this.loanSlipModel.aggregate([
+      {$unwind: '$publications'}, // Tách từng phần tử trong mảng publications
+      {$match: {'publications.publicationId': {$in: publicationIds}}}, // Lọc những phiếu mượn có publicationId trong danh sách
+      {
+        $group: {
+          _id: '$publications.publicationId', // Gom nhóm theo publicationId
+          totalQuantityLoan: {$sum: '$publications.quantityLoan'}, // Tính tổng quantityLoan cho từng cuốn sách
+        },
+      },
+    ]);
   }
 }

@@ -19,12 +19,12 @@ import {Public} from 'src/auth/auth.decorator';
 
 @Controller('example')
 @ApiTags('example')
-@CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'example')) // tên permission và bảng cần chặn
-@UseGuards(CaslGuard)
 export class ExampleController {
   constructor(private readonly exampleService: ExampleService) {}
 
   @Post()
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Create, 'examples')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard)
   async create(@Body() createDto: CreateExampleDto, @Req() request: Request): Promise<Example> {
     const user = request['user'] ?? null;
     createDto.libraryId = user?.libraryId ?? null;
@@ -35,7 +35,7 @@ export class ExampleController {
   @Get()
   // @Roles(Role.Student) // tên role để chặn bên dưới
   // @UseGuards(RolesGuard) // chặn role (admin, student ,....)
-  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'example')) // tên permission và bảng cần chặn
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'examples')) // tên permission và bảng cần chặn
   @UseGuards(CaslGuard) // chặn permission (CRUD)
   // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test'), (ability: AppAbility) => ability.can(Action.Read, 'example'))
   async findAll(@Query() query: Partial<CreateExampleDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Example>> {

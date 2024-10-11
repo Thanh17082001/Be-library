@@ -17,6 +17,7 @@ import {Action} from 'src/casl/casl.action';
 import {Request} from 'express';
 import {Public} from 'src/auth/auth.decorator';
 import {LoanSlip} from './entities/loanship.entity';
+import {FilterDateDto} from './dto/fillter-date.dto';
 
 @Controller('loan-slip')
 @ApiTags('loanSlip')
@@ -42,6 +43,18 @@ export class LoanshipController {
     const user = request['user'];
     query.libraryId = user?.libraryId ?? null;
     return await this.loanSlipService.findAll(pageOptionDto, query);
+  }
+
+  @Get('filter-date')
+  // @Roles(Role.User) // tên role để chặn bên dưới
+  // @UseGuards(RolesGuard) // chặn role (admin, student ,....)
+  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test')) // tên permission và bảng cần chặn
+  // @UseGuards(CaslGuard) // chặn permission (CRUD)
+  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test'), (ability: AppAbility) => ability.can(Action.Read, 'LoanSlip'))
+  async filterByDate(@Query() query: Partial<FilterDateDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<LoanSlip>> {
+    const user = request['user'];
+    query.libraryId = user?.libraryId ?? null;
+    return await this.loanSlipService.filterByDate(pageOptionDto, query);
   }
   @Get('/deleted')
   async findAllDeleted(@Query() query: Partial<CreateLoanshipDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<LoanSlip>> {
