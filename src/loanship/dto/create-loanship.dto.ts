@@ -53,4 +53,8 @@ export class CreateLoanshipDto extends OmitType(BaseDto, ['isPublic']) {
   @ApiProperty({type: [LoanSlipItem]})
   @IsOptional()
   publications: LoanSlipItem[];
+
+  startDate: string;
+  endDate: string;
+  type: string;
 }

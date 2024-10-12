@@ -28,7 +28,19 @@ export class PublicationService {
       createDto.path = '/publication/publication-default.jpg';
       createDto.priviewImage = '/publication/publication-default.jpg';
     }
+    createDto.totalQuantity = 0;
     return await this.publicationModel.create(createDto);
+  }
+
+  async test() {
+    const pubs = await this.publicationModel.find();
+    const ids = pubs.map(pub => pub._id);
+    return await this.liquidationModel.updateMany(
+      {_id: {$in: ids}}, // Điều kiện lọc, chọn tất cả các tài liệu có _id nằm trong mảng ids
+      {
+        totalQuantity: 0, // Các trường cần cập nhật
+      }
+    );
   }
 
   async findAll(pageOptions: PageOptionsDto, query: Partial<Publication>): Promise<PageDto<Publication>> {

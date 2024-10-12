@@ -27,6 +27,7 @@ import {CategoryService} from 'src/category/category.service';
 import {PublisherService} from 'src/publisher/publisher.service';
 import {MaterialService} from 'src/material/material.service';
 import {UpdateQuantityShelves, UpdateQuantityStock} from './dto/update-shelvesdto';
+import {log} from 'console';
 
 @Controller('publications')
 @ApiTags('publications')
@@ -39,6 +40,10 @@ export class PublicationController {
     private readonly publisherService: PublisherService,
     private readonly materialService: MaterialService
   ) {}
+  @Get('test')
+  async abc() {
+    await this.publicationService.test();
+  }
 
   @Post()
   @ApiConsumes('multipart/form-data')
@@ -86,8 +91,9 @@ export class PublicationController {
     const data = XLSX.utils.sheet_to_json(worksheet);
     let publications: Array<Publication> = [];
     let errors: Array<{row: number; error: string}> = [];
-
+    console.log(data.length);
     for (let i = 0; i < data.length; i++) {
+      console.log('babababab');
       try {
         let categoryIds = [];
         let authorIds = [];
@@ -100,7 +106,6 @@ export class PublicationController {
         authorIds = await this.authorService.findByName(publication[6].split(',').map(item => item.toLowerCase().trim()));
         publisherIds = await this.publisherService.findByName(publication[7].split(',').map(item => item.toLowerCase().trim()));
         materialIds = await this.materialService.findByName(publication[8].split(',').map(item => item.toLowerCase().trim()));
-        console.log(publication[6].split(',').map(item => item.toLowerCase()));
         const createDto: CreatePublicationDto = {
           name: publication[1],
           barcode: publication[2],
@@ -119,19 +124,19 @@ export class PublicationController {
           authorIds,
           materialIds,
           isLink: false,
-          isPublic: true,
+          isPublic: false,
           type: publication[4],
           createBy: user?._id ?? null,
           note: '',
+          totalQuantity: 0,
         };
         const ressult = await this.publicationService.create({...createDto});
         publications.push(ressult);
       } catch (error) {
         errors.push({row: i + 1, error: error.message});
       }
-
-      return {publications, errors};
     }
+    return {publications, errors};
   }
 
   @Get()

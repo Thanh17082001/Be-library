@@ -23,6 +23,7 @@ export class CreatePublicationDto extends BaseDto {
   @ApiProperty()
   @IsOptional()
   quantity: number = 0;
+  totalQuantity: number = 0;
   @ApiProperty()
   @IsOptional()
   shelvesQuantity: number = 0;
