@@ -145,18 +145,17 @@ export class LoanshipService {
       arrayQuery.forEach(key => {
         console.log(key);
         if (key && !pagination.includes(key)) {
-          
-          if (key == 'startDate' || key == 'endDate' ) {
+          if (key == 'startDate' || key == 'endDate') {
             const startDate = new Date(query.startDate);
             startDate.setHours(0, 0, 0, 0); // Đặt thời gian bắt đầu của ngày
 
             const endDate = new Date(query.endDate);
             endDate.setHours(23, 59, 59, 999);
             mongoQuery[query.type ?? 'borrowedDay'] = {
-              $gte: startDate , // Ngày bắt đầu
-              $lte: endDate  , // Ngày kết thúc
+              $gte: startDate, // Ngày bắt đầu
+              $lte: endDate, // Ngày kết thúc
             };
-          } else if(key!=='type'){
+          } else if (key !== 'type') {
             mongoQuery[key] = query[key];
           }
         }

@@ -12,9 +12,11 @@ import * as express from 'express';
 import {join} from 'path';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
-    logger: WinstonModule.createLogger(winstonLoggerConfig),
-  });
+  const appOptions: any = {};
+  if (process.env.NODE_ENV === 'production') {
+    appOptions.logger = WinstonModule.createLogger(winstonLoggerConfig);
+  }
+  const app = await NestFactory.create(AppModule, appOptions);
   app.useGlobalFilters(new HttpExceptionFilter());
 
   //static file

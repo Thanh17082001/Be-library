@@ -46,7 +46,7 @@ export class WarehouseReceiptService {
       }
       await this.publicationService.update(item.publicationId.toString(), {quantity: publication.quantity + item.quantity, totalQuantity: publication.totalQuantity + item.quantity, status: 'có sẵn'});
     }
-    await this.warehouseReceiptModel.findByIdAndUpdate(id, { isAccept: true});
+    await this.warehouseReceiptModel.findByIdAndUpdate(id, {isAccept: true});
     return warehouse;
   }
 

@@ -9,24 +9,19 @@ export const winstonLoggerConfig = {
     new winston.transports.Console({
       format: winston.format.combine(winston.format.timestamp(), winston.format.colorize(), winston.format.simple()),
     }),
-    // new winston.transports.Console({
-    //     level: 'warn',
-    //     format: winston.format.combine(
-    //         winston.format.timestamp(),
-    //         winston.format.colorize(),
-    //         winston.format.simple(),
-    //     ),
-    //     handleExceptions: true, // Ghi log cho các ngoại lệ
-    // }),
-    new winston.transports.File({
-      filename: 'application.log',
-      format: winston.format.combine(
-        winston.format.timestamp({
-          format: () => moment().tz('Asia/Bangkok').format('YYYY-MM-DD HH:mm:ss'),
-        }),
-        winston.format.json()
-      ),
-      level: 'error', // Chỉ ghi log mức độ cao hơn warn trong production
-    }),
+    ...(isProduction
+      ? [
+          new winston.transports.File({
+            filename: 'application.log',
+            format: winston.format.combine(
+              winston.format.timestamp({
+                format: () => moment().tz('Asia/Bangkok').format('YYYY-MM-DD HH:mm:ss'),
+              }),
+              winston.format.json()
+            ),
+            level: 'error', // Chỉ ghi log mức độ 'error' trong môi trường production
+          }),
+        ]
+      : []),
   ],
 };
