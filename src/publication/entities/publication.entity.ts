@@ -17,6 +17,8 @@ export class Publication extends BaseDocument {
   @Prop({default: 0})
   quantity: number;
   @Prop({default: 0})
+  totalQuantity: number;
+  @Prop({default: 0})
   shelvesQuantity: number;
   @Prop({enum: ['thanh lý', 'bị hư hỏng', 'có sẵn', 'không có sẵn'], default: 'có sẵn'})
   status: string;

@@ -21,14 +21,16 @@ import {FilterDateDto} from './dto/fillter-date.dto';
 
 @Controller('loan-slip')
 @ApiTags('loanSlip')
-@Public()
+// @Public()
 export class LoanshipController {
   constructor(private readonly loanSlipService: LoanshipService) {}
 
   @Post()
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Create, 'loanslips')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   async create(@Body() createDto: CreateLoanshipDto, @Req() request: Request): Promise<LoanSlip> {
     const user = request['user'] ?? null;
-    createDto.libraryId = createDto.libraryId ? (user?.libraryId ?? null) : createDto.libraryId;
+    createDto.libraryId = !createDto.libraryId ? (user?.libraryId ?? null) : createDto.libraryId;
     createDto.groupId = user?.groupId ?? null;
     return await this.loanSlipService.create({...createDto});
   }
@@ -36,8 +38,8 @@ export class LoanshipController {
   @Get()
   // @Roles(Role.User) // tên role để chặn bên dưới
   // @UseGuards(RolesGuard) // chặn role (admin, student ,....)
-  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test')) // tên permission và bảng cần chặn
-  // @UseGuards(CaslGuard) // chặn permission (CRUD)
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'loanslips')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test'), (ability: AppAbility) => ability.can(Action.Read, 'LoanSlip'))
   async findAll(@Query() query: Partial<CreateLoanshipDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<LoanSlip>> {
     const user = request['user'];
@@ -45,17 +47,6 @@ export class LoanshipController {
     return await this.loanSlipService.findAll(pageOptionDto, query);
   }
 
-  @Get('filter-date')
-  // @Roles(Role.User) // tên role để chặn bên dưới
-  // @UseGuards(RolesGuard) // chặn role (admin, student ,....)
-  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test')) // tên permission và bảng cần chặn
-  // @UseGuards(CaslGuard) // chặn permission (CRUD)
-  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test'), (ability: AppAbility) => ability.can(Action.Read, 'LoanSlip'))
-  async filterByDate(@Query() query: Partial<FilterDateDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<LoanSlip>> {
-    const user = request['user'];
-    query.libraryId = user?.libraryId ?? null;
-    return await this.loanSlipService.filterByDate(pageOptionDto, query);
-  }
   @Get('/deleted')
   async findAllDeleted(@Query() query: Partial<CreateLoanshipDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<LoanSlip>> {
     const user = request['user'];

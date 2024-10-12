@@ -143,11 +143,27 @@ export class LoanshipService {
     if (!!query && Object.keys(query).length > 0) {
       const arrayQuery = Object.keys(query);
       arrayQuery.forEach(key => {
+        console.log(key);
         if (key && !pagination.includes(key)) {
-          mongoQuery[key] = query[key];
+          
+          if (key == 'startDate' || key == 'endDate' ) {
+            const startDate = new Date(query.startDate);
+            startDate.setHours(0, 0, 0, 0); // Đặt thời gian bắt đầu của ngày
+
+            const endDate = new Date(query.endDate);
+            endDate.setHours(23, 59, 59, 999);
+            mongoQuery[query.type ?? 'borrowedDay'] = {
+              $gte: startDate , // Ngày bắt đầu
+              $lte: endDate  , // Ngày kết thúc
+            };
+          } else if(key!=='type'){
+            mongoQuery[key] = query[key];
+          }
         }
       });
     }
+
+    console.log(mongoQuery);
 
     //search document
     if (search) {
