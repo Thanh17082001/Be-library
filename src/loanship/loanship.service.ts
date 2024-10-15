@@ -9,7 +9,7 @@ import {PageMetaDto} from 'src/utils/page.metadata.dto';
 import {SoftDeleteModel} from 'mongoose-delete';
 import {LoanSlip} from './entities/loanship.entity';
 import {PublicationService} from 'src/publication/publication.service';
-import {generateRandomData} from 'src/common/genegrate-barcode';
+import {generateBarcode} from 'src/common/genegrate-barcode';
 import {FilterDateDto} from './dto/fillter-date.dto';
 
 @Injectable()
@@ -19,7 +19,7 @@ export class LoanshipService {
     private readonly publicationService: PublicationService
   ) {}
   async create(createDto: CreateLoanshipDto): Promise<LoanSlip> {
-    createDto.barcode = generateRandomData();
+    createDto.barcode = generateBarcode();
     const publications = [];
     for (let i = 0; i < createDto.publications.length; i++) {
       const publicationId = createDto.publications[i].publicationId;

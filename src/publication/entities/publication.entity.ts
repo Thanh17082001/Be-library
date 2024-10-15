@@ -14,6 +14,8 @@ export class Publication extends BaseDocument {
   path: string;
   @Prop()
   description: string;
+  @Prop()
+  mimetype: string;
   @Prop({default: 0})
   quantity: number;
   @Prop({default: 0})

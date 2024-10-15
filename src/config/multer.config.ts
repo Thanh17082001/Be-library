@@ -13,6 +13,7 @@ export const storage = (folder: string, isSplit: boolean = false) =>
       let uploadPath = path.join(__dirname, '..', '..', 'public', folder);
       // chia ra từng thư mục
       if (isSplit) {
+        console.log('vvvv', file);
         if (file.mimetype == 'application/pdf') {
           uploadPath = path.join(uploadPath, 'pdf');
         } else if (file.mimetype == 'video/mp4') {
@@ -25,7 +26,6 @@ export const storage = (folder: string, isSplit: boolean = false) =>
           uploadPath = path.join(uploadPath, 'image');
         }
       }
-      console.log(uploadPath);
       // Tạo thư mục nếu nó không tồn tại
       if (!existsSync(uploadPath)) {
         mkdirSync(uploadPath, {recursive: true});

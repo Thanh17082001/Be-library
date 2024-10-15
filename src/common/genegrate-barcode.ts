@@ -2,8 +2,8 @@ import * as JsBarcode from 'jsbarcode';
 
 import {createCanvas} from 'canvas';
 
-export function generateBarcode(): string {
-  const data = generateRandomData();
+export function generateBarcodeImage(): string {
+  const data = generateBarcode();
   // Create a canvas for rendering the barcode
   const canvas = createCanvas(300, 100);
 
@@ -19,7 +19,7 @@ export function generateBarcode(): string {
   return canvas.toDataURL('image/png');
 }
 
-export function generateRandomData(): string {
+export function generateBarcode(): string {
   const date = new Date();
   const timestamp = date.getTime(); // Lấy timestamp (millisecond từ 01/01/1970)
 

@@ -17,7 +17,7 @@ export class MailController {
       to: 'recipient@example.com',
       subject: 'Hello World',
       body: 'This is a test email',
-    })
-    return result; 
+    });
+    return result;
   }
 }

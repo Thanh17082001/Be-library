@@ -1,5 +1,5 @@
 export class EmailDto {
-    subject: string;
-    body: string;
-    emails: string[];
+  subject: string;
+  body: string;
+  emails: string[];
 }

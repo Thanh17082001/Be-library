@@ -13,7 +13,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import {generateUserName} from 'src/common/genegrate-name-user';
 import {generateRandomPassword} from 'src/common/generate-pass';
-import {generateRandomData} from 'src/common/genegrate-barcode';
+import {generateBarcode} from 'src/common/genegrate-barcode';
 import {RoleService} from 'src/role/role.service';
 import {RoleS} from 'src/role/entities/role.entity';
 import {SoftDeleteModel} from 'mongoose-delete';
@@ -30,7 +30,7 @@ export class UserService {
     createUserDto.username = generateUserName(createUserDto.fullname, createUserDto.birthday);
     createUserDto.password = generateRandomPassword(8);
     const password = await bcrypt.hash(createUserDto.password, 10);
-    createUserDto.barcode = generateRandomData();
+    createUserDto.barcode = generateBarcode();
     console.log(createUserDto.email);
     const userExits = await this.userModel.findOne({
       $or: [{username: createUserDto.username}, {email: createUserDto.email}],

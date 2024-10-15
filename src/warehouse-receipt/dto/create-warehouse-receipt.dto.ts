@@ -1,5 +1,5 @@
 import {ApiProperty, OmitType} from '@nestjs/swagger';
-import {IsString} from 'class-validator';
+import {IsOptional, IsString} from 'class-validator';
 import {Types} from 'mongoose';
 import {BaseDto} from 'src/common/base.dto';
 
@@ -17,5 +17,8 @@ export class CreateWarehouseReceiptDto extends OmitType(BaseDto, ['isPublic', 'i
   supplierId: Types.ObjectId;
 
   @ApiProperty({type: [WarehouseItem]})
+  @IsOptional()
   publications: WarehouseItem[];
+
+  barcode: string;
 }

@@ -11,6 +11,7 @@ import {SoftDeleteModel} from 'mongoose-delete';
 import {WarehouseReceipt} from './entities/warehouse-receipt.entity';
 import {PublicationService} from 'src/publication/publication.service';
 import {Publication} from 'src/publication/entities/publication.entity';
+import {generateBarcode} from 'src/common/genegrate-barcode';
 
 @Injectable()
 export class WarehouseReceiptService {
@@ -20,6 +21,9 @@ export class WarehouseReceiptService {
   ) {}
   async create(createDto: CreateWarehouseReceiptDto): Promise<WarehouseReceipt> {
     const publications = [];
+    if (createDto?.publications?.length == 0 || !createDto.publications) {
+      throw new BadRequestException('Invalid publication');
+    }
     for (let i = 0; i < createDto.publications.length; i++) {
       const publicationId = createDto.publications[i].publicationId;
       const publication = await this.publicationService.findById(publicationId);
@@ -30,13 +34,20 @@ export class WarehouseReceiptService {
       });
     }
     createDto.publications = publications;
+    createDto.barcode = generateBarcode();
     const result: WarehouseReceipt = await this.warehouseReceiptModel.create(createDto);
 
     return result;
   }
 
   async accept(id: string): Promise<WarehouseReceipt> {
-    const warehouse: WarehouseReceipt = await this.warehouseReceiptModel.findById(new Types.ObjectId(id));
+    const warehouse = await this.warehouseReceiptModel.findById(new Types.ObjectId(id));
+    if (warehouse.isAccept) {
+      throw new BadRequestException('Warehouse already accept');
+    }
+    if (!warehouse) {
+      throw new NotFoundException('Resource not found');
+    }
     for (let i = 0; i < warehouse.publications.length; i++) {
       const item = warehouse.publications[i];
       item.publicationId = new Types.ObjectId(item.publicationId);
@@ -44,7 +55,7 @@ export class WarehouseReceiptService {
       if (!publication) {
         throw new NotFoundException('Publication not found');
       }
-      await this.publicationService.update(item.publicationId.toString(), {quantity: publication.quantity + item.quantity, totalQuantity: publication.totalQuantity + item.quantity, status: 'có sẵn'});
+      await this.publicationService.update(publication?._id?.toString(), {quantity: publication.quantity + item.quantityWareHouse, totalQuantity: publication.totalQuantity + item.quantityWareHouse, status: 'có sẵn'});
     }
     await this.warehouseReceiptModel.findByIdAndUpdate(id, {isAccept: true});
     return warehouse;
@@ -73,7 +84,8 @@ export class WarehouseReceiptService {
     const [results, itemCount] = await Promise.all([
       this.warehouseReceiptModel
         .find(mongoQuery)
-        // .populate('aaaaaa')
+        .populate('supplierId')
+        .populate('createBy')
         .sort({order: 1, createdAt: order === 'ASC' ? 1 : -1})
         .skip(skip)
         .limit(limit)
@@ -103,7 +115,7 @@ export class WarehouseReceiptService {
       throw new NotFoundException('Resource not found');
     }
     if (resource.isAccept) {
-      throw new HttpException('ware house receipt is accepted',400)
+      throw new HttpException('ware house receipt is accepted', 400);
     }
     return this.warehouseReceiptModel.findByIdAndUpdate(id, updateDto, {
       returnDocument: 'after',
@@ -119,7 +131,7 @@ export class WarehouseReceiptService {
       throw new NotFoundException('Resource not found');
     }
     if (resource.isAccept) {
-      throw new HttpException('ware house receipt is accepted', 400)
+      throw new HttpException('ware house receipt is accepted', 400);
     }
     return await this.warehouseReceiptModel?.deleteById(new Types.ObjectId(id));
   }
@@ -137,7 +149,7 @@ export class WarehouseReceiptService {
         throw new NotFoundException('Resource not found');
       }
       if (resource.isAccept) {
-        throw new HttpException('ware house receipt is accepted', 400)
+        throw new HttpException('ware house receipt is accepted', 400);
       }
       const result = await this.warehouseReceiptModel.deleteById(id);
       arrResult.push(result);
@@ -221,7 +233,7 @@ export class WarehouseReceiptService {
       throw new NotFoundException('Resource not found');
     }
     if (resource.isAccept) {
-      throw new HttpException('ware house receipt is accepted', 400)
+      throw new HttpException('ware house receipt is accepted', 400);
     }
     return await this.warehouseReceiptModel?.findByIdAndDelete(new Types.ObjectId(id));
   }

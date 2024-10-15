@@ -16,6 +16,7 @@ export class CreatePublicationDto extends BaseDto {
 
   path: string;
   images: string[];
+  mimetype: string;
 
   @ApiProperty()
   @IsString()

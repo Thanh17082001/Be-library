@@ -56,22 +56,23 @@ export class PublicationController {
     let images = [];
     createDto.path = '';
     if (file) {
+      createDto.mimetype = file.mimetype;
       if (file.mimetype == 'application/pdf') {
         images = await this.publicationService.convertPdfToImages(file?.path);
-        createDto.path = `/publication/pdf/${file.filename}`;
+        createDto.path = `publication/pdf/${file.filename}`;
         createDto.priviewImage = images.length > 0 ? images[0] : createDto.path;
       } else if (file.mimetype == 'video/mp4') {
         createDto.priviewImage = await generateImageFromVideo(`publication/video/${file.filename}`);
-        createDto.path = `/publication/video/${file.filename}`;
+        createDto.path = `publication/video/${file.filename}`;
       } else if (file.mimetype == 'application/vnd.openxmlformats-officedocument.presentationml.presentation') {
-        createDto.path = `/publication/ptt/${file.filename}`;
+        createDto.path = `publication/ptt/${file.filename}`;
         createDto.priviewImage = '/default/default-ptt.jpg';
       } else if (file.mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-        createDto.path = `/publication/word/${file.filename}`;
+        createDto.path = `publication/word/${file.filename}`;
         createDto.priviewImage = '/default/default-word.jpg';
       } else {
-        createDto.path = `/publication/image/${file.filename}`;
-        createDto.priviewImage = `/publication/image/${file.filename}`;
+        createDto.path = `publication/image/${file.filename}`;
+        createDto.priviewImage = `publication/image/${file.filename}`;
       }
     }
     createDto.images = images;
@@ -140,6 +141,7 @@ export class PublicationController {
           createBy: user?._id ?? null,
           note: '',
           totalQuantity: 0,
+          mimetype: null,
         };
         const ressult = await this.publicationService.create({...createDto});
         publications.push(ressult);
@@ -221,7 +223,7 @@ export class PublicationController {
 
   @Patch(':id')
   @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('file', {storage: storage('publication'), ...multerOptions}))
+  @UseInterceptors(FileInterceptor('file', {storage: storage('publication', true), ...multerOptions}))
   async update(@UploadedFile() file: Express.Multer.File, @Param('id') id: string, @Body() updateDto: UpdatePublicationDto): Promise<Publication> {
     updateDto.authorIds = updateDto.authorIds ? JSON.parse(updateDto.authorIds?.toString()) : [];
     updateDto.categoryIds = updateDto.categoryIds ? JSON.parse(updateDto.categoryIds?.toString()) : [];
@@ -232,11 +234,22 @@ export class PublicationController {
     if (file) {
       if (file.mimetype == 'application/pdf') {
         images = await this.publicationService.convertPdfToImages(file?.path);
+        updateDto.path = `publication/pdf/${file.filename}`;
+        updateDto.priviewImage = images.length > 0 ? images[0] : updateDto.path;
+      } else if (file.mimetype == 'video/mp4') {
+        updateDto.priviewImage = await generateImageFromVideo(`publication/video/${file.filename}`);
+        updateDto.path = `publication/video/${file.filename}`;
+      } else if (file.mimetype == 'application/vnd.openxmlformats-officedocument.presentationml.presentation') {
+        updateDto.path = `publication/ptt/${file.filename}`;
+        updateDto.priviewImage = '/default/default-ptt.jpg';
+      } else if (file.mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+        updateDto.path = `publication/word/${file.filename}`;
+        updateDto.priviewImage = '/default/default-word.jpg';
+      } else {
+        updateDto.path = `publication/image/${file.filename}`;
+        updateDto.priviewImage = `publication/image/${file.filename}`;
       }
-      updateDto.path = `/publication/${file.filename}`;
     }
-    updateDto.images = images;
-    updateDto.priviewImage = images.length > 0 ? images[0] : updateDto.path;
 
     updateDto.quantity = +updateDto.quantity;
     updateDto.shelvesQuantity = +updateDto.shelvesQuantity;

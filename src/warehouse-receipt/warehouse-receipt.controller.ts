@@ -26,10 +26,13 @@ export class WarehouseReceiptController {
   constructor(private readonly warehouseReceiptService: WarehouseReceiptService) {}
 
   @Post()
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Create, 'warehousereceipts')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard)
   async create(@Body() createDto: CreateWarehouseReceiptDto, @Req() request: Request): Promise<WarehouseReceipt> {
     const user = request['user'] ?? null;
     createDto.libraryId = user?.libraryId ?? null;
     createDto.groupId = user?.groupId ?? null;
+    createDto.createBy = user?._id ?? null;
     return await this.warehouseReceiptService.create({...createDto});
   }
 

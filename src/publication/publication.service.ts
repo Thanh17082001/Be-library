@@ -30,6 +30,14 @@ export class PublicationService {
       createDto.priviewImage = '/default/publication-default.jpg';
     }
     createDto.totalQuantity = 0;
+    const pub: Publication = await this.publicationModel.findOne({barcode: createDto.barcode});
+    if (pub) {
+      throw new BadRequestException('Barcode đã tồn tại!');
+    }
+    if (createDto.barcode == '') {
+      createDto.barcode = undefined;
+    }
+    createDto.totalQuantity = 0;
     return await this.publicationModel.create(createDto);
   }
 
@@ -179,9 +187,14 @@ export class PublicationService {
       }
 
       for (let i = 0; i < resource.images.length; i++) {
-        const oldPath = path.join(__dirname, '..', '..', 'public', resource.images[i]);
-        if (existsSync(oldPath)) {
-          unlinkSync(oldPath);
+        const pathOld = path.join(__dirname, '..', '..', 'public', resource.path);
+        const priviewImageOld = path.join(__dirname, '..', '..', 'public', resource.path);
+        if (existsSync(pathOld)) {
+          unlinkSync(pathOld);
+        }
+
+        if (existsSync(priviewImageOld)) {
+          unlinkSync(priviewImageOld);
         }
       }
     } else {

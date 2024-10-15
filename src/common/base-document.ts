@@ -1,9 +1,10 @@
 import {Prop, Schema, SchemaFactory} from '@nestjs/mongoose';
 import {Document, Types} from 'mongoose';
+import {User} from 'src/user/entities/user.entity';
 
 @Schema({timestamps: true})
 export class BaseDocument extends Document {
-  @Prop({default: null})
+  @Prop({default: null, ref: 'User'})
   createBy: Types.ObjectId | null;
 
   @Prop({default: null})
