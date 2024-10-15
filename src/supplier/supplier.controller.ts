@@ -19,7 +19,7 @@ import {Supplier} from './entities/supplier.entity';
 
 @Controller('supplier')
 @ApiTags('supplier')
-@CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'supplier')) // tên permission và bảng cần chặn
+@CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'suppliers')) // tên permission và bảng cần chặn
 @UseGuards(CaslGuard)
 export class SupplierController {
   constructor(private readonly supplierService: SupplierService) {}
@@ -35,7 +35,7 @@ export class SupplierController {
   @Get()
   // @Roles(Role.Student) // tên role để chặn bên dưới
   // @UseGuards(RolesGuard) // chặn role (admin, student ,....)
-  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'Supplier')) // tên permission và bảng cần chặn
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'suppliers')) // tên permission và bảng cần chặn
   @UseGuards(CaslGuard) // chặn permission (CRUD)
   // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test'), (ability: AppAbility) => ability.can(Action.Read, 'Supplier'))
   async findAll(@Query() query: Partial<CreateSupplierDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Supplier>> {

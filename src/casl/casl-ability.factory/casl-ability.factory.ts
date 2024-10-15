@@ -12,7 +12,6 @@ export type AppAbility = Ability<[Action, Subjects]>;
 export class CaslAbilityFactory {
   constructor(private roleService: RoleService) {}
   async createForUser(user: User) {
-    console.log(user);
     const role = await this.roleService.findById(user?.roleId?._id.toString());
     const {can, cannot, build} = new AbilityBuilder<Ability<[Action, Subjects]>>(Ability as AbilityClass<AppAbility>);
     if (user?.isAdmin) {

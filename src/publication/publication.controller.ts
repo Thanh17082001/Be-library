@@ -28,6 +28,7 @@ import {PublisherService} from 'src/publisher/publisher.service';
 import {MaterialService} from 'src/material/material.service';
 import {UpdateQuantityShelves, UpdateQuantityStock} from './dto/update-shelvesdto';
 import {log} from 'console';
+import {generateImageFromVideo} from 'src/common/genegrate-image-from-video';
 
 @Controller('publications')
 @ApiTags('publications')
@@ -47,7 +48,7 @@ export class PublicationController {
 
   @Post()
   @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('file', {storage: storage('publication'), ...multerOptions}))
+  @UseInterceptors(FileInterceptor('file', {storage: storage('publication', true), ...multerOptions}))
   @CheckPolicies((ability: AppAbility) => ability.can(Action.Create, 'publications')) // tên permission và bảng cần chặn
   @UseGuards(CaslGuard) // chặn permission (CRUD)
   async create(@UploadedFile() file: Express.Multer.File, @Body() createDto: CreatePublicationDto, @Req() request: Request): Promise<any> {
@@ -57,11 +58,23 @@ export class PublicationController {
     if (file) {
       if (file.mimetype == 'application/pdf') {
         images = await this.publicationService.convertPdfToImages(file?.path);
+        createDto.path = `/publication/pdf/${file.filename}`;
+        createDto.priviewImage = images.length > 0 ? images[0] : createDto.path;
+      } else if (file.mimetype == 'video/mp4') {
+        createDto.priviewImage = await generateImageFromVideo(`publication/video/${file.filename}`);
+        createDto.path = `/publication/video/${file.filename}`;
+      } else if (file.mimetype == 'application/vnd.openxmlformats-officedocument.presentationml.presentation') {
+        createDto.path = `/publication/ptt/${file.filename}`;
+        createDto.priviewImage = '/default/default-ptt.jpg';
+      } else if (file.mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+        createDto.path = `/publication/word/${file.filename}`;
+        createDto.priviewImage = '/default/default-word.jpg';
+      } else {
+        createDto.path = `/publication/image/${file.filename}`;
+        createDto.priviewImage = `/publication/image/${file.filename}`;
       }
-      createDto.path = `/publication/${file.filename}`;
     }
     createDto.images = images;
-    createDto.priviewImage = images.length > 0 ? images[0] : '';
 
     createDto.createBy = user?._id ?? null;
     createDto.libraryId = user?.libraryId ?? null;
@@ -74,7 +87,6 @@ export class PublicationController {
     createDto.categoryIds = createDto.categoryIds ? JSON.parse(createDto.categoryIds?.toString()) : [];
     createDto.publisherIds = createDto.publisherIds ? JSON.parse(createDto.publisherIds?.toString()) : [];
     createDto.materialIds = createDto.materialIds ? JSON.parse(createDto.materialIds?.toString()) : [];
-
     return await this.publicationService.create({...createDto});
   }
 
@@ -93,7 +105,6 @@ export class PublicationController {
     let errors: Array<{row: number; error: string}> = [];
     console.log(data.length);
     for (let i = 0; i < data.length; i++) {
-      console.log('babababab');
       try {
         let categoryIds = [];
         let authorIds = [];
@@ -124,7 +135,7 @@ export class PublicationController {
           authorIds,
           materialIds,
           isLink: false,
-          isPublic: false,
+          isPublic: true,
           type: publication[4],
           createBy: user?._id ?? null,
           note: '',

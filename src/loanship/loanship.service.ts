@@ -151,6 +151,9 @@ export class LoanshipService {
 
             const endDate = new Date(query.endDate);
             endDate.setHours(23, 59, 59, 999);
+            if (query.type != 'borrowedDay' && query.type != 'returnDay') {
+              query.type = 'borrowedDay';
+            }
             mongoQuery[query.type ?? 'borrowedDay'] = {
               $gte: startDate, // Ngày bắt đầu
               $lte: endDate, // Ngày kết thúc
