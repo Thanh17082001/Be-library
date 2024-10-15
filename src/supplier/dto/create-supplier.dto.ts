@@ -13,6 +13,6 @@ export class CreateSupplierDto extends OmitType(BaseDto, ['isPublic', 'isLink'] 
   @IsString()
   address: string;
   @ApiProperty()
-  @IsEmail()
+  @IsString()
   email: string;
 }

@@ -10,6 +10,7 @@ import {Publication} from './entities/publication.entity';
 import * as pdfPoppler from 'pdf-poppler';
 import {existsSync, unlinkSync, promises as fs} from 'fs';
 import * as path from 'path';
+import * as ffmpeg from 'fluent-ffmpeg';
 import {SoftDeleteModel} from 'mongoose-delete';
 import {UpdateQuantityShelves, UpdateQuantityStock} from './dto/update-shelvesdto';
 import {LoanshipService} from 'src/loanship/loanship.service';
@@ -25,8 +26,8 @@ export class PublicationService {
   ) {}
   async create(createDto: CreatePublicationDto): Promise<Publication> {
     if (createDto.path == '') {
-      createDto.path = '/publication/publication-default.jpg';
-      createDto.priviewImage = '/publication/publication-default.jpg';
+      createDto.path = '/default/publication-default.jpg';
+      createDto.priviewImage = '/default/publication-default.jpg';
     }
     createDto.totalQuantity = 0;
     return await this.publicationModel.create(createDto);
@@ -173,7 +174,7 @@ export class PublicationService {
     // co file
     if (updateDto.path) {
       const oldImagePath = path.join(__dirname, '..', '..', 'public', resource.path);
-      if (existsSync(oldImagePath) && resource.path !== '/publication/publication-default.jpg') {
+      if (existsSync(oldImagePath) && resource.path !== '/default/publication-default.jpg') {
         unlinkSync(oldImagePath);
       }
 
@@ -342,6 +343,25 @@ export class PublicationService {
     const objectIds = ids.map(id => new Types.ObjectId(id));
     return await this.publicationModel.deleteMany({
       _id: {$in: objectIds},
+    });
+  }
+
+  async generateImageFromVideo2(videoPath: string, outputImagePath: string, time: string = '00:00:14'): Promise<void> {
+    return new Promise((resolve, reject) => {
+      ffmpeg(videoPath)
+        .screenshots({
+          timestamps: [time],
+          filename: path.basename(outputImagePath), // Ensure only the filename is used, not the full path
+          folder: path.dirname(outputImagePath),
+        })
+        .on('end', () => {
+          console.log('Screenshot taken');
+          resolve();
+        })
+        .on('error', (err: any) => {
+          console.error('Error taking screenshot:', err);
+          reject(err);
+        });
     });
   }
 }

@@ -20,7 +20,7 @@ export class LiquidationService {
   async create(createDto: CreateLiquidationDto): Promise<Liquidation> {
     const publication: Publication = await this.publicationService.findById(new Types.ObjectId(createDto.publicationId));
     let data = {};
-    if (createDto.poistion.toLowerCase() == 'trong kho') {
+    if (createDto.position.toLowerCase() == 'trong kho') {
       if (publication.quantity - createDto.quantity < 0) {
         throw new BadRequestException(`Số lượng ấn phẩm ${publication.name} không đủ`);
       }
@@ -29,11 +29,11 @@ export class LiquidationService {
       if (publication.shelvesQuantity - createDto.quantity < 0) {
         throw new BadRequestException(`Số lượng ấn phẩm ${publication.name} không đủ`);
       }
-      data = {quantity: publication.shelvesQuantity - createDto.quantity};
+      data = {shelvesQuantity: publication.shelvesQuantity - createDto.quantity};
     }
     const result = new this.liquidationModel(createDto);
     await result.save();
-    await this.publicationService.update(createDto.publicationId.toString(), {quantity: publication.quantity - createDto.quantity});
+    await this.publicationService.update(createDto.publicationId.toString(), data);
     return result;
   }
 

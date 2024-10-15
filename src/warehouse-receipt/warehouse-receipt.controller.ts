@@ -20,7 +20,7 @@ import {WarehouseReceipt} from './entities/warehouse-receipt.entity';
 
 @Controller('warehouse-receipt')
 @ApiTags('warehouse-receipt')
-@CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'WarehouseReceipts')) // tên permission và bảng cần chặn
+@CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'warehousereceipts')) // tên permission và bảng cần chặn
 @UseGuards(CaslGuard)
 export class WarehouseReceiptController {
   constructor(private readonly warehouseReceiptService: WarehouseReceiptService) {}
@@ -36,7 +36,7 @@ export class WarehouseReceiptController {
   @Get()
   // @Roles(Role.Student) // tên role để chặn bên dưới
   // @UseGuards(RolesGuard) // chặn role (admin, student ,....)
-  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'WarehouseReceipt')) // tên permission và bảng cần chặn
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'warehousereceipts')) // tên permission và bảng cần chặn
   @UseGuards(CaslGuard) // chặn permission (CRUD)
   // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test'), (ability: AppAbility) => ability.can(Action.Read, 'WarehouseReceipt'))
   async findAll(@Query() query: Partial<CreateWarehouseReceiptDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<WarehouseReceipt>> {

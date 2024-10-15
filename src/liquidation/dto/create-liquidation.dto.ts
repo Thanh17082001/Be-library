@@ -19,5 +19,5 @@ export class CreateLiquidationDto extends OmitType(BaseDto, ['isLink', 'isPublic
 
   @ApiProperty({enum: ['trong kho', 'trên kệ']})
   @IsString()
-  poistion: string;
+  position: string;
 }

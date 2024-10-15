@@ -15,7 +15,7 @@ export class Liquidation extends BaseDocument {
   @Prop({enum: ['thanh lý', 'hư hỏng']})
   status: string;
   @Prop({enum: ['trong kho', 'trên kệ']})
-  poistion: string;
+  position: string;
 }
 
 export const LiquidationSchema = SchemaFactory.createForClass(Liquidation)

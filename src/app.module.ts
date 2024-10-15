@@ -29,9 +29,25 @@ import {SupplierModule} from './supplier/supplier.module';
 import {WarehouseReceiptModule} from './warehouse-receipt/warehouse-receipt.module';
 import * as mongoose from 'mongoose';
 import * as mongooseDelete from 'mongoose-delete';
+import {ClientsModule, Transport} from '@nestjs/microservices';
+import {MailModule} from './mail/mail.module';
+import {RabbitmqModule} from './rabbitmq/rabbitmq.module';
 
 @Module({
   imports: [
+    ClientsModule.register([
+      {
+        name: 'MAILGUN_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: ['amqp://localhost:5672'], // Thay đổi URL nếu cần
+          queue: 'email_queue',
+          queueOptions: {
+            durable: false,
+          },
+        },
+      },
+    ]),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
     }),
@@ -73,6 +89,8 @@ import * as mongooseDelete from 'mongoose-delete';
     LiquidationModule,
     SupplierModule,
     WarehouseReceiptModule,
+    MailModule,
+    RabbitmqModule,
   ],
   controllers: [AppController],
   providers: [
