@@ -4,6 +4,7 @@
 /build
 /public
 .env.production
+.env.development
 application.log
 
 # Logs

@@ -32,9 +32,15 @@ import * as mongooseDelete from 'mongoose-delete';
 import {ClientsModule, Transport} from '@nestjs/microservices';
 import {MailModule} from './mail/mail.module';
 import {RabbitmqModule} from './rabbitmq/rabbitmq.module';
+import {ScheduleModule} from '@nestjs/schedule';
+import {LoanshipService} from './loanship/loanship.service';
+import {StatisticalModule} from './statistical/statistical.module';
+import {TypeVoiceModule} from './type-voice/type-voice.module';
+import {VoiceModule} from './voice/voice.module';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ClientsModule.register([
       {
         name: 'MAILGUN_SERVICE',
@@ -91,6 +97,9 @@ import {RabbitmqModule} from './rabbitmq/rabbitmq.module';
     WarehouseReceiptModule,
     MailModule,
     RabbitmqModule,
+    StatisticalModule,
+    TypeVoiceModule,
+    VoiceModule,
   ],
   controllers: [AppController],
   providers: [
@@ -101,4 +110,14 @@ import {RabbitmqModule} from './rabbitmq/rabbitmq.module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule {
+  // constructor(private readonly loanslipService: LoanshipService) {
+  //   // Schedule job to run every day at midnight
+  //   this.scheduleJob();
+  // }
+  // scheduleJob() {
+  //   setInterval(() => {
+  //     this.loanslipService.updateStatusIsOverdue();
+  //   }, 3000); // 86400000 ms = 1 day
+  // }
+}

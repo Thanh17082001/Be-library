@@ -11,6 +11,7 @@ import {LoanSlip} from './entities/loanship.entity';
 import {PublicationService} from 'src/publication/publication.service';
 import {generateBarcode} from 'src/common/genegrate-barcode';
 import {FilterDateDto} from './dto/fillter-date.dto';
+import {Cron} from '@nestjs/schedule';
 
 @Injectable()
 export class LoanshipService {
@@ -43,6 +44,7 @@ export class LoanshipService {
     if (!loan) {
       throw new NotFoundException('Resource not found');
     }
+
     const publications = loan.publications;
     const publicationsUpdate = [];
     const error = [];
@@ -81,7 +83,7 @@ export class LoanshipService {
     }
     return await this.loanSlipModel.findByIdAndUpdate(
       new Types.ObjectId(id),
-      {isAgree: true, status: 'đã duyệt', publications: publicationsUpdate},
+      {isAgree: true, status: 'đang mượn', publications: publicationsUpdate},
       {
         returnDocument: 'after',
       }
@@ -138,12 +140,11 @@ export class LoanshipService {
   async findAll(pageOptions: PageOptionsDto, query: Partial<CreateLoanshipDto>): Promise<PageDto<LoanSlip>> {
     const {page, limit, skip, order, search} = pageOptions;
     const pagination = ['page', 'limit', 'skip', 'order', 'search'];
-    const mongoQuery: any = {isActive: 1};
+    let mongoQuery: any = {isActive: 1};
     // Thêm các điều kiện từ `query`
     if (!!query && Object.keys(query).length > 0) {
       const arrayQuery = Object.keys(query);
       arrayQuery.forEach(key => {
-        console.log(key);
         if (key && !pagination.includes(key)) {
           if (key == 'startDate' || key == 'endDate') {
             const startDate = new Date(query.startDate);
@@ -158,7 +159,27 @@ export class LoanshipService {
               $gte: startDate, // Ngày bắt đầu
               $lte: endDate, // Ngày kết thúc
             };
-          } else if (key !== 'type') {
+          } else if (key == 'status') {
+            const today = new Date(); // Ngày hiện tại
+            const startDate = new Date(today.setHours(0, 0, 0, 0)); // Ngày bắt đầu hôm nay
+            const endDate = new Date(today.setHours(23, 59, 59, 999)); // Ngày kết thúc hôm nay
+            if (query.status == 'overdue') {
+              mongoQuery = {
+                status: 'quá hạn', // Trạng thái đã mượn
+                isAgree: true,
+              };
+            } else if (query.status == 'returned') {
+              mongoQuery.isReturn = true;
+              mongoQuery.isAgree = true;
+            } else {
+              mongoQuery = {
+                status: 'đang mượn', // Trạng thái đã mượn
+                isAgree: true,
+              };
+            }
+          }
+          //fitter
+          else if (key !== 'type') {
             mongoQuery[key] = query[key];
           }
         }
@@ -196,44 +217,23 @@ export class LoanshipService {
     return new PageDto(results, pageMetaDto);
   }
 
-  async filterByDate(pageOptions: PageOptionsDto, query: Partial<FilterDateDto>): Promise<PageDto<LoanSlip>> {
-    const {page, limit, skip, order, search} = pageOptions;
-    const pagination = ['page', 'limit', 'skip', 'order', 'search'];
-    const mongoQuery: any = {
-      borrowDate: {
-        $gte: new Date(query.startDate.toString()), // Ngày bắt đầu
-        $lte: new Date(query.endDate.toString()), // Ngày kết thúc
-      },
-      libraryId: query.libraryId,
-      isActive: 1,
-    };
-
-    // Thực hiện phân trang và sắp xếp
-    const [results, itemCount] = await Promise.all([
-      this.loanSlipModel
-        .find(mongoQuery)
-        // .populate('publications.publicationId')
-        .populate({
-          path: 'userId',
-          select: ['-password', '-passwordFirst'],
-        })
-        .sort({order: 1, createdAt: order === 'ASC' ? 1 : -1})
-        .skip(skip)
-        .limit(limit)
-        .lean()
-        .exec(),
-      this.loanSlipModel.countDocuments(mongoQuery),
-    ]);
-
-    const pageMetaDto = new PageMetaDto({
-      pageOptionsDto: pageOptions,
-      itemCount,
-    });
-    return new PageDto(results, pageMetaDto);
-  }
-
   async findOne(id: Types.ObjectId): Promise<ItemDto<LoanSlip>> {
     return new ItemDto(await this.loanSlipModel.findById(id));
+  }
+  @Cron('0 0 * * *')
+  async updateStatusIsOverdue() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const result = await this.loanSlipModel.updateMany(
+      {
+        status: 'đang mượn',
+        returnDay: {$lt: today},
+      },
+      {
+        $set: {status: 'quá hạn'},
+      }
+    );
+    console.log(result);
   }
 
   async update(id: string, updateDto: UpdateLoanshipDto): Promise<LoanSlip> {
@@ -359,7 +359,7 @@ export class LoanshipService {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid id');
     }
-    const resource: LoanSlip = await this.loanSlipModel.findById(new Types.ObjectId(id));
+    const resource: LoanSlip = await this.loanSlipModel.findOneDeleted({_id: new Types.ObjectId(id)});
     if (!resource) {
       throw new NotFoundException('Resource not found');
     }

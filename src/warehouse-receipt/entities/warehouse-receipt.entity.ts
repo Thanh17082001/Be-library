@@ -13,13 +13,6 @@ export class WarehouseReceipt extends BaseDocument {
   @Prop({required: true, ref: 'Supplier'})
   supplierId: Types.ObjectId;
   @Prop({
-    type: [
-      {
-        publicationId: {type: Types.ObjectId, ref: 'Publication'},
-        quantity: Number,
-        _id: false,
-      },
-    ],
     required: true,
   })
   publications: WarehouseReceiptItem[];

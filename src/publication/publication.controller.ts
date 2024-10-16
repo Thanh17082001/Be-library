@@ -14,7 +14,6 @@ import {CheckPolicies} from 'src/casl/check-policies.decorator';
 import {AppAbility} from 'src/casl/casl-ability.factory/casl-ability.factory';
 import {Action} from 'src/casl/casl.action';
 import {Request} from 'express';
-import {Public} from 'src/auth/auth.decorator';
 import {Publication} from './entities/publication.entity';
 import {FileInterceptor} from '@nestjs/platform-express';
 import {multerOptions, storage} from 'src/config/multer.config';
@@ -22,12 +21,10 @@ import {multerOptions, storage} from 'src/config/multer.config';
 import * as XLSX from 'xlsx';
 import {ImportExcel} from './dto/import-excel.dto';
 import {AuthorService} from 'src/author/author.service';
-import {Category} from 'src/category/entities/category.entity';
 import {CategoryService} from 'src/category/category.service';
 import {PublisherService} from 'src/publisher/publisher.service';
 import {MaterialService} from 'src/material/material.service';
 import {UpdateQuantityShelves, UpdateQuantityStock} from './dto/update-shelvesdto';
-import {log} from 'console';
 import {generateImageFromVideo} from 'src/common/genegrate-image-from-video';
 
 @Controller('publications')
@@ -233,7 +230,7 @@ export class PublicationController {
     updateDto.path = '';
     if (file) {
       if (file.mimetype == 'application/pdf') {
-        images = await this.publicationService.convertPdfToImages(file?.path);
+        updateDto.images = await this.publicationService.convertPdfToImages(file?.path);
         updateDto.path = `publication/pdf/${file.filename}`;
         updateDto.priviewImage = images.length > 0 ? images[0] : updateDto.path;
       } else if (file.mimetype == 'video/mp4') {

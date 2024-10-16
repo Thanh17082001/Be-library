@@ -55,6 +55,7 @@ export class WarehouseReceiptService {
       if (!publication) {
         throw new NotFoundException('Publication not found');
       }
+      console.log(item.quantityWarehouse);
       await this.publicationService.update(publication?._id?.toString(), {quantity: publication.quantity + item.quantityWareHouse, totalQuantity: publication.totalQuantity + item.quantityWareHouse, status: 'có sẵn'});
     }
     await this.warehouseReceiptModel.findByIdAndUpdate(id, {isAccept: true});
@@ -117,6 +118,20 @@ export class WarehouseReceiptService {
     if (resource.isAccept) {
       throw new HttpException('ware house receipt is accepted', 400);
     }
+
+    const publications = [];
+
+    for (let i = 0; i < updateDto.publications.length; i++) {
+      const publicationId = updateDto.publications[i].publicationId;
+      const publication = await this.publicationService.findById(publicationId);
+
+      publications.push({
+        ...updateDto.publications[i],
+        ...publication,
+      });
+    }
+    updateDto.publications = publications;
+
     return this.warehouseReceiptModel.findByIdAndUpdate(id, updateDto, {
       returnDocument: 'after',
     });
