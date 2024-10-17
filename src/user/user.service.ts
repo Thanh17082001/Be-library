@@ -70,7 +70,13 @@ export class UserService {
       const arrayQuery = Object.keys(query);
       arrayQuery.forEach(key => {
         if (key && !pagination.includes(key)) {
-          mongoQuery[key] = query[key];
+          if (key == 'roleId') {
+            mongoQuery.roleId = new Types.ObjectId(query.roleId);
+          }
+          else {
+            
+            mongoQuery[key] = query[key];
+          }
         }
       });
     }
@@ -168,6 +174,25 @@ export class UserService {
     return arrResult;
   }
 
+  //xóa cứng
+  async delete(id: string): Promise<User> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid id');
+    }
+    const resource: User = await this.userModel.findOneDeleted({ _id: new Types.ObjectId(id) });
+    if (!resource) {
+      throw new NotFoundException('Resource not found');
+    }
+    return await this.userModel?.findByIdAndDelete(new Types.ObjectId(id));
+  }
+  //xóa cứng
+  async deleteMultiple(ids: string[]): Promise<any> {
+    const objectIds = ids.map(id => new Types.ObjectId(id));
+    return await this.userModel.deleteMany({
+      _id: { $in: objectIds },
+    });
+  }
+
   async findDeleted(pageOptions: PageOptionsDto, query: Partial<User>): Promise<PageDto<User>> {
     const {page, limit, skip, order, search} = pageOptions;
     const pagination = ['page', 'limit', 'skip', 'order', 'search'];
@@ -192,6 +217,8 @@ export class UserService {
     const [results, itemCount] = await Promise.all([
       this.userModel
         .findDeleted(mongoQuery) // Sử dụng phương thức `findDeleted` từ mongoose-delete
+        .select(['-password', '-passwordFirst'])
+        .populate('roleId')
         .sort({order: 1, createdAt: order === 'ASC' ? 1 : -1})
         .skip(skip)
         .limit(limit)

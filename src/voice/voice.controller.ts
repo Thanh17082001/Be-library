@@ -36,6 +36,7 @@ export class VoiceController {
     if (!file) {
       throw new BadRequestException('File is required');
     }
+    createDto.name=file.originalname
     createDto.path = `voice/${file.filename}`;
     createDto.createBy = user?._id ?? null;
     return await this.voiceService.create({...createDto});
@@ -99,9 +100,10 @@ export class VoiceController {
   @UseInterceptors(FileInterceptor('file', {storage: storage('voice'), ...multerOptions}))
   async update(@UploadedFile() file: Express.Multer.File, @Param('id') id: string, @Body() updateDto: UpdateVoiceDto): Promise<Voice> {
     if (!file) {
-      throw new BadRequestException('File is required');
+      updateDto.path = '';
+    } else {
+      updateDto.path = `voice/${file.filename}`;
     }
-    updateDto.path = `voice/${file.filename}`;
     return await this.voiceService.update(id, updateDto);
   }
 }

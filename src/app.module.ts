@@ -37,6 +37,7 @@ import {LoanshipService} from './loanship/loanship.service';
 import {StatisticalModule} from './statistical/statistical.module';
 import {TypeVoiceModule} from './type-voice/type-voice.module';
 import {VoiceModule} from './voice/voice.module';
+import {ConsumerRabbitmqModule} from './consumer-rabbitmq/consumer-rabbitmq.module';
 
 @Module({
   imports: [
@@ -100,6 +101,7 @@ import {VoiceModule} from './voice/voice.module';
     StatisticalModule,
     TypeVoiceModule,
     VoiceModule,
+    ConsumerRabbitmqModule,
   ],
   controllers: [AppController],
   providers: [

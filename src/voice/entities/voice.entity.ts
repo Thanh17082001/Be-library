@@ -12,6 +12,12 @@ export class Voice extends BaseDocument {
   typeVoiceId: Types.ObjectId;
   @Prop()
   path: string;
+  @Prop()
+  isPrivate: boolean;
+  @Prop()
+  order: number
+  @Prop()
+  name:string
 }
 
 export const VoiceSchema = SchemaFactory.createForClass(Voice)

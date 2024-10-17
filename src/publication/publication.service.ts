@@ -377,4 +377,44 @@ export class PublicationService {
         });
     });
   }
+
+  // Tính tổng số lượng sách
+  async getTotalBooks(): Promise<number> {
+    const result = await this.publicationModel.aggregate([
+      {
+        $group: {
+          _id: '$type', // Nhóm theo loại ấn phẩm
+          totalQuantity: {
+            $sum: {
+              $cond: {
+                if: {$eq: ['$totalQuantity', 0]}, // Nếu số lượng = 0
+                then: 1, // Gán giá trị là 1
+                else: '$totalQuantity', // Nếu khác 0, giữ nguyên giá trị
+              },
+            },
+          },
+          count: {$sum: 1}, // Đếm tổng số đầu sách theo loại
+        },
+      },
+      {
+        $project: {
+          _id: 0, // Ẩn trường _id
+          type: '$_id', // Đổi tên _id thành type
+          totalQuantity: 1, // Hiển thị trường totalQuantity
+          count: 1, // Hiển thị trường count
+        },
+      },
+    ]);
+
+    // Nếu không có sách, trả về 0
+    return result;
+  }
+  // sách có thể mượn totalQuantity>0 và ấn phẩm cứng
+  async countBorrowableHardcoverBooks(): Promise<any> {
+    const count = await this.publicationModel.countDocuments({
+      type: 'ấn phẩm cứng', // Chỉ đếm các sách là ấn phẩm cứng
+      totalQuantity: {$gt: 0}, // Chỉ đếm các sách có totalQuantity > 0
+    });
+    return count;
+  }
 }

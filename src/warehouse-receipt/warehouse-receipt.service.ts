@@ -196,6 +196,8 @@ export class WarehouseReceiptService {
     const [results, itemCount] = await Promise.all([
       this.warehouseReceiptModel
         .findDeleted(mongoQuery) // Sử dụng phương thức `findDeleted` từ mongoose-delete
+        .populate('supplierId')
+        .populate('createBy')
         .sort({order: 1, createdAt: order === 'ASC' ? 1 : -1})
         .skip(skip)
         .limit(limit)

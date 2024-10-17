@@ -122,13 +122,23 @@ export class UserController {
   }
 
   @Delete('selected')
+  deleteSelected(@Body() ids: string[]) {
+    return this.userService.deleteMultiple(ids);
+  }
+
+  @Delete('soft/selected')
   async removes(@Body() ids: string[]): Promise<Array<User>> {
     return await this.userService.removes(ids);
   }
 
-  @Delete(':id')
+  @Delete('soft/:id')
   remove(@Param('id') id: string) {
     return this.userService.remove(id);
+  }
+
+  @Delete(':id')
+  delete(@Param('id') id: string) {
+    return this.userService.delete(id);
   }
 
   @Patch('restore')

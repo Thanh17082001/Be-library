@@ -20,7 +20,7 @@ export class RabbitmqService implements OnModuleInit {
       this.channel = await this.connection.createChannel();
       await this.channel.assertQueue('emailQueue', {durable: true});
       console.log('RabbitMQ connected successfully!');
-      await this.consumeEmailQueue();
+      // await this.consumeEmailQueue();
     } catch (error) {
       console.error(`RabbitMQ connection error: ${error}`);
     }
@@ -38,36 +38,36 @@ export class RabbitmqService implements OnModuleInit {
     console.log(`Email data sent to queue: chờ xử lý`);
   }
 
-  private async consumeEmailQueue() {
-    if (!this.channel) {
-      console.error('Channel is not available for consuming emails');
-      return;
-    }
-    console.log('Starting to consume email queue...');
+  // private async consumeEmailQueue() {
+  //   if (!this.channel) {
+  //     console.error('Channel is not available for consuming emails');
+  //     return;
+  //   }
+  //   console.log('Starting to consume email queue...');
 
-    // Bắt đầu tiêu thụ từ hàng đợi emailQueue
-    await this.channel.consume(
-      'emailQueue',
-      async msg => {
-        if (msg) {
-          console.log('Message received from queue:', msg.content.toString()); // Thêm log khi nhận được tin nhắn
-          const emailData = JSON.parse(msg.content.toString());
+  //   // Bắt đầu tiêu thụ từ hàng đợi emailQueue
+  //   await this.channel.consume(
+  //     'emailQueue',
+  //     async msg => {
+  //       if (msg) {
+  //         console.log('Message received from queue:', msg.content.toString()); // Thêm log khi nhận được tin nhắn
+  //         const emailData = JSON.parse(msg.content.toString());
 
-          try {
-            await this.mailService.sendEmailCampaign(); // Truyền emailData vào hàm
-            console.log(`Email sent successfully to ${emailData.to}`);
-            this.channel.ack(msg); // Xác nhận tin nhắn đã được xử lý
-          } catch (error) {
-            console.error('Error while sending email:', error.message);
-            this.channel.nack(msg, false, false); // Không gửi lại message
-          }
-        } else {
-          console.log('No message received from queue');
-        }
-      },
-      {
-        noAck: false, // Đảm bảo xác nhận tin nhắn sau khi xử lý
-      }
-    );
-  }
+  //         try {
+  //           await this.mailService.sendEmailCampaign(); // Truyền emailData vào hàm
+  //           console.log(`Email sent successfully to ${emailData.to}`);
+  //           this.channel.ack(msg); // Xác nhận tin nhắn đã được xử lý
+  //         } catch (error) {
+  //           console.error('Error while sending email:', error.message);
+  //           this.channel.nack(msg, false, false); // Không gửi lại message
+  //         }
+  //       } else {
+  //         console.log('No message received from queue');
+  //       }
+  //     },
+  //     {
+  //       noAck: false, // Đảm bảo xác nhận tin nhắn sau khi xử lý
+  //     }
+  //   );
+  // }
 }

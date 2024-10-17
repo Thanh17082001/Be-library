@@ -12,6 +12,7 @@ import {PublicationService} from 'src/publication/publication.service';
 import {generateBarcode} from 'src/common/genegrate-barcode';
 import {FilterDateDto} from './dto/fillter-date.dto';
 import {Cron} from '@nestjs/schedule';
+import * as moment from 'moment';
 
 @Injectable()
 export class LoanshipService {
@@ -391,5 +392,59 @@ export class LoanshipService {
         },
       },
     ]);
+  }
+
+  async getTopBorrowedBooksInMonth(): Promise<any> {
+    const startOfMonth = moment().startOf('month').toDate();
+    const endOfMonth = moment().endOf('month').toDate();
+
+    const results = await this.loanSlipModel.aggregate([
+      {
+        $match: {
+          borrowedDay: {
+            $gte: startOfMonth,
+            $lte: endOfMonth,
+          },
+        },
+      },
+      {
+        $unwind: '$publications',
+      },
+      {
+        $group: {
+          _id: '$publications.name',
+          totalBorrowed: {$sum: '$publications.quantityLoan'},
+        },
+      },
+      {
+        $sort: {totalBorrowed: -1}, // Sắp xếp theo số lượng mượn giảm dần
+      },
+      {
+        $limit: 10,
+        // Giới hạn số lượng sách trả về (top 10)
+      },
+      {
+        $project: {
+          _id: 0, // Không bao gồm trường _id trong kết quả
+          name: '$_id', // Đổi tên trường _id thành name
+          totalBorrowed: 1, // Bao gồm trường totalBorrowed
+        },
+      },
+    ]);
+    return results;
+  }
+  // tổng số lượng ấn phẩm đang mượn
+  async getTotalBorrowedBooks(): Promise<number> {
+    return this.loanSlipModel.countDocuments({status: 'đang mượn'}).exec();
+  }
+
+  // tổng số lượng ấn phẩm đã trả
+  async getTotalReturnedBooks(): Promise<number> {
+    return this.loanSlipModel.countDocuments({status: 'đã trả'}).exec();
+  }
+
+  // tổng số lượng ấn phẩm đã quá hạn
+  async getTotalOverdueLoans(): Promise<number> {
+    return this.loanSlipModel.countDocuments({status: 'quá hạn'}).exec();
   }
 }

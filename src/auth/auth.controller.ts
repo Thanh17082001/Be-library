@@ -46,7 +46,8 @@ export class AuthController {
   @Public()
   @Get('resources')
   async getResources(): Promise<string[]> {
-    return await this.authService.getCollections();
+    const resources = await this.authService.getCollections();
+    return [...resources, 'statisticals'];
   }
 
   // @Public()
