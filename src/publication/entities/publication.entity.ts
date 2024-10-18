@@ -46,6 +46,6 @@ export class Publication extends BaseDocument {
   materialIds: Types.ObjectId[];
 }
 
-const PublicationSchema = SchemaFactory.createForClass(Publication).index({name: 1}).remove([]);
+const PublicationSchema = SchemaFactory.createForClass(Publication).index({name: 1});
 
 export {PublicationSchema};

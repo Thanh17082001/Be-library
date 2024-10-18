@@ -23,7 +23,6 @@ import {ServeStaticModule} from '@nestjs/serve-static';
 import {join} from 'path';
 import {LoanshipModule} from './loanship/loanship.module';
 import {AssetModule} from './asset/asset.module';
-import {LibraryStockModule} from './library-stock/library-stock.module';
 import {LiquidationModule} from './liquidation/liquidation.module';
 import {SupplierModule} from './supplier/supplier.module';
 import {WarehouseReceiptModule} from './warehouse-receipt/warehouse-receipt.module';
@@ -92,7 +91,6 @@ import {ConsumerRabbitmqModule} from './consumer-rabbitmq/consumer-rabbitmq.modu
     PublicationModule,
     LoanshipModule,
     AssetModule,
-    LibraryStockModule,
     LiquidationModule,
     SupplierModule,
     WarehouseReceiptModule,

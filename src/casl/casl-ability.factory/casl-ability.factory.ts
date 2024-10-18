@@ -16,9 +16,7 @@ export class CaslAbilityFactory {
     const {can, cannot, build} = new AbilityBuilder<Ability<[Action, Subjects]>>(Ability as AbilityClass<AppAbility>);
     if (user?.isAdmin) {
       can(Action.Manage, 'all'); // Admin có thể thực hiện mọi hành động trên mọi tài nguyên)
-    }
-
-    if (!role?.permissions || !Array.isArray(role?.permissions)) {
+    } else if (!role?.permissions || !Array.isArray(role?.permissions)) {
       throw new ForbiddenException('Không có quyền truy cập');
     }
 

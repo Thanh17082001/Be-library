@@ -16,13 +16,12 @@ export class CreateVoiceDto extends BaseDto {
   @ApiProperty({type: 'file', format: 'file', required: false})
   file?: Express.Multer.File;
   @ApiProperty()
-
   @IsString()
   isPrivate: boolean;
-  
+
   @ApiProperty()
   @IsString()
-  order: number
+  order: number;
 
-  name: string
+  name: string;
 }

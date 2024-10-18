@@ -1,5 +1,6 @@
 import {Prop, Schema, SchemaFactory} from '@nestjs/mongoose';
 import {Document, Types} from 'mongoose';
+import {Library} from 'src/library/entities/library.entity';
 import {User} from 'src/user/entities/user.entity';
 
 @Schema({timestamps: true})
@@ -7,10 +8,10 @@ export class BaseDocument extends Document {
   @Prop({default: null, ref: 'User'})
   createBy: Types.ObjectId | null;
 
-  @Prop({default: null})
-  groupId: Types.ObjectId | null;
+  // @Prop({default: null})
+  // groupId: Types.ObjectId | null;
 
-  @Prop()
+  @Prop({ref: 'Library'})
   libraryId: Types.ObjectId;
 
   @Prop({default: null})

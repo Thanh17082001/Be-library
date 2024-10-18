@@ -10,5 +10,6 @@ import {LibraryModule} from 'src/library/library.module';
   imports: [MongooseModule.forFeature([{name: Group.name, schema: GroupSchema}]), CaslModule, LibraryModule],
   controllers: [GroupController],
   providers: [GroupService],
+  exports: [MongooseModule, GroupService],
 })
 export class GroupModule {}

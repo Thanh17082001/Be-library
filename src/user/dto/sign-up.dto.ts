@@ -5,7 +5,7 @@ import {Types} from 'mongoose';
 import {BaseDocument} from 'src/common/base-document';
 import {BaseDto} from 'src/common/base.dto';
 
-export class SignUpDto extends OmitType(BaseDto, ['isPublic', 'groupId', 'libraryId'] as const) {
+export class SignUpDto extends OmitType(BaseDto, ['isPublic', 'libraryId'] as const) {
   @ApiProperty({example: 'string@gmail.com'})
   @IsString()
   email: string;
@@ -17,10 +17,6 @@ export class SignUpDto extends OmitType(BaseDto, ['isPublic', 'groupId', 'librar
   @ApiProperty({example: 'id'})
   @IsString()
   roleId: Types.ObjectId;
-
-  @ApiProperty({example: 'id'})
-  @IsString()
-  groupId: Types.ObjectId;
 
   @ApiProperty({example: 'id'})
   @IsString()
@@ -51,7 +47,4 @@ export class SignUpDto extends OmitType(BaseDto, ['isPublic', 'groupId', 'librar
   @IsEnum(['nam', 'nữ', 'khác'])
   @IsString()
   gender: string;
-
-  @ApiProperty({type: 'file', format: 'file', required: false})
-  file?: Express.Multer.File;
 }

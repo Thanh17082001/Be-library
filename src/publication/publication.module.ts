@@ -11,9 +11,10 @@ import {MaterialModule} from 'src/material/material.module';
 import {PublisherModule} from 'src/publisher/publisher.module';
 import {LoanshipModule} from 'src/loanship/loanship.module';
 import {LiquidationModule} from 'src/liquidation/liquidation.module';
+import {GroupModule} from 'src/group/group.module';
 
 @Module({
-  imports: [MongooseModule.forFeature([{name: Publication.name, schema: PublicationSchema}]), CaslModule, AuthorModule, CategoryModule, MaterialModule, PublisherModule, forwardRef(() => LoanshipModule), forwardRef(() => LiquidationModule)],
+  imports: [MongooseModule.forFeature([{name: Publication.name, schema: PublicationSchema}]), GroupModule, CaslModule, AuthorModule, CategoryModule, MaterialModule, PublisherModule, forwardRef(() => LoanshipModule), forwardRef(() => LiquidationModule)],
   controllers: [PublicationController],
   providers: [PublicationService],
   exports: [MongooseModule, PublicationService],

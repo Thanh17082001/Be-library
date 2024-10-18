@@ -14,6 +14,8 @@ import {Cron} from '@nestjs/schedule';
 import {PermissonDto} from 'src/user/dto/permission.dto';
 import {LoginDto} from 'src/user/dto/login.dto';
 import {SignUpDto} from 'src/user/dto/sign-up.dto';
+import {UpdateUserDto} from 'src/user/dto/update-user.dto';
+import {UpdateAuthDto} from 'src/user/dto/update-auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -25,8 +27,15 @@ export class AuthService {
   ) {}
 
   async signUp(data: SignUpDto): Promise<User> {
+    data.username = '';
+    data.avatar = '';
+    console.log(data);
     const newUser = await this.usersService.create({...data, barcode: ''});
     return newUser;
+  }
+
+  async update(id: string, data: UpdateAuthDto): Promise<User> {
+    return await this.usersService.updateAuth(id, data);
   }
 
   async logIn(data: LoginDto): Promise<any> {

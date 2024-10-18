@@ -19,73 +19,93 @@ import {Supplier} from './entities/supplier.entity';
 
 @Controller('supplier')
 @ApiTags('supplier')
-@CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'suppliers')) // tên permission và bảng cần chặn
-@UseGuards(CaslGuard)
 export class SupplierController {
   constructor(private readonly supplierService: SupplierService) {}
 
   @Post()
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Create, 'suppliers')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard)
   async create(@Body() createDto: CreateSupplierDto, @Req() request: Request): Promise<Supplier> {
     const user = request['user'] ?? null;
-    createDto.libraryId = user?.libraryId ?? null;
-    createDto.groupId = user?.groupId ?? null;
+    createDto.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
+    createDto.createBy = new Types.ObjectId(user?.userId) ?? null;
     return await this.supplierService.create({...createDto});
   }
 
   @Get()
-  // @Roles(Role.Student) // tên role để chặn bên dưới
-  // @UseGuards(RolesGuard) // chặn role (admin, student ,....)
   @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'suppliers')) // tên permission và bảng cần chặn
   @UseGuards(CaslGuard) // chặn permission (CRUD)
-  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test'), (ability: AppAbility) => ability.can(Action.Read, 'Supplier'))
   async findAll(@Query() query: Partial<CreateSupplierDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Supplier>> {
     const user = request['user'];
-    query.libraryId = user?.libraryId ?? null;
+    if (!user.isAdmin) {
+      query.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
+    }
+
     return await this.supplierService.findAll(pageOptionDto, query);
   }
   @Get('/deleted')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'suppliers')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   async findAllDeleted(@Query() query: Partial<CreateSupplierDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Supplier>> {
     const user = request['user'];
-    query.libraryId = user?.libraryId ?? null;
+    if (!user.isAdmin) {
+      query.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
+    }
     return await this.supplierService.findDeleted(pageOptionDto, query);
   }
 
   @Get('deleted/:id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'suppliers')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   async findOneDeleted(@Param('id') id: string): Promise<ItemDto<Supplier>> {
     return await this.supplierService.findByIdDeleted(new Types.ObjectId(id));
   }
 
   @Get(':id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'suppliers')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   async findOne(@Param('id') id: string): Promise<ItemDto<Supplier>> {
     return await this.supplierService.findOne(new Types.ObjectId(id));
   }
 
   @Delete('selected')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'suppliers')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   deleteSelected(@Body() ids: string[]) {
     return this.supplierService.deleteMultiple(ids);
   }
 
   @Delete('soft/selected')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'suppliers')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   async removes(@Body() ids: string[]): Promise<Array<Supplier>> {
     return await this.supplierService.removes(ids);
   }
 
   @Delete('soft/:id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'suppliers')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   remove(@Param('id') id: string) {
     return this.supplierService.remove(id);
   }
 
   @Delete(':id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'suppliers')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   delete(@Param('id') id: string) {
     return this.supplierService.delete(id);
   }
 
   @Patch('restore')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, 'suppliers')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   async restoreByIds(@Body() ids: string[]): Promise<Supplier[]> {
     return this.supplierService.restoreByIds(ids);
   }
 
   @Patch(':id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, 'suppliers')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   async update(@Param('id') id: string, @Body() updateDto: UpdateSupplierDto): Promise<Supplier> {
     return await this.supplierService.update(id, updateDto);
   }

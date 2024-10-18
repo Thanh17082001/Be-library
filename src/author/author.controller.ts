@@ -19,74 +19,92 @@ import {Author} from './entities/author.entity';
 
 @Controller('author')
 @ApiTags('author')
-@UseGuards(RolesGuard)
-@Roles(Role.Admin)
 export class AuthorController {
   constructor(private readonly authorService: AuthorService) {}
 
   @Post()
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Create, 'authors')) // tên permisson và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permisson (CRUD)
   async create(@Body() createDto: CreateAuthorDto, @Req() request: Request): Promise<Author> {
     const user = request['user'] ?? null;
-    createDto.createBy = user?.userId ?? null;
-    createDto.libraryId = user?.libraryId ?? null;
-    createDto.groupId = user?.groupId ?? null;
+    createDto.createBy = new Types.ObjectId(user?.userId) ?? null;
+    createDto.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
     return await this.authorService.create({...createDto});
   }
 
   @Get()
-  // @Roles(Role.User) // tên role để chặn bên dưới
-  // @UseGuards(RolesGuard) // chặn role (admin, student ,....)
-  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test')) // tên permisson và bảng cần chặn
-  // @UseGuards(CaslGuard) // chặn permisson (CRUD)
-  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test'), (ability: AppAbility) => ability.can(Action.Read, 'Author'))
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'authors')) // tên permisson và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permisson (CRUD)
   async findAll(@Query() query: Partial<CreateAuthorDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Author>> {
     const user = request['user'];
-    query.libraryId = user?.libraryId ?? null;
+    if (!user.isAdmin) {
+      query.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
+    }
     return await this.authorService.findAll(pageOptionDto, query);
   }
   @Get('/deleted')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'authors')) // tên permisson và bảng cần chặn
+  @UseGuards(CaslGuard)
   async findAllDeleted(@Query() query: Partial<CreateAuthorDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Author>> {
     const user = request['user'];
-    query.libraryId = user?.libraryId ?? null;
+    if (!user.isAdmin) {
+      query.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
+    }
     return await this.authorService.findDeleted(pageOptionDto, query);
   }
 
   @Get('deleted/:id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'authors')) // tên permisson và bảng cần chặn
+  @UseGuards(CaslGuard)
   async findOneDeleted(@Param('id') id: string): Promise<ItemDto<Author>> {
     return await this.authorService.findByIdDeleted(new Types.ObjectId(id));
   }
 
   @Get(':id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'authors')) // tên permisson và bảng cần chặn
+  @UseGuards(CaslGuard)
   async findOne(@Param('id') id: ObjectId): Promise<ItemDto<Author>> {
     return await this.authorService.findOne(id);
   }
 
   @Delete('soft/selected')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'authors')) // tên permisson và bảng cần chặn
+  @UseGuards(CaslGuard)
   async removes(@Body() ids: string[]): Promise<Array<Author>> {
     return await this.authorService.removes(ids);
   }
 
   @Delete('selected')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'authors')) // tên permisson và bảng cần chặn
+  @UseGuards(CaslGuard)
   deleteSelected(@Body() ids: string[]) {
     return this.authorService.deleteMultiple(ids);
   }
 
   @Delete('soft/:id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'authors')) // tên permisson và bảng cần chặn
+  @UseGuards(CaslGuard)
   remove(@Param('id') id: string) {
     return this.authorService.remove(id);
   }
 
   @Delete(':id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'authors')) // tên permisson và bảng cần chặn
+  @UseGuards(CaslGuard)
   delete(@Param('id') id: string) {
     return this.authorService.delete(id);
   }
 
   @Patch('restore')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, 'authors')) // tên permisson và bảng cần chặn
+  @UseGuards(CaslGuard)
   async restoreByIds(@Body() ids: string[]): Promise<Author[]> {
     return this.authorService.restoreByIds(ids);
   }
 
   @Patch(':id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, 'authors')) // tên permisson và bảng cần chặn
+  @UseGuards(CaslGuard)
   async update(@Param('id') id: string, @Body() updateDto: UpdateAuthorDto): Promise<Author> {
     return await this.authorService.update(id, updateDto);
   }

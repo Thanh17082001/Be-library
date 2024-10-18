@@ -31,66 +31,85 @@ export class VoiceController {
   @UseGuards(CaslGuard)
   async create(@UploadedFile() file: Express.Multer.File, @Body() createDto: CreateVoiceDto, @Req() request: Request): Promise<Voice> {
     const user = request['user'] ?? null;
-    createDto.libraryId = user?.libraryId ?? null;
-    createDto.groupId = user?.groupId ?? null;
+    createDto.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
     if (!file) {
       throw new BadRequestException('File is required');
     }
-    createDto.name=file.originalname
+    createDto.name = file.originalname;
     createDto.path = `voice/${file.filename}`;
-    createDto.createBy = user?._id ?? null;
+    createDto.createBy = new Types.ObjectId(user?._id) ?? null;
     return await this.voiceService.create({...createDto});
   }
 
   @Get()
   // @Roles(Role.Student) // tên role để chặn bên dưới
   // @UseGuards(RolesGuard) // chặn role (admin, student ,....)
-  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'examples')) // tên permission và bảng cần chặn
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'voices')) // tên permission và bảng cần chặn
   @UseGuards(CaslGuard) // chặn permission (CRUD)
   // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test'), (ability: AppAbility) => ability.can(Action.Read, 'Voice'))
   async findAll(@Query() query: Partial<CreateVoiceDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Voice>> {
     const user = request['user'];
-    query.libraryId = user?.libraryId ?? null;
+    if (!user.isAdmin) {
+      query.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
+    }
     return await this.voiceService.findAll(pageOptionDto, query);
   }
   @Get('/deleted')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'voices')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard)
   async findAllDeleted(@Query() query: Partial<CreateVoiceDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Voice>> {
     const user = request['user'];
-    query.libraryId = user?.libraryId ?? null;
+    if (!user.isAdmin) {
+      query.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
+    }
     return await this.voiceService.findDeleted(pageOptionDto, query);
   }
 
   @Get('deleted/:id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'voices')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard)
   async findOneDeleted(@Param('id') id: string): Promise<ItemDto<Voice>> {
     return await this.voiceService.findByIdDeleted(new Types.ObjectId(id));
   }
 
   @Get(':id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'voices')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard)
   async findOne(@Param('id') id: string): Promise<ItemDto<Voice>> {
     return await this.voiceService.findOne(new Types.ObjectId(id));
   }
 
   @Delete('selected')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'voices')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard)
   deleteSelected(@Body() ids: string[]) {
     return this.voiceService.deleteMultiple(ids);
   }
 
   @Delete('soft/selected')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'voices')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard)
   async removes(@Body() ids: string[]): Promise<Array<Voice>> {
     return await this.voiceService.removes(ids);
   }
 
   @Delete('soft/:id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'voices')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard)
   remove(@Param('id') id: string) {
     return this.voiceService.remove(id);
   }
 
   @Delete(':id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'voices')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard)
   delete(@Param('id') id: string) {
     return this.voiceService.delete(id);
   }
 
   @Patch('restore')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, 'voices')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard)
   async restoreByIds(@Body() ids: string[]): Promise<Voice[]> {
     return this.voiceService.restoreByIds(ids);
   }
@@ -98,6 +117,8 @@ export class VoiceController {
   @Patch(':id')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file', {storage: storage('voice'), ...multerOptions}))
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, 'voices')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard)
   async update(@UploadedFile() file: Express.Multer.File, @Param('id') id: string, @Body() updateDto: UpdateVoiceDto): Promise<Voice> {
     if (!file) {
       updateDto.path = '';

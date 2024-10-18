@@ -27,8 +27,7 @@ export class ExampleController {
   @UseGuards(CaslGuard)
   async create(@Body() createDto: CreateExampleDto, @Req() request: Request): Promise<Example> {
     const user = request['user'] ?? null;
-    createDto.libraryId = user?.libraryId ?? null;
-    createDto.groupId = user?.groupId ?? null;
+    createDto.libraryId = new Types.ObjectId(new Types.ObjectId(user?.libraryId)) ?? null;
     return await this.exampleService.create({...createDto});
   }
 
@@ -40,13 +39,17 @@ export class ExampleController {
   // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test'), (ability: AppAbility) => ability.can(Action.Read, 'example'))
   async findAll(@Query() query: Partial<CreateExampleDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Example>> {
     const user = request['user'];
-    query.libraryId = user?.libraryId ?? null;
+    if (!user.isAdmin) {
+      query.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
+    }
     return await this.exampleService.findAll(pageOptionDto, query);
   }
   @Get('/deleted')
   async findAllDeleted(@Query() query: Partial<CreateExampleDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Example>> {
     const user = request['user'];
-    query.libraryId = user?.libraryId ?? null;
+    if (!user.isAdmin) {
+      query.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
+    }
     return await this.exampleService.findDeleted(pageOptionDto, query);
   }
 

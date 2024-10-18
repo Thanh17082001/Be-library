@@ -26,6 +26,7 @@ import {PublisherService} from 'src/publisher/publisher.service';
 import {MaterialService} from 'src/material/material.service';
 import {UpdateQuantityShelves, UpdateQuantityStock} from './dto/update-shelvesdto';
 import {generateImageFromVideo} from 'src/common/genegrate-image-from-video';
+import {Library} from 'src/library/entities/library.entity';
 
 @Controller('publications')
 @ApiTags('publications')
@@ -74,9 +75,8 @@ export class PublicationController {
     }
     createDto.images = images;
 
-    createDto.createBy = user?._id ?? null;
-    createDto.libraryId = user?.libraryId ?? null;
-    createDto.groupId = user?.groupId ?? null;
+    createDto.createBy = new Types.ObjectId(user?._id.toString()) ?? null;
+    createDto.libraryId = new Types.ObjectId(user?.libraryId?.toString()) ?? null;
 
     createDto.quantity = +createDto.quantity;
     createDto.shelvesQuantity = +createDto.shelvesQuantity;
@@ -101,7 +101,6 @@ export class PublicationController {
     const data = XLSX.utils.sheet_to_json(worksheet);
     let publications: Array<Publication> = [];
     let errors: Array<{row: number; error: string}> = [];
-    console.log(data.length);
     for (let i = 0; i < data.length; i++) {
       try {
         let categoryIds = [];
@@ -124,8 +123,7 @@ export class PublicationController {
           priviewImage: '',
           images: [],
           description: publication[3],
-          libraryId: user?.libraryId ?? null,
-          groupId: user?.groupId ?? null,
+          libraryId: new Types.ObjectId(user?.libraryId?.toString()) ?? null,
           status: 'không có sẵn',
           shelvesId: null,
           publisherIds,
@@ -135,7 +133,7 @@ export class PublicationController {
           isLink: false,
           isPublic: true,
           type: publication[4],
-          createBy: user?._id ?? null,
+          createBy: new Types.ObjectId(user?._id.toString()) ?? null,
           note: '',
           totalQuantity: 0,
           mimetype: null,
@@ -150,70 +148,102 @@ export class PublicationController {
   }
 
   @Get()
-  // @Roles(Role.User) // tên role để chặn bên dưới
-  // @UseGuards(RolesGuard) // chặn role (admin, student ,....)
-  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test')) // tên permission và bảng cần chặn
-  // @UseGuards(CaslGuard) // chặn permission (CRUD)
-  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test'), (ability: AppAbility) => ability.can(Action.Read, 'Publication'))
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'publications')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   async findAll(@Query() query: Partial<CreatePublicationDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Publication>> {
     const user = request['user'];
-    query.libraryId = user?.libraryId ?? null;
+    if (!user.isAdmin) {
+      query.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
+    }
     return await this.publicationService.findAll(pageOptionDto, query);
   }
 
+  @Get('lt')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'publications')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
+  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test'), (ability: AppAbility) => ability.can(Action.Read, 'Publication'))
+  async lt(@Query() query: Partial<CreatePublicationDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Publication>> {
+    const user = request['user'];
+    const libraryId = user?.libraryId ?? null;
+
+    return await this.publicationService.GetIsLink(libraryId);
+  }
+
   @Get('/deleted')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'publications')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   async findAllDeleted(@Query() query: Partial<CreatePublicationDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Publication>> {
     const user = request['user'];
-    query.libraryId = user?.libraryId ?? null;
+    query.libraryId = new Types.ObjectId(user?.libraryId?.toString()) ?? null;
     return await this.publicationService.findDeleted(pageOptionDto, query);
   }
 
   @Get('deleted/:id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'publications')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   async findOneDeleted(@Param('id') id: string): Promise<ItemDto<Publication>> {
     return await this.publicationService.findByIdDeleted(new Types.ObjectId(id));
   }
 
   @Get(':id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'publications')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   async findOne(@Param('id') id: Types.ObjectId): Promise<ItemDto<Publication>> {
     return await this.publicationService.findOne(id);
   }
 
   @Get('barcode/:barcode')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'publications')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   async findByBarcode(@Param('barcode') barcode: string): Promise<ItemDto<Publication>> {
     return await this.publicationService.findByBarcode(barcode);
   }
 
   @Delete('selected')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'publications')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   deleteSelected(@Body() ids: string[]) {
     return this.publicationService.deleteMultiple(ids);
   }
 
   @Delete('soft/selected')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'publications')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   async removes(@Body() ids: string[]): Promise<Array<Publication>> {
     return await this.publicationService.removes(ids);
   }
 
   @Delete('soft/:id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'publications')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   remove(@Param('id') id: string) {
     return this.publicationService.remove(id);
   }
 
   @Delete(':id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'publications')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   delete(@Param('id') id: string) {
     return this.publicationService.delete(id);
   }
 
   @Patch('restore')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, 'publications')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   async restoreByIds(@Body() ids: string[]): Promise<Publication[]> {
     return this.publicationService.restoreByIds(ids);
   }
 
   @Patch('shelves-quantity')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, 'publications')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   async updateQuantityShelves(@Body() data: UpdateQuantityShelves): Promise<Publication> {
     return this.publicationService.updateQuantityShelves(data);
   }
 
   @Patch('move-stock')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, 'publications')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   async updateQuantityStock(@Body() data: UpdateQuantityStock): Promise<Publication> {
     return this.publicationService.updateQuantityStock(data);
   }
@@ -221,6 +251,8 @@ export class PublicationController {
   @Patch(':id')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file', {storage: storage('publication', true), ...multerOptions}))
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, 'publications')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   async update(@UploadedFile() file: Express.Multer.File, @Param('id') id: string, @Body() updateDto: UpdatePublicationDto): Promise<Publication> {
     updateDto.authorIds = updateDto.authorIds ? JSON.parse(updateDto.authorIds?.toString()) : [];
     updateDto.categoryIds = updateDto.categoryIds ? JSON.parse(updateDto.categoryIds?.toString()) : [];

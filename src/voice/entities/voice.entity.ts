@@ -15,9 +15,9 @@ export class Voice extends BaseDocument {
   @Prop()
   isPrivate: boolean;
   @Prop()
-  order: number
+  order: number;
   @Prop()
-  name:string
+  name: string;
 }
 
 export const VoiceSchema = SchemaFactory.createForClass(Voice)

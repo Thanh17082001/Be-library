@@ -1,3 +1,4 @@
+import {CaslModule} from 'src/casl/casl.module';
 import {Module} from '@nestjs/common';
 import {AuthService} from './auth.service';
 import {AuthController} from './auth.controller';
@@ -16,6 +17,7 @@ import {TokenModule} from 'src/token/token.module';
       secret: jwtConstants.secret,
       signOptions: {expiresIn: '60s'},
     }),
+    CaslModule,
   ],
   controllers: [AuthController],
   providers: [AuthService],

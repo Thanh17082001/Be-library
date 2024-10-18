@@ -16,13 +16,15 @@ import {UpdateQuantityShelves, UpdateQuantityStock} from './dto/update-shelvesdt
 import {LoanshipService} from 'src/loanship/loanship.service';
 import {LoanSlip} from 'src/loanship/entities/loanship.entity';
 import {Liquidation} from 'src/liquidation/entities/liquidation.entity';
+import {Group} from 'src/group/entities/group.entity';
 
 @Injectable()
 export class PublicationService {
   constructor(
     @InjectModel(Publication.name) private publicationModel: SoftDeleteModel<Publication>,
     @InjectModel(LoanSlip.name) private loanSlipModel: SoftDeleteModel<LoanSlip>,
-    @InjectModel(Liquidation.name) private liquidationModel: SoftDeleteModel<Liquidation>
+    @InjectModel(Liquidation.name) private liquidationModel: SoftDeleteModel<Liquidation>,
+    @InjectModel(Group.name) private groupModel: SoftDeleteModel<Group>
   ) {}
   async create(createDto: CreatePublicationDto): Promise<Publication> {
     if (createDto.path == '') {
@@ -64,11 +66,14 @@ export class PublicationService {
           if (['categoryIds', 'authorIds', 'publisherIds', 'materialIds'].includes(key)) {
             mongoQuery[key] = {$in: query[key]};
           }
+
           mongoQuery[key] = query[key];
         }
       });
     }
-
+    if (Object.keys(mongoQuery).includes('createBy')) {
+      mongoQuery.createBy = new Types.ObjectId(mongoQuery.createBy);
+    }
     //search document
     if (search) {
       mongoQuery.name = {$regex: new RegExp(search, 'i')};
@@ -187,14 +192,15 @@ export class PublicationService {
       }
 
       for (let i = 0; i < resource.images.length; i++) {
-        const pathOld = path.join(__dirname, '..', '..', 'public', resource.path);
         const priviewImageOld = path.join(__dirname, '..', '..', 'public', resource.path);
-        if (existsSync(pathOld)) {
-          unlinkSync(pathOld);
-        }
+        const imageConvertOld = path.join(__dirname, '..', '..', 'public', resource.images[i]);
 
         if (existsSync(priviewImageOld)) {
           unlinkSync(priviewImageOld);
+        }
+
+        if (existsSync(imageConvertOld)) {
+          unlinkSync(imageConvertOld);
         }
       }
     } else {
@@ -350,10 +356,49 @@ export class PublicationService {
     if (!resource) {
       throw new NotFoundException('Resource not found');
     }
+    const oldImagePath = path.join(__dirname, '..', '..', 'public', resource.path);
+    if (existsSync(oldImagePath) && resource.path !== '/default/publication-default.jpg') {
+      unlinkSync(oldImagePath);
+    }
+
+    for (let i = 0; i < resource.images.length; i++) {
+      const priviewImageOld = path.join(__dirname, '..', '..', 'public', resource.path);
+      const imageConvertOld = path.join(__dirname, '..', '..', 'public', resource.images[i]);
+
+      if (existsSync(priviewImageOld)) {
+        unlinkSync(priviewImageOld);
+      }
+
+      if (existsSync(imageConvertOld)) {
+        unlinkSync(imageConvertOld);
+      }
+    }
     return await this.publicationModel?.findByIdAndDelete(new Types.ObjectId(id));
   }
+
   async deleteMultiple(ids: string[]): Promise<any> {
     const objectIds = ids.map(id => new Types.ObjectId(id));
+    for (let i = 0; i < objectIds.length; i++) {
+      const resource: Publication = await this.publicationModel.findOneDeleted(new Types.ObjectId(objectIds[i]));
+
+      const oldImagePath = path.join(__dirname, '..', '..', 'public', resource.path);
+      if (existsSync(oldImagePath)) {
+        unlinkSync(oldImagePath);
+      }
+
+      for (let i = 0; i < resource.images.length; i++) {
+        const priviewImageOld = path.join(__dirname, '..', '..', 'public', resource.path);
+        const imageConvertOld = path.join(__dirname, '..', '..', 'public', resource.images[i]);
+
+        if (existsSync(priviewImageOld)) {
+          unlinkSync(priviewImageOld);
+        }
+
+        if (existsSync(imageConvertOld)) {
+          unlinkSync(imageConvertOld);
+        }
+      }
+    }
     return await this.publicationModel.deleteMany({
       _id: {$in: objectIds},
     });
@@ -416,5 +461,47 @@ export class PublicationService {
       totalQuantity: {$gt: 0}, // Chỉ đếm các sách có totalQuantity > 0
     });
     return count;
+  }
+
+  //liên thông
+  async GetIsLink(libraryId: string): Promise<any> {
+    console.log(libraryId);
+    const group = await this.groupModel.findOne({
+      libraries: {$in: [libraryId]},
+    });
+    if (!group) {
+      throw new Error('Không tìm thấy groupId cho libraryId này');
+    }
+
+    const groupId = group._id;
+    const results = await this.publicationModel.aggregate([
+      {
+        $match: {
+          isLink: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'libraries', // Tên của collection thư viện
+          localField: 'libraryId', // Trường libraryId của bảng ấn phẩm
+          foreignField: '_id', // Trường _id của bảng thư viện
+          as: 'libraryDetails', // Tên trường chứa dữ liệu kết nối
+        },
+      },
+      {
+        $unwind: {
+          path: '$libraryDetails',
+          preserveNullAndEmptyArrays: true, // Giữ lại tài liệu nếu abc là null hoặc không tồn tại
+        },
+      },
+
+      {
+        $match: {
+          'libraryDetails.groupId': groupId, // Điều kiện groupId
+        },
+      },
+    ]);
+
+    return results;
   }
 }

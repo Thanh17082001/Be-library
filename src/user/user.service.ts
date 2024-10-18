@@ -18,6 +18,7 @@ import {RoleService} from 'src/role/role.service';
 import {RoleS} from 'src/role/entities/role.entity';
 import {SoftDeleteModel} from 'mongoose-delete';
 import {Role} from 'src/role/role.enum';
+import {UpdateAuthDto} from './dto/update-auth.dto';
 
 @Injectable()
 export class UserService {
@@ -27,16 +28,17 @@ export class UserService {
   ) {}
   async create(createUserDto: CreateUserDto): Promise<User> {
     const roleEnum = Role.Student;
-    createUserDto.username = generateUserName(createUserDto.fullname, createUserDto.birthday);
+    if (createUserDto.username == '') {
+      createUserDto.username = generateUserName(createUserDto.fullname, createUserDto.birthday);
+    }
+
     createUserDto.password = generateRandomPassword(8);
     const password = await bcrypt.hash(createUserDto.password, 10);
     createUserDto.barcode = generateBarcode();
-    console.log(createUserDto.email);
     const userExits = await this.userModel.findOne({
       $or: [{username: createUserDto.username}, {email: createUserDto.email}],
     });
-
-    if (!!userExits) {
+    if (userExits) {
       throw new BadRequestException('Username or email already exists');
     }
 
@@ -45,16 +47,16 @@ export class UserService {
     if (!role) {
       role = (await this.roleService.findOne({name: roleEnum})).result;
     }
-
+    createUserDto.libraryId = new Types.ObjectId(createUserDto.libraryId);
     const user = {
       ...createUserDto,
+
       permissions: role.permissions,
       roleId: new Types.ObjectId(roleId),
-      avatar: createUserDto.avatar != '' ? createUserDto.avatar : '/default/68e1d8178e17d7d962ec9db4fae3eabc.jpg',
+      avatar: createUserDto?.avatar || createUserDto?.avatar != '' ? createUserDto.avatar : '/default/68e1d8178e17d7d962ec9db4fae3eabc.jpg',
       passwordFirst: createUserDto.password,
       password: password,
     };
-
     const result = await this.userModel.create(user);
     result.password = undefined;
     result.passwordFirst = undefined;
@@ -70,17 +72,15 @@ export class UserService {
       const arrayQuery = Object.keys(query);
       arrayQuery.forEach(key => {
         if (key && !pagination.includes(key)) {
-          if (key == 'roleId') {
-            mongoQuery.roleId = new Types.ObjectId(query.roleId);
-          }
-          else {
-            
-            mongoQuery[key] = query[key];
-          }
+          mongoQuery[key] = query[key];
         }
       });
     }
-
+    if (Object.keys(mongoQuery).includes('roleId')) {
+      mongoQuery.roleId = new Types.ObjectId(mongoQuery.roleId.toString());
+    }
+    console.log(mongoQuery);
+    // console.log(mongoQuery)
     //search document
     if (search) {
       mongoQuery.name = {$regex: new RegExp(search, 'i')};
@@ -92,6 +92,7 @@ export class UserService {
         .find(mongoQuery)
         .select(['-password', '-passwordFirst'])
         .populate('roleId')
+        .populate('libraryId')
         .sort({order: 1, createdAt: order === 'ASC' ? 1 : -1})
         .skip(skip)
         .limit(limit)
@@ -145,6 +146,27 @@ export class UserService {
     });
   }
 
+  async updateAuth(id: string, updateDto: UpdateAuthDto): Promise<User> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid id');
+    }
+
+    const exits: User = await this.userModel.findOne({
+      email: updateDto.email, // Tìm theo tên
+      _id: {$ne: new Types.ObjectId(id)}, // Loại trừ ID hiện tại
+    });
+    if (exits) {
+      throw new BadRequestException('email already exists');
+    }
+    const resource: User = await this.userModel.findById(new Types.ObjectId(id));
+    if (!resource) {
+      throw new NotFoundException('Resource not found');
+    }
+    return this.userModel.findByIdAndUpdate(id, updateDto, {
+      returnDocument: 'after',
+    });
+  }
+
   async remove(id: string): Promise<User> {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid id');
@@ -179,7 +201,7 @@ export class UserService {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid id');
     }
-    const resource: User = await this.userModel.findOneDeleted({ _id: new Types.ObjectId(id) });
+    const resource: User = await this.userModel.findOneDeleted({_id: new Types.ObjectId(id)});
     if (!resource) {
       throw new NotFoundException('Resource not found');
     }
@@ -189,7 +211,7 @@ export class UserService {
   async deleteMultiple(ids: string[]): Promise<any> {
     const objectIds = ids.map(id => new Types.ObjectId(id));
     return await this.userModel.deleteMany({
-      _id: { $in: objectIds },
+      _id: {$in: objectIds},
     });
   }
 

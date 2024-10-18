@@ -30,8 +30,7 @@ export class WarehouseReceiptController {
   @UseGuards(CaslGuard)
   async create(@Body() createDto: CreateWarehouseReceiptDto, @Req() request: Request): Promise<WarehouseReceipt> {
     const user = request['user'] ?? null;
-    createDto.libraryId = user?.libraryId ?? null;
-    createDto.groupId = user?.groupId ?? null;
+    createDto.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
     createDto.createBy = user?._id ?? null;
     return await this.warehouseReceiptService.create({...createDto});
   }
@@ -44,57 +43,81 @@ export class WarehouseReceiptController {
   // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test'), (ability: AppAbility) => ability.can(Action.Read, 'WarehouseReceipt'))
   async findAll(@Query() query: Partial<CreateWarehouseReceiptDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<WarehouseReceipt>> {
     const user = request['user'];
-    query.libraryId = user?.libraryId ?? null;
+    if (!user.isAdmin) {
+      query.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
+    }
     return await this.warehouseReceiptService.findAll(pageOptionDto, query);
   }
   @Get('/deleted')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'warehousereceipts')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard)
   async findAllDeleted(@Query() query: Partial<CreateWarehouseReceiptDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<WarehouseReceipt>> {
     const user = request['user'];
-    query.libraryId = user?.libraryId ?? null;
+    if (!user.isAdmin) {
+      query.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
+    }
     return await this.warehouseReceiptService.findDeleted(pageOptionDto, query);
   }
 
   @Get('deleted/:id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'warehousereceipts')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard)
   async findOneDeleted(@Param('id') id: string): Promise<ItemDto<WarehouseReceipt>> {
     return await this.warehouseReceiptService.findByIdDeleted(new Types.ObjectId(id));
   }
 
   @Get(':id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'warehousereceipts')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard)
   async findOne(@Param('id') id: string): Promise<ItemDto<WarehouseReceipt>> {
     return await this.warehouseReceiptService.findOne(new Types.ObjectId(id));
   }
 
   @Get('accept/:id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'warehousereceipts')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard)
   async acceptWarehouse(@Param('id') id: string): Promise<WarehouseReceipt> {
     return await this.warehouseReceiptService.accept(id);
   }
 
   @Delete('selected')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'warehousereceipts')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard)
   deleteSelected(@Body() ids: string[]) {
     return this.warehouseReceiptService.deleteMultiple(ids);
   }
 
   @Delete('soft/selected')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'warehousereceipts')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard)
   async removes(@Body() ids: string[]): Promise<Array<WarehouseReceipt>> {
     return await this.warehouseReceiptService.removes(ids);
   }
 
   @Delete('soft/:id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'warehousereceipts')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard)
   remove(@Param('id') id: string) {
     return this.warehouseReceiptService.remove(id);
   }
 
   @Delete(':id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'warehousereceipts')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard)
   delete(@Param('id') id: string) {
     return this.warehouseReceiptService.delete(id);
   }
 
   @Patch('restore')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, 'warehousereceipts')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard)
   async restoreByIds(@Body() ids: string[]): Promise<WarehouseReceipt[]> {
     return this.warehouseReceiptService.restoreByIds(ids);
   }
 
   @Patch(':id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, 'warehousereceipts')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard)
   async update(@Param('id') id: string, @Body() updateDto: UpdateWarehouseReceiptDto): Promise<WarehouseReceipt> {
     return await this.warehouseReceiptService.update(id, updateDto);
   }

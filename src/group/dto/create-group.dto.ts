@@ -3,7 +3,7 @@ import {IsArray, IsString} from 'class-validator';
 import {Types} from 'mongoose';
 import {BaseDto} from 'src/common/base.dto';
 
-export class CreateGroupDto extends OmitType(BaseDto, ['libraryId', 'groupId']) {
+export class CreateGroupDto extends OmitType(BaseDto, ['libraryId']) {
   @ApiProperty()
   @IsString()
   name: string;

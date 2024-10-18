@@ -26,26 +26,27 @@ import {generateBarcode} from 'src/common/genegrate-barcode';
 
 @Controller('user')
 @ApiTags('user')
-@UseGuards(RolesGuard)
-@Roles(Role.Admin) // tên role để chặn bên dưới
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Create, 'users')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file', {storage: storage('avatar'), ...multerOptions}))
   async create(@UploadedFile() file: Express.Multer.File, @Body() createDto: CreateUserDto, @Req() request: Request): Promise<User> {
     const user = request['user'] ?? null;
     createDto.avatar = file ? `/avatar/${file.filename}` : '';
-    createDto.createBy = user?._id ?? null;
-    createDto.libraryId = user?.libraryId ?? null;
-    createDto.groupId = user?.groupId ?? null;
+    createDto.createBy = new Types.ObjectId(user?._id) ?? null;
+    createDto.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
     return await this.userService.create({...createDto});
   }
 
   @Post('import-excel')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Create, 'users')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   async importExcel(@UploadedFile() file: Express.Multer.File, @Req() request: Request, @Body() body: ImportExcel) {
     const user = request['user'] ?? null;
     const workbook = XLSX.read(file.buffer, {type: 'buffer'});
@@ -67,8 +68,7 @@ export class UserController {
           gender: valuesItem[6],
           username: '',
           password: '',
-          libraryId: user?.libraryId ?? null,
-          groupId: user?.groupId ?? null,
+          libraryId: new Types.ObjectId(user?.libraryId) ?? null,
           passwordFirst: '',
           avatar: '',
           roleId: new Types.ObjectId(),
@@ -87,61 +87,80 @@ export class UserController {
   }
 
   @Get()
-  // @Roles(Role.User) // tên role để chặn bên dưới
-  // @UseGuards(RolesGuard) // chặn role (admin, student ,....)
-  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test')) // tên permission và bảng cần chặn
-  // @UseGuards(CaslGuard) // chặn permission (CRUD)
-  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test'), (ability: AppAbility) => ability.can(Action.Read, 'User'))
-  // @Public()
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'users')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   async findAll(@Query() query: Partial<CreateUserDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<User>> {
     const user = request['user'];
-    query.libraryId = user?.libraryId ?? null;
+    if (!user.isAdmin) {
+      query.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
+    }
+
     return await this.userService.findAll(pageOptionDto, query);
   }
 
   @Get('/deleted')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'users')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   async findAllDeleted(@Query() query: Partial<CreateUserDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<User>> {
     const user = request['user'];
-    query.libraryId = user?.libraryId ?? null;
+    if (!user.isAdmin) {
+      query.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
+    }
     return await this.userService.findDeleted(pageOptionDto, query);
   }
 
   @Get('deleted/:id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'users')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   async findOneDeleted(@Param('id') id: string): Promise<ItemDto<User>> {
     return await this.userService.findByIdDeleted(new Types.ObjectId(id));
   }
 
   @Get(':id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'users')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   async findOne(@Param('id') id: string): Promise<ItemDto<User>> {
     return await this.userService.findById(new Types.ObjectId(id));
   }
 
   @Get('barcode/:barcode')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'users')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   async findByBarcode(@Param('barcode') barcode: string): Promise<ItemDto<User>> {
     return await this.userService.findByBarcode(barcode);
   }
 
   @Delete('selected')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'users')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   deleteSelected(@Body() ids: string[]) {
     return this.userService.deleteMultiple(ids);
   }
 
   @Delete('soft/selected')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'users')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   async removes(@Body() ids: string[]): Promise<Array<User>> {
     return await this.userService.removes(ids);
   }
 
   @Delete('soft/:id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'users')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   remove(@Param('id') id: string) {
     return this.userService.remove(id);
   }
 
   @Delete(':id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'users')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   delete(@Param('id') id: string) {
     return this.userService.delete(id);
   }
 
   @Patch('restore')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, 'users')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   async restoreByIds(@Body('ids') ids: string[]): Promise<User[]> {
     return this.userService.restoreByIds(ids);
   }
@@ -149,6 +168,8 @@ export class UserController {
   @Patch(':id')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file', {storage: storage('avatar'), ...multerOptions}))
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, 'users')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   async update(@UploadedFile() file: Express.Multer.File, @Param('id') id: string, @Body() updateDto: UpdateUserDto): Promise<User> {
     if (file) {
       updateDto.avatar = `/avatar/${file.filename}`;

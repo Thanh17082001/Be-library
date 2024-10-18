@@ -20,67 +20,83 @@ import {Public} from 'src/auth/auth.decorator';
 
 @Controller('library')
 @ApiTags('library')
-@Public()
 export class LibraryController {
   constructor(private readonly libraryService: LibraryService) {}
 
   @Post()
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Create, 'libraries')) // tên permisson và bảng cần chặn
+  @UseGuards(CaslGuard)
   create(@Body() createLibraryDto: CreateLibraryDto, @Req() request: Request) {
     return this.libraryService.create({...createLibraryDto});
   }
 
   @Get()
-  @Roles(Role.Student) // tên role để chặn bên dưới
-  // @UseGuards(RolesGuard) // chặn role (admin, student ,....)
-  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test')) // tên permission và bảng cần chặn
-  // @UseGuards(CaslGuard) // chặn permission (CRUD)
-  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test'), (ability: AppAbility) => ability.can(Action.Read, 'Library'))
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'libraries')) // tên permisson và bảng cần chặn
+  @UseGuards(CaslGuard)
   findAll(@Query() query: Partial<CreateLibraryDto>, @Query() pageOptionDto: PageOptionsDto): Promise<PageDto<Library>> {
     return this.libraryService.findAll(pageOptionDto, query);
   }
 
   @Get('/deleted')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'libraries')) // tên permisson và bảng cần chặn
+  @UseGuards(CaslGuard)
   async findAllDeleted(@Query() query: Partial<CreateLibraryDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Library>> {
     const user = request['user'];
     return await this.libraryService.findDeleted(pageOptionDto, query);
   }
 
   @Get('deleted/:id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'libraries')) // tên permisson và bảng cần chặn
+  @UseGuards(CaslGuard)
   async findOneDeleted(@Param('id') id: string): Promise<ItemDto<Library>> {
     return await this.libraryService.findByIdDeleted(new Types.ObjectId(id));
   }
 
   @Get(':id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'libraries')) // tên permisson và bảng cần chặn
+  @UseGuards(CaslGuard)
   findOne(@Param('id') id: string) {
     return this.libraryService.findOne(id);
   }
 
   @Delete('selected')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'libraries')) // tên permisson và bảng cần chặn
+  @UseGuards(CaslGuard)
   deleteSelected(@Body() ids: string[]) {
     return this.libraryService.deleteMultiple(ids);
   }
 
   @Delete('soft/selected')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'libraries')) // tên permisson và bảng cần chặn
+  @UseGuards(CaslGuard)
   async removes(@Body() ids: string[]): Promise<Array<Library>> {
     return await this.libraryService.removes(ids);
   }
 
   @Delete('soft/:id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'libraries')) // tên permisson và bảng cần chặn
+  @UseGuards(CaslGuard)
   remove(@Param('id') id: string) {
     return this.libraryService.remove(id);
   }
 
   @Delete(':id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'libraries')) // tên permisson và bảng cần chặn
+  @UseGuards(CaslGuard)
   delete(@Param('id') id: string) {
     return this.libraryService.delete(id);
   }
 
   @Patch('restore')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, 'libraries')) // tên permisson và bảng cần chặn
+  @UseGuards(CaslGuard)
   async restoreByIds(@Body() ids: string[]): Promise<Library[]> {
     return this.libraryService.restoreByIds(ids);
   }
 
   @Patch(':id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, 'libraries')) // tên permisson và bảng cần chặn
+  @UseGuards(CaslGuard)
   update(@Param('id') id: string, @Body() updateLibraryDto: UpdateLibraryDto) {
     return this.libraryService.update(id, updateLibraryDto);
   }

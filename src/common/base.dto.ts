@@ -4,9 +4,6 @@ import {Types} from 'mongoose';
 
 export class BaseDto {
   @IsOptional()
-  groupId: Types.ObjectId | null;
-
-  @IsOptional()
   libraryId: Types.ObjectId | null;
 
   @IsOptional()

@@ -20,71 +20,93 @@ import {Category} from './entities/category.entity';
 
 @Controller('category')
 @ApiTags('category')
-@Public()
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
   @Post()
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Create, 'categories')) // tên permisson và bảng cần chặn
+  @UseGuards(CaslGuard)
   async create(@Body() createDto: CreateCategoryDto, @Req() request: Request): Promise<Category> {
     const user = request['user'] ?? null;
+    createDto.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
+    createDto.createBy = new Types.ObjectId(user?.userId) ?? null;
     return await this.categoryService.create({...createDto});
   }
 
   @Get()
-  // @Roles(Role.User) // tên role để chặn bên dưới
-  // @UseGuards(RolesGuard) // chặn role (admin, student ,....)
-  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test')) // tên permission và bảng cần chặn
-  // @UseGuards(CaslGuard) // chặn permission (CRUD)
-  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test'), (ability: AppAbility) => ability.can(Action.Read, 'Category'))
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'categories')) // tên permisson và bảng cần chặn
+  @UseGuards(CaslGuard)
   async findAll(@Query() query: Partial<CreateCategoryDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Category>> {
     const user = request['user'];
-    query.libraryId = user?.libraryId ?? null;
+    if (!user.isAdmin) {
+      query.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
+    }
     return await this.categoryService.findAll(pageOptionDto, query);
   }
 
   @Get('/deleted')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'categories')) // tên permisson và bảng cần chặn
+  @UseGuards(CaslGuard)
   async findAllDeleted(@Query() query: Partial<CreateCategoryDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Category>> {
     const user = request['user'];
-    query.libraryId = user?.libraryId ?? null;
+    if (!user.isAdmin) {
+      query.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
+    }
     return await this.categoryService.findDeleted(pageOptionDto, query);
   }
 
   @Get('deleted/:id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'categories')) // tên permisson và bảng cần chặn
+  @UseGuards(CaslGuard)
   async findOneDeleted(@Param('id') id: string): Promise<ItemDto<Category>> {
     return await this.categoryService.findByIdDeleted(new Types.ObjectId(id));
   }
 
   @Get(':id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'categories')) // tên permisson và bảng cần chặn
+  @UseGuards(CaslGuard)
   async findOne(@Param('id') id: ObjectId): Promise<ItemDto<Category>> {
     return await this.categoryService.findOne(id);
   }
 
   @Delete('selected')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'categories')) // tên permisson và bảng cần chặn
+  @UseGuards(CaslGuard)
   deleteSelected(@Body() ids: string[]) {
     return this.categoryService.deleteMultiple(ids);
   }
 
   @Delete('soft/selected')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'categories')) // tên permisson và bảng cần chặn
+  @UseGuards(CaslGuard)
   async removes(@Body() ids: string[]): Promise<Array<Category>> {
     return await this.categoryService.removes(ids);
   }
 
   @Delete('soft/:id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'categories')) // tên permisson và bảng cần chặn
+  @UseGuards(CaslGuard)
   remove(@Param('id') id: string) {
     return this.categoryService.remove(id);
   }
 
   @Delete(':id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'categories')) // tên permisson và bảng cần chặn
+  @UseGuards(CaslGuard)
   delete(@Param('id') id: string) {
     return this.categoryService.delete(id);
   }
 
   @Patch('restore')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, 'categories')) // tên permisson và bảng cần chặn
+  @UseGuards(CaslGuard)
   async restoreByIds(@Body() ids: string[]): Promise<Category[]> {
     return this.categoryService.restoreByIds(ids);
   }
 
   @Patch(':id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, 'categories')) // tên permisson và bảng cần chặn
+  @UseGuards(CaslGuard)
   async update(@Param('id') id: string, @Body() updateDto: UpdateCategoryDto): Promise<Category> {
     return await this.categoryService.update(id, updateDto);
   }

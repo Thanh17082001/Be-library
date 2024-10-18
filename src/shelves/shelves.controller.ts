@@ -24,72 +24,89 @@ export class ShelvesController {
   constructor(private readonly shelvesService: ShelvesService) {}
 
   @Post()
-  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'shelves')) // tên permission và bảng cần chặn
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Create, 'shelves')) // tên permission và bảng cần chặn
   @UseGuards(CaslGuard) // chặn permission (CRUD)
   async create(@Body() createDto: CreateShelfDto, @Req() request: Request): Promise<Shelves> {
     const user = request['user'] ?? null;
-    createDto.libraryId = user?.libraryId ?? null;
-    createDto.groupId = user?.groupId ?? null;
+    createDto.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
+    createDto.createBy = new Types.ObjectId(user?.userId) ?? null;
     return await this.shelvesService.create({...createDto});
   }
 
   @Get()
-  // @Roles(Role.User) // tên role để chặn bên dưới
-  // @UseGuards(RolesGuard) // chặn role (admin, student ,....)
   @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'shelves')) // tên permission và bảng cần chặn
   @UseGuards(CaslGuard) // chặn permission (CRUD)
-  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test'), (ability: AppAbility) => ability.can(Action.Read, 'Shelves'))
-  // @Public()
   async findAll(@Query() query: Partial<CreateShelfDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Shelves>> {
     const user = request['user'];
-    query.libraryId = user?.libraryId ?? null;
-    query.groupId = user?.groupId ?? null;
+    if (!user.isAdmin) {
+      query.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
+    }
     return await this.shelvesService.findAll(pageOptionDto, query);
   }
 
   @Get('/deleted')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'shelves')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   async findAllDeleted(@Query() query: Partial<CreateShelfDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Shelves>> {
     const user = request['user'];
-    query.libraryId = user?.libraryId ?? null;
+    if (!user.isAdmin) {
+      query.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
+    }
     return await this.shelvesService.findDeleted(pageOptionDto, query);
   }
 
   @Get('deleted/:id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'shelves')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   async findOneDeleted(@Param('id') id: string): Promise<ItemDto<Shelves>> {
     return await this.shelvesService.findByIdDeleted(new Types.ObjectId(id));
   }
 
   @Get(':id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'shelves')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   async findOne(@Param('id') id: ObjectId): Promise<ItemDto<Shelves>> {
     return await this.shelvesService.findOne(id);
   }
 
   @Delete('soft/selected')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'shelves')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   async removes(@Body() ids: string[]): Promise<Array<Shelves>> {
     return await this.shelvesService.removes(ids);
   }
 
   @Delete('selected')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'shelves')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   async deleteSelected(@Body() ids: string[]): Promise<Array<Shelves>> {
     return await this.shelvesService.deleteMultiple(ids);
   }
 
   @Delete('soft/:id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'shelves')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   remove(@Param('id') id: string) {
     return this.shelvesService.remove(id);
   }
 
   @Delete(':id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'shelves')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   delete(@Param('id') id: string) {
     return this.shelvesService.delete(id);
   }
 
   @Patch('restore')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, 'shelves')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   async restoreByIds(@Body() ids: string[]): Promise<Shelves[]> {
     return this.shelvesService.restoreByIds(ids);
   }
 
   @Patch(':id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, 'shelves')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
   async update(@Param('id') id: string, @Body() updateDto: UpdateShelfDto): Promise<Shelves> {
     return await this.shelvesService.update(id, updateDto);
   }
