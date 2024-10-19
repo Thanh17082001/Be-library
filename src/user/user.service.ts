@@ -28,7 +28,7 @@ export class UserService {
   ) {}
   async create(createUserDto: CreateUserDto): Promise<User> {
     const roleEnum = Role.Student;
-    if (createUserDto.username == '') {
+    if (createUserDto.username == '' || !createUserDto.username) {
       createUserDto.username = generateUserName(createUserDto.fullname, createUserDto.birthday);
     }
 

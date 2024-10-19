@@ -29,6 +29,7 @@ export class AssetController {
   async create(@Body() createDto: CreateAssetDto, @Req() request: Request): Promise<Asset> {
     const user = request['user'] ?? null;
     createDto.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
+    createDto.createBy = new Types.ObjectId(user?.userId) ?? null;
     return await this.assetService.create({...createDto});
   }
 
