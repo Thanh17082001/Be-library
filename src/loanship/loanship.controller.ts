@@ -31,6 +31,7 @@ export class LoanshipController {
   async create(@Body() createDto: CreateLoanshipDto, @Req() request: Request): Promise<LoanSlip> {
     const user = request['user'] ?? null;
     createDto.libraryId = !createDto.libraryId ? (new Types.ObjectId(user?.libraryId) ?? null) : createDto.libraryId;
+    createDto.createBy = !createDto.createBy ? (new Types.ObjectId(user?.id) ?? null) : createDto.createBy;
     return await this.loanSlipService.create({...createDto});
   }
 
