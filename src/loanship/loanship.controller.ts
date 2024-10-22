@@ -18,6 +18,7 @@ import {Request} from 'express';
 import {Public} from 'src/auth/auth.decorator';
 import {LoanSlip} from './entities/loanship.entity';
 import {FilterDateDto} from './dto/fillter-date.dto';
+import {ReturnDto} from './dto/return.dto';
 
 @Controller('loan-slip')
 @ApiTags('loanSlip')
@@ -63,11 +64,11 @@ export class LoanshipController {
     return this.loanSlipService.agreeToLoan(id);
   }
 
-  @Get('return/:id')
+  @Patch('return/:id')
   @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'loanslips')) // tên permission và bảng cần chặn
   @UseGuards(CaslGuard) // chặn permission (CRUD)
-  async loanReturn(@Param() id: string): Promise<LoanSlip> {
-    return this.loanSlipService.returnToLoan(id);
+  async loanReturn(@Param('id') id: string, @Body() ReturnDto: ReturnDto): Promise<LoanSlip> {
+    return this.loanSlipService.returnToLoan(id, ReturnDto);
   }
 
   @Get('deleted/:id')

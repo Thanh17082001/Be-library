@@ -158,15 +158,14 @@ export class PublicationController {
     return await this.publicationService.findAll(pageOptionDto, query);
   }
 
-  @Get('lt')
+  @Get('link')
   @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'publications')) // tên permission và bảng cần chặn
   @UseGuards(CaslGuard) // chặn permission (CRUD)
-  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test'), (ability: AppAbility) => ability.can(Action.Read, 'Publication'))
   async lt(@Query() query: Partial<CreatePublicationDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Publication>> {
     const user = request['user'];
     const libraryId = user?.libraryId ?? null;
 
-    return await this.publicationService.GetIsLink(libraryId);
+    return await this.publicationService.GetIsLink(libraryId, pageOptionDto);
   }
 
   @Get('/deleted')

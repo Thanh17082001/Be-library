@@ -14,6 +14,9 @@ export class LoanSlipItem {
   @ApiProperty({type: Number, description: 'Số lượng ấn phẩm được mượn'})
   quantityLoan: number;
 
+  // @ApiProperty({ type: Number })
+  quantityReturn: number;
+
   @ApiProperty({enum: ['trong kho', 'trên kệ'], default: 'trên kệ', description: 'vị trí sách được mượn'})
   position: string = 'trên kệ';
 }

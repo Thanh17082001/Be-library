@@ -13,6 +13,7 @@ import {generateBarcode} from 'src/common/genegrate-barcode';
 import {FilterDateDto} from './dto/fillter-date.dto';
 import {Cron} from '@nestjs/schedule';
 import * as moment from 'moment';
+import {ReturnDto} from './dto/return.dto';
 
 @Injectable()
 export class LoanshipService {
@@ -25,11 +26,11 @@ export class LoanshipService {
     const publications = [];
     for (let i = 0; i < createDto.publications.length; i++) {
       const publicationId = createDto.publications[i].publicationId;
-      console.log(publicationId);
       const publication = await this.publicationService.findById(publicationId);
 
       publications.push({
         ...createDto.publications[i],
+        quantityReturn: 0,
         ...publication,
       });
     }
@@ -91,7 +92,7 @@ export class LoanshipService {
     );
   }
 
-  async returnToLoan(id: string): Promise<any> {
+  async returnToLoan(id: string, ReturnDto: ReturnDto): Promise<any> {
     const loan = await this.loanSlipModel.findById(new Types.ObjectId(id));
     if (loan.isReturn) {
       throw new BadRequestException('books already return');
@@ -101,37 +102,57 @@ export class LoanshipService {
     }
     const publications = loan.publications;
     const error = [];
+
     for (let i = 0; i < publications.length; i++) {
-      const publicationId = publications[i].publicationId;
-      const publication = await this.publicationService.findById(publicationId);
-      let loanQuantityed = publication.shelvesQuantity + publications[i].quantityLoan;
-      let data = {};
-      if (publications[i].position == 'stock') {
-        loanQuantityed = publication.quantity + publications[i].quantityLoan;
-        if (loanQuantityed <= 0) {
+      const item1 = publications[i];
+      const publicationId = item1.pulicationId;
+      const item2 = ReturnDto.publications.find(dtoItem => dtoItem.publicationId == item1.publicationId.toString());
+      if (item2) {
+        if (item2.quantityReturn > item1.quantityLoan) {
           error.push({
-            publicationId: publicationId,
-            message: `Not enough quantity : ${publicationId}`,
+            publicationId: item1.publicationId,
+            message: `Not enough quantity: ${item1.name}`,
           });
         }
-        data = {quantity: loanQuantityed};
-      } else {
-        if (loanQuantityed <= 0) {
-          error.push({
-            publicationId: publicationId,
-            message: `Not enough quantity: ${publicationId}`,
-          });
+        const publication = await this.publicationService.findById(publicationId);
+        let data = {};
+
+        item1.quantityReturn = item2.quantityReturn;
+        let loanQuantityed = publication.shelvesQuantity + publications[i].quantityLoan;
+        if (publications[i].position == 'stock') {
+          loanQuantityed = publication.quantity + item2.quantityReturn;
+          if (loanQuantityed <= 0) {
+            error.push({
+              publicationId: publicationId,
+              message: `Not enough quantity : ${publicationId}`,
+            });
+          }
+          data = {quantity: loanQuantityed};
+        } else {
+          if (loanQuantityed <= 0) {
+            error.push({
+              publicationId: publicationId,
+              message: `Not enough quantity: ${publicationId}`,
+            });
+          }
+          data = {shelvesQuantity: loanQuantityed};
         }
-        data = {shelvesQuantity: loanQuantityed};
+        if (error.length > 0) {
+          throw new HttpException(error, 400);
+        }
+        await this.publicationService.update(publicationId.toString(), data);
+        publications[i] = item1;
       }
-      if (error.length > 0) {
-        throw new HttpException(error, 400);
-      }
-      await this.publicationService.update(publicationId.toString(), data);
     }
+    const allReturned = publications.every(item => item.quantityLoan == item.quantityReturn);
+    let status = 'đang mượn';
+    if (allReturned) {
+      status = 'đã trả';
+    }
+
     return await this.loanSlipModel.findByIdAndUpdate(
       new Types.ObjectId(id),
-      {isReturn: true, status: 'đã trả sách'},
+      {isReturn: true, status: status, publications: publications},
       {
         returnDocument: 'after',
       }

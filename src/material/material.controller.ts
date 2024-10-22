@@ -46,6 +46,16 @@ export class MaterialController {
     return this.materialService.findAll(pageOptionDto, query);
   }
 
+  @Get('link')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'materials')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
+  async lt(@Query() query: Partial<CreateMaterialDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Material>> {
+    const user = request['user'];
+    const libraryId = user?.libraryId ?? null;
+
+    return await this.materialService.GetIsLink(libraryId, pageOptionDto);
+  }
+
   @Get('/deleted')
   @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'materials')) // tên permission và bảng cần chặn
   @UseGuards(CaslGuard) // chặn permission (CRUD)

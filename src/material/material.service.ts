@@ -8,9 +8,11 @@ import {ItemDto, PageDto} from 'src/utils/page.dto';
 import {PageMetaDto} from 'src/utils/page.metadata.dto';
 import {Material} from './entities/material.entity';
 import {SoftDeleteModel} from 'mongoose-delete';
+import {Group} from 'src/group/entities/group.entity';
 
 @Injectable()
 export class MaterialService {
+  @InjectModel(Group.name) private groupModel: SoftDeleteModel<Group>;
   constructor(@InjectModel(Material.name) private materialModel: SoftDeleteModel<Material>) {}
   async create(createDto: CreateMaterialDto): Promise<Material> {
     createDto.name = createDto.name.toLowerCase();
@@ -213,5 +215,66 @@ export class MaterialService {
       }
       await this.materialModel?.findByIdAndDelete(new Types.ObjectId(id));
     }
+  }
+
+  //liên thông
+  async GetIsLink(libraryId: string, pageOptions: PageOptionsDto): Promise<any> {
+    const {page, limit, skip, order} = pageOptions;
+    const group = await this.groupModel.findOne({
+      libraries: {$in: [libraryId]},
+    });
+    if (!group) {
+      throw new Error('Không tìm thấy groupId cho libraryId này');
+    }
+
+    const groupId = group._id;
+    const results = await this.materialModel.aggregate([
+      {
+        $match: {
+          isLink: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'libraries', // Tên của collection thư viện
+          localField: 'libraryId', // Trường libraryId của bảng ấn phẩm
+          foreignField: '_id', // Trường _id của bảng thư viện
+          as: 'libraryDetails', // Tên trường chứa dữ liệu kết nối
+        },
+      },
+      {
+        $unwind: {
+          path: '$libraryDetails',
+          preserveNullAndEmptyArrays: true, // Giữ lại tài liệu nếu abc là null hoặc không tồn tại
+        },
+      },
+
+      {
+        $match: {
+          'libraryDetails.groupId': groupId, // Điều kiện groupId
+        },
+      },
+      {
+        $sort: {createdAt: order === 'ASC' ? 1 : -1}, // Sắp xếp theo createdAt
+      },
+      {
+        $skip: skip, // Bỏ qua các tài liệu đã phân trang
+      },
+      {
+        $limit: limit, // Giới hạn số tài liệu trả về
+      },
+    ]);
+
+    const itemCount = await this.materialModel.countDocuments({
+      isLink: true,
+      'libraryDetails.groupId': groupId,
+    });
+
+    const pageMetaDto = new PageMetaDto({
+      pageOptionsDto: pageOptions,
+      itemCount,
+    });
+
+    return new PageDto(results, pageMetaDto);
   }
 }

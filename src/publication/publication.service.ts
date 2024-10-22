@@ -464,8 +464,8 @@ export class PublicationService {
   }
 
   //liên thông
-  async GetIsLink(libraryId: string): Promise<any> {
-    console.log(libraryId);
+  async GetIsLink(libraryId: string, pageOptions: PageOptionsDto): Promise<any> {
+    const {page, limit, skip, order} = pageOptions;
     const group = await this.groupModel.findOne({
       libraries: {$in: [libraryId]},
     });
@@ -500,8 +500,27 @@ export class PublicationService {
           'libraryDetails.groupId': groupId, // Điều kiện groupId
         },
       },
+      {
+        $sort: {createdAt: order === 'ASC' ? 1 : -1}, // Sắp xếp theo createdAt
+      },
+      {
+        $skip: skip, // Bỏ qua các tài liệu đã phân trang
+      },
+      {
+        $limit: limit, // Giới hạn số tài liệu trả về
+      },
     ]);
 
-    return results;
+    const itemCount = await this.publicationModel.countDocuments({
+      isLink: true,
+      'libraryDetails.groupId': groupId,
+    });
+
+    const pageMetaDto = new PageMetaDto({
+      pageOptionsDto: pageOptions,
+      itemCount,
+    });
+
+    return new PageDto(results, pageMetaDto);
   }
 }

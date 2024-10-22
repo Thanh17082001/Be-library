@@ -8,6 +8,7 @@ export class LoanSlipItem extends Publication {
   publicationId: Types.ObjectId;
   quantityLoan: number;
   position: string;
+  quantityReturn: number;
 }
 @Schema()
 export class LoanSlip extends BaseDocument {
