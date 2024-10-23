@@ -25,7 +25,12 @@ async function bootstrap() {
   app.use(express.urlencoded({limit: '1024mb', extended: true}));
 
   // Cấu hình CORS
-  app.enableCors();
+  app.enableCors({
+    origin: '*',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+  });
 
   // config swagger
   app.setGlobalPrefix('api'); // set global route

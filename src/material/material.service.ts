@@ -16,6 +16,10 @@ export class MaterialService {
   constructor(@InjectModel(Material.name) private materialModel: SoftDeleteModel<Material>) {}
   async create(createDto: CreateMaterialDto): Promise<Material> {
     createDto.name = createDto.name.toLowerCase();
+    const exits: Material = await this.materialModel.findOne({name: createDto.name, libraryId: createDto.libraryId});
+    if (exits) {
+      throw new BadRequestException('name already exists');
+    }
     return await this.materialModel.create(createDto);
   }
 
@@ -60,6 +64,10 @@ export class MaterialService {
 
   async findOne(id: ObjectId): Promise<ItemDto<Material>> {
     return new ItemDto(await this.materialModel.findById(id));
+  }
+
+  async findById(id: string): Promise<Material> {
+    return await this.materialModel.findById(id);
   }
 
   async findByName(names: Array<string>): Promise<Array<Types.ObjectId>> {
@@ -234,6 +242,7 @@ export class MaterialService {
           isLink: true,
         },
       },
+
       {
         $lookup: {
           from: 'libraries', // Tên của collection thư viện
@@ -242,6 +251,7 @@ export class MaterialService {
           as: 'libraryDetails', // Tên trường chứa dữ liệu kết nối
         },
       },
+
       {
         $unwind: {
           path: '$libraryDetails',

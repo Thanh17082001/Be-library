@@ -104,8 +104,9 @@ export class LoanshipService {
     const error = [];
 
     for (let i = 0; i < publications.length; i++) {
+      //item1 là lấy trong phiếu, item2 là truyền lên
       const item1 = publications[i];
-      const publicationId = item1.pulicationId;
+      const publicationId = item1.publicationId;
       const item2 = ReturnDto.publications.find(dtoItem => dtoItem.publicationId == item1.publicationId.toString());
       if (item2) {
         if (item2.quantityReturn > item1.quantityLoan) {
@@ -116,9 +117,11 @@ export class LoanshipService {
         }
         const publication = await this.publicationService.findById(publicationId);
         let data = {};
+        if (item2.quantityReturn > (item1.quantityLoan - item1.quantityReturn)) {
+          throw new BadRequestException('quantity return must be less than quantity loan');
+        }
 
-        item1.quantityReturn = item2.quantityReturn;
-        let loanQuantityed = publication.shelvesQuantity + publications[i].quantityLoan;
+        let loanQuantityed = publication.shelvesQuantity + item2.quantityReturn;
         if (publications[i].position == 'stock') {
           loanQuantityed = publication.quantity + item2.quantityReturn;
           if (loanQuantityed <= 0) {
@@ -141,22 +144,27 @@ export class LoanshipService {
           throw new HttpException(error, 400);
         }
         await this.publicationService.update(publicationId.toString(), data);
+        item1.quantityReturn += item2.quantityReturn;
+
         publications[i] = item1;
       }
     }
     const allReturned = publications.every(item => item.quantityLoan == item.quantityReturn);
     let status = 'đang mượn';
+    let isReturn= false
     if (allReturned) {
       status = 'đã trả';
+      isReturn=true;
     }
 
-    return await this.loanSlipModel.findByIdAndUpdate(
+    const resutl= await this.loanSlipModel.findByIdAndUpdate(
       new Types.ObjectId(id),
-      {isReturn: true, status: status, publications: publications},
+      { isReturn: isReturn, status: status, publications: publications},
       {
         returnDocument: 'after',
       }
     );
+    return new ItemDto(resutl)
   }
 
   async findAll(pageOptions: PageOptionsDto, query: Partial<CreateLoanshipDto>): Promise<PageDto<LoanSlip>> {
@@ -243,6 +251,7 @@ export class LoanshipService {
     return new ItemDto(await this.loanSlipModel.findById(id));
   }
   @Cron('0 0 * * *')
+    // @Cron('* * * * * *')
   async updateStatusIsOverdue() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -267,8 +276,8 @@ export class LoanshipService {
       throw new NotFoundException('Resource not found');
     }
 
-    if (resource.isAgree) {
-      throw new BadRequestException('Resource is agree');
+    if (resource.isAgree && resource.isReturn) {
+      throw new BadRequestException('Resource is return');
     }
     if (resource.isReturn) {
       throw new BadRequestException('Resource is return');

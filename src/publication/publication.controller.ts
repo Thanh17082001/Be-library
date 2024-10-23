@@ -259,11 +259,12 @@ export class PublicationController {
     updateDto.materialIds = updateDto.materialIds ? JSON.parse(updateDto.materialIds?.toString()) : [];
     let images = [];
     updateDto.path = '';
+    updateDto.priviewImage = '';
     if (file) {
       if (file.mimetype == 'application/pdf') {
         updateDto.images = await this.publicationService.convertPdfToImages(file?.path);
         updateDto.path = `publication/pdf/${file.filename}`;
-        updateDto.priviewImage = images.length > 0 ? images[0] : updateDto.path;
+        updateDto.priviewImage = updateDto.images.length > 0 ? updateDto.images[0] : updateDto.path;
       } else if (file.mimetype == 'video/mp4') {
         updateDto.priviewImage = await generateImageFromVideo(`publication/video/${file.filename}`);
         updateDto.path = `publication/video/${file.filename}`;

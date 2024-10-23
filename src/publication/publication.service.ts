@@ -488,6 +488,111 @@ export class PublicationService {
           as: 'libraryDetails', // Tên trường chứa dữ liệu kết nối
         },
       },
+      //chuyển đổi các mảng thành ObId
+      {
+        $addFields: {
+          authorIds: {
+            $map: {
+              input: '$authorIds',
+              as: 'id',
+              in: {$toObjectId: '$$id'}, // Chuyển đổi từng `authorId` sang `ObjectId`
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          categoryIds: {
+            $map: {
+              input: '$categoryIds',
+              as: 'id',
+              in: {$toObjectId: '$$id'}, // Chuyển đổi từng `authorId` sang `ObjectId`
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          publisherIds: {
+            $map: {
+              input: '$publisherIds',
+              as: 'id',
+              in: {$toObjectId: '$$id'}, // Chuyển đổi từng `authorId` sang `ObjectId`
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          materialIds: {
+            $map: {
+              input: '$materialIds',
+              as: 'id',
+              in: {$toObjectId: '$$id'}, // Chuyển đổi từng `authorId` sang `ObjectId`
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          materials: {
+            $map: {
+              input: '$materials',
+              as: 'id',
+              in: {$toObjectId: '$$id'}, // Chuyển đổi từng `authorId` sang `ObjectId`
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          shelvesId: {
+            $toObjectId: '$shelvesId', // Chuyển đổi từng `authorId` sang `ObjectId`
+          },
+        },
+      },
+      //tìm trong các mảng lieenm kết tới bảng
+
+      {
+        $lookup: {
+          from: 'authors', // Giả sử bạn muốn populate thêm thông tin tác giả
+          localField: 'authorIds', // Trường liên kết của bảng `material`
+          foreignField: '_id', // Trường `_id` của bảng `authors`
+          as: 'authorIds',
+        },
+      },
+      {
+        $lookup: {
+          from: 'categories', // Giả sử bạn muốn populate thêm thông tin tác giả
+          localField: 'categoryIds', // Trường liên kết của bảng `material`
+          foreignField: '_id', // Trường `_id` của bảng `authors`
+          as: 'categoryIds',
+        },
+      },
+      {
+        $lookup: {
+          from: 'publishers', // Giả sử bạn muốn populate thêm thông tin tác giả
+          localField: 'publisherIds', // Trường liên kết của bảng `material`
+          foreignField: '_id', // Trường `_id` của bảng `authors`
+          as: 'publisherIds',
+        },
+      },
+      {
+        $lookup: {
+          from: 'materials', // Giả sử bạn muốn populate thêm thông tin tác giả
+          localField: 'materialIds', // Trường liên kết của bảng `material`
+          foreignField: '_id', // Trường `_id` của bảng `authors`
+          as: 'materialIds',
+        },
+      },
+      {
+        $lookup: {
+          from: 'shelves', // Giả sử bạn muốn populate thêm thông tin tác giả
+          localField: 'shelvesId', // Trường liên kết của bảng `material`
+          foreignField: '_id', // Trường `_id` của bảng `authors`
+          as: 'shelvesId',
+        },
+      },
       {
         $unwind: {
           path: '$libraryDetails',
