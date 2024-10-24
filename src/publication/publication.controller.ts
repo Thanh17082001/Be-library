@@ -27,6 +27,7 @@ import {MaterialService} from 'src/material/material.service';
 import {UpdateQuantityShelves, UpdateQuantityStock} from './dto/update-shelvesdto';
 import {generateImageFromVideo} from 'src/common/genegrate-image-from-video';
 import {Library} from 'src/library/entities/library.entity';
+import {SearchName} from './dto/search-name.dto';
 
 @Controller('publications')
 @ApiTags('publications')
@@ -110,10 +111,10 @@ export class PublicationController {
 
         const item = data[i];
         const publication = Object.values(item);
-        categoryIds = await this.categoryService.findByName(publication[5].split(',').map(item => item.toLowerCase().trim()));
-        authorIds = await this.authorService.findByName(publication[6].split(',').map(item => item.toLowerCase().trim()));
-        publisherIds = await this.publisherService.findByName(publication[7].split(',').map(item => item.toLowerCase().trim()));
-        materialIds = await this.materialService.findByName(publication[8].split(',').map(item => item.toLowerCase().trim()));
+        categoryIds = await this.categoryService.findByName(publication[5].split(',').map(item => item.toLowerCase().trim()),  user.libraryId);
+        authorIds = await this.authorService.findByName(publication[6].split(',').map(item => item.toLowerCase().trim()),user.libraryId);
+        publisherIds = await this.publisherService.findByName(publication[7].split(',').map(item => item.toLowerCase().trim()),user.libraryId);
+        materialIds = await this.materialService.findByName(publication[8].split(',').map(item => item.toLowerCase().trim()),user.libraryId);
         const createDto: CreatePublicationDto = {
           name: publication[1],
           barcode: publication[2],
@@ -165,7 +166,15 @@ export class PublicationController {
     const user = request['user'];
     const libraryId = user?.libraryId ?? null;
 
-    return await this.publicationService.GetIsLink(libraryId, pageOptionDto);
+    return await this.publicationService.GetIsLink(libraryId, pageOptionDto, query);
+  }
+  @Get('/name')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'publications')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
+  async findByname(@Query() query: SearchName, @Req() request: Request): Promise<ItemDto<Publication>> {
+    const user = request['user'];
+    query.libraryId = query.libraryId ?? user.libraryId;
+    return await this.publicationService.findBynames(query);
   }
 
   @Get('/deleted')
@@ -192,11 +201,15 @@ export class PublicationController {
   }
 
   @Get('barcode/:barcode')
-  @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'publications')) // tên permission và bảng cần chặn
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'publications')) // tên permission và bảng cần chặn
   @UseGuards(CaslGuard) // chặn permission (CRUD)
-  async findByBarcode(@Param('barcode') barcode: string): Promise<ItemDto<Publication>> {
-    return await this.publicationService.findByBarcode(barcode);
+  async findByBarcode(@Param('barcode') barcode: string, @Req() request: Request): Promise<ItemDto<Publication>> {
+    const user = request['user'];
+    const libraryId = user.libraryId;
+    return await this.publicationService.findByBarcode(barcode, libraryId);
   }
+
+ 
 
   @Delete('selected')
   @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'publications')) // tên permission và bảng cần chặn

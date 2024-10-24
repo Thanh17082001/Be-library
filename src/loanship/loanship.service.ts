@@ -117,7 +117,7 @@ export class LoanshipService {
         }
         const publication = await this.publicationService.findById(publicationId);
         let data = {};
-        if (item2.quantityReturn > (item1.quantityLoan - item1.quantityReturn)) {
+        if (item2.quantityReturn > item1.quantityLoan - item1.quantityReturn) {
           throw new BadRequestException('quantity return must be less than quantity loan');
         }
 
@@ -151,20 +151,20 @@ export class LoanshipService {
     }
     const allReturned = publications.every(item => item.quantityLoan == item.quantityReturn);
     let status = 'đang mượn';
-    let isReturn= false
+    let isReturn = false;
     if (allReturned) {
       status = 'đã trả';
-      isReturn=true;
+      isReturn = true;
     }
 
-    const resutl= await this.loanSlipModel.findByIdAndUpdate(
+    const resutl = await this.loanSlipModel.findByIdAndUpdate(
       new Types.ObjectId(id),
-      { isReturn: isReturn, status: status, publications: publications},
+      {isReturn: isReturn, status: status, publications: publications},
       {
         returnDocument: 'after',
       }
     );
-    return new ItemDto(resutl)
+    return new ItemDto(resutl);
   }
 
   async findAll(pageOptions: PageOptionsDto, query: Partial<CreateLoanshipDto>): Promise<PageDto<LoanSlip>> {
@@ -251,7 +251,7 @@ export class LoanshipService {
     return new ItemDto(await this.loanSlipModel.findById(id));
   }
   @Cron('0 0 * * *')
-    // @Cron('* * * * * *')
+  // @Cron('* * * * * *')
   async updateStatusIsOverdue() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);

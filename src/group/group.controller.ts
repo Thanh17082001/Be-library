@@ -16,7 +16,6 @@ import {AppAbility} from 'src/casl/casl-ability.factory/casl-ability.factory';
 import {Action} from 'src/casl/casl.action';
 import {Request} from 'express';
 import {Group} from './entities/group.entity';
-import {Public} from 'src/auth/auth.decorator';
 
 @Controller('group')
 @ApiTags('group')
@@ -38,12 +37,22 @@ export class GroupController {
   findAll(@Query() query: Partial<CreateGroupDto>, @Query() pageOptionDto: PageOptionsDto): Promise<PageDto<Group>> {
     return this.groupService.findAll(pageOptionDto, query);
   }
+
   @Get('/deleted')
   @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'groups')) // tên permisson và bảng cần chặn
   @UseGuards(CaslGuard)
   async findAllDeleted(@Query() query: Partial<CreateGroupDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Group>> {
     const user = request['user'];
     return await this.groupService.findDeleted(pageOptionDto, query);
+  }
+
+  @Get('/libraries')
+  @Roles(Role.Admin, Role.Teacher) // tên role để chặn bên dưới
+  @UseGuards(RolesGuard) // chặn role (admin, student ,....)
+  async findAllLibrary(@Req() request: Request): Promise<ItemDto<Group>> {
+    const user = request['user'];
+    const libraryId = user.libraryId;
+    return await this.groupService.getLibraries(libraryId);
   }
 
   @Get('deleted/:id')

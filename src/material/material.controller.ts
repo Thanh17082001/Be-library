@@ -88,7 +88,7 @@ export class MaterialController {
     const user = request['user'];
     const libraryId = user?.libraryId ?? null;
 
-    return await this.materialService.GetIsLink(libraryId, pageOptionDto);
+    return await this.materialService.GetIsLink(libraryId, pageOptionDto, query);
   }
 
   @Get('/deleted')

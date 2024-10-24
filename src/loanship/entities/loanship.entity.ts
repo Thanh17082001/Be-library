@@ -44,4 +44,4 @@ export const LoanSlipSchema = SchemaFactory.createForClass(LoanSlip)
     deletedAt: true,
     deletedBy: true,
   })
-  .remove(['isPublic', 'isLink']);
+  .remove(['isPublic']);

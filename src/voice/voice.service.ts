@@ -10,10 +10,14 @@ import {SoftDeleteModel} from 'mongoose-delete';
 import {Voice} from './entities/voice.entity';
 import * as path from 'path';
 import {existsSync, unlinkSync, promises as fs} from 'fs';
+import {Group} from 'src/group/entities/group.entity';
 
 @Injectable()
 export class VoiceService {
-  constructor(@InjectModel(Voice.name) private voiceModel: SoftDeleteModel<Voice>) {}
+  constructor(
+    @InjectModel(Voice.name) private voiceModel: SoftDeleteModel<Voice>,
+    @InjectModel(Group.name) private groupModel: SoftDeleteModel<Group>
+  ) {}
   async create(createDto: CreateVoiceDto): Promise<Voice> {
     const voice: Voice = await this.voiceModel.findOne({name: createDto.name, isPrivate: createDto.isPrivate, publicationId: createDto.publicationId, typeVoiceId: createDto.typeVoiceId});
     if (voice) {
@@ -230,5 +234,97 @@ export class VoiceService {
       _id: {$in: objectIds},
     });
     return result;
+  }
+
+  //liên thông
+  async GetIsLink(libraryId: string, pageOptions: PageOptionsDto): Promise<any> {
+    const {page, limit, skip, order} = pageOptions;
+    const group = await this.groupModel.findOne({
+      libraries: {$in: [libraryId]},
+    });
+    if (!group) {
+      throw new Error('Không tìm thấy groupId cho libraryId này');
+    }
+
+    const groupId = group._id;
+    const results = await this.voiceModel.aggregate([
+      {
+        $match: {
+          isLink: true,
+        },
+      },
+
+      {
+        $lookup: {
+          from: 'libraries', // Tên của collection thư viện
+          localField: 'libraryId', // Trường libraryId của bảng ấn phẩm
+          foreignField: '_id', // Trường _id của bảng thư viện
+          as: 'libraryDetails', // Tên trường chứa dữ liệu kết nối
+        },
+      },
+
+      {
+        $unwind: {
+          path: '$libraryDetails',
+          preserveNullAndEmptyArrays: true, // Giữ lại tài liệu nếu abc là null hoặc không tồn tại
+        },
+      },
+
+      {
+        $match: {
+          'libraryDetails.groupId': groupId, // Điều kiện groupId
+        },
+      },
+      {
+        $sort: {createdAt: order === 'ASC' ? 1 : -1}, // Sắp xếp theo createdAt
+      },
+      {
+        $skip: skip, // Bỏ qua các tài liệu đã phân trang
+      },
+      {
+        $limit: limit, // Giới hạn số tài liệu trả về
+      },
+    ]);
+
+    // Đếm tổng số tài liệu khớp với điều kiện
+    const countResult = await this.voiceModel.aggregate([
+      {
+        $match: {
+          isLink: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'libraries',
+          localField: 'libraryId',
+          foreignField: '_id',
+          as: 'libraryDetails',
+        },
+      },
+      {
+        $unwind: {
+          path: '$libraryDetails',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $match: {
+          'libraryDetails.groupId': groupId,
+        },
+      },
+      {
+        $count: 'totalCount', // Đếm số tài liệu
+      },
+    ]);
+
+    const itemCount = countResult.length > 0 ? countResult[0].totalCount : 0;
+    console.log(itemCount);
+
+    const pageMetaDto = new PageMetaDto({
+      pageOptionsDto: pageOptions,
+      itemCount: itemCount,
+    });
+
+    return new PageDto(results, pageMetaDto);
   }
 }

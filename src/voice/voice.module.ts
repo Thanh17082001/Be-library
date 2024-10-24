@@ -4,9 +4,10 @@ import {VoiceController} from './voice.controller';
 import {MongooseModule} from '@nestjs/mongoose';
 import {Voice, VoiceSchema} from './entities/voice.entity';
 import {CaslModule} from 'src/casl/casl.module';
+import {GroupModule} from 'src/group/group.module';
 
 @Module({
-  imports: [MongooseModule.forFeature([{name: Voice.name, schema: VoiceSchema}]), CaslModule],
+  imports: [MongooseModule.forFeature([{name: Voice.name, schema: VoiceSchema}]), CaslModule, GroupModule],
   controllers: [VoiceController],
   providers: [VoiceService],
 })

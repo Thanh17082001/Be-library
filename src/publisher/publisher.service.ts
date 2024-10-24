@@ -8,12 +8,20 @@ import {ItemDto, PageDto} from 'src/utils/page.dto';
 import {PageMetaDto} from 'src/utils/page.metadata.dto';
 import {Publisher} from './entities/publisher.entity';
 import {SoftDeleteModel} from 'mongoose-delete';
+import {Group} from 'src/group/entities/group.entity';
 
 @Injectable()
 export class PublisherService {
-  constructor(@InjectModel(Publisher.name) private publisherModel: SoftDeleteModel<Publisher>) {}
+  constructor(
+    @InjectModel(Publisher.name) private publisherModel: SoftDeleteModel<Publisher>,
+    @InjectModel(Group.name) private groupModel: SoftDeleteModel<Group>
+  ) {}
   async create(createDto: CreatePublisherDto): Promise<Publisher> {
     createDto.name = createDto.name.toLowerCase();
+    const exits: Publisher = await this.publisherModel.findOne({name: createDto.name, libraryId: createDto.libraryId});
+    if (exits) {
+      throw new BadRequestException('name already exists');
+    }
     return await this.publisherModel.create(createDto);
   }
 
@@ -39,7 +47,7 @@ export class PublisherService {
     // Thực hiện phân trang và sắp xếp
     const [results, itemCount] = await Promise.all([
       this.publisherModel
-        .find()
+        .find(mongoQuery)
         // .populate('aaaaaa')
         .sort({order: 1, createdAt: order === 'ASC' ? 1 : -1})
         .skip(skip)
@@ -60,9 +68,13 @@ export class PublisherService {
     return new ItemDto(await this.publisherModel.findById(id));
   }
 
-  async findByName(names: Array<string>): Promise<Array<Types.ObjectId>> {
+  async findById(id: string): Promise<Publisher> {
+    return await this.publisherModel.findById(id);
+  }
+
+  async findByName(names: Array<string>,libraryId:string): Promise<Array<Types.ObjectId>> {
     const resources = await this.publisherModel
-      .find({name: {$in: names}}, '_id') // Chỉ lấy trường _id
+      .find({ name: { $in: names }, libraryId: new Types.ObjectId(libraryId) }) // Chỉ lấy trường _id
       .lean(); // Trả về dữ liệu đơn giản, không phải mongoose document
 
     // Trả về mảng các ObjectId
@@ -203,5 +215,120 @@ export class PublisherService {
       }
       await this.publisherModel?.findByIdAndDelete(new Types.ObjectId(id));
     }
+  }
+  //liên thông
+  async GetIsLink(libraryId: string, pageOptions: PageOptionsDto, query: Partial<Publisher>): Promise<any> {
+    const {page, limit, skip, order, search} = pageOptions;
+    const group = await this.groupModel.findOne({
+      libraries: {$in: [libraryId]},
+    });
+    if (!group) {
+      throw new Error('Không tìm thấy groupId cho libraryId này');
+    }
+
+    const groupId = group._id;
+    // Thêm các điều kiện từ `query` và search
+    const searchRegex = search
+      ? {$regex: search, $options: 'i'} // 'i' để không phân biệt hoa thường
+      : null;
+    const mongoQuery: any = {isLink: true};
+    const pagination = ['page', 'limit', 'skip', 'order', 'search'];
+
+    if (!!query && Object.keys(query).length > 0) {
+      const arrayQuery = Object.keys(query);
+      arrayQuery.forEach(key => {
+        if (key && !pagination.includes(key)) {
+          mongoQuery[key] = query[key];
+        }
+      });
+    }
+    if (Object.keys(mongoQuery).includes('libraryId')) {
+      mongoQuery.libraryId = new Types.ObjectId(mongoQuery.libraryId);
+    }
+    const match = {
+      ...(searchRegex && {name: searchRegex}),
+      ...mongoQuery,
+    };
+
+    // truy vấn
+
+    const results = await this.publisherModel.aggregate([
+      {
+        $match: {
+          ...match,
+        },
+      },
+
+      {
+        $lookup: {
+          from: 'libraries', // Tên của collection thư viện
+          localField: 'libraryId', // Trường libraryId của bảng ấn phẩm
+          foreignField: '_id', // Trường _id của bảng thư viện
+          as: 'libraryDetails', // Tên trường chứa dữ liệu kết nối
+        },
+      },
+
+      {
+        $unwind: {
+          path: '$libraryDetails',
+          preserveNullAndEmptyArrays: true, // Giữ lại tài liệu nếu abc là null hoặc không tồn tại
+        },
+      },
+
+      {
+        $match: {
+          'libraryDetails.groupId': groupId, // Điều kiện groupId
+        },
+      },
+      {
+        $sort: {createdAt: order === 'ASC' ? 1 : -1}, // Sắp xếp theo createdAt
+      },
+      {
+        $skip: skip, // Bỏ qua các tài liệu đã phân trang
+      },
+      {
+        $limit: limit, // Giới hạn số tài liệu trả về
+      },
+    ]);
+
+    // Đếm tổng số tài liệu khớp với điều kiện
+    const countResult = await this.publisherModel.aggregate([
+      {
+        $match: {
+          ...match,
+        },
+      },
+      {
+        $lookup: {
+          from: 'libraries',
+          localField: 'libraryId',
+          foreignField: '_id',
+          as: 'libraryDetails',
+        },
+      },
+      {
+        $unwind: {
+          path: '$libraryDetails',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $match: {
+          'libraryDetails.groupId': groupId,
+        },
+      },
+      {
+        $count: 'totalCount', // Đếm số tài liệu
+      },
+    ]);
+
+    const itemCount = countResult.length > 0 ? countResult[0].totalCount : 0;
+
+    const pageMetaDto = new PageMetaDto({
+      pageOptionsDto: pageOptions,
+      itemCount: itemCount,
+    });
+
+    return new PageDto(results, pageMetaDto);
   }
 }

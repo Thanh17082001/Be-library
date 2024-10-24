@@ -258,4 +258,8 @@ export class GroupService {
       _id: {$in: objectIds},
     });
   }
+
+  async getLibraries(libraryId: string): Promise<ItemDto<Group>> {
+    return new ItemDto(await this.groupModel.findOne({libraries: libraryId}).populate('libraries'));
+  }
 }

@@ -32,7 +32,9 @@ export class LoanshipController {
   async create(@Body() createDto: CreateLoanshipDto, @Req() request: Request): Promise<LoanSlip> {
     const user = request['user'] ?? null;
     createDto.libraryId = !createDto.libraryId ? (new Types.ObjectId(user?.libraryId) ?? null) : createDto.libraryId;
-    createDto.createBy = !createDto.createBy ? (new Types.ObjectId(user?.id) ?? null) : createDto.createBy;
+    createDto.createBy =  (new Types.ObjectId(user?.id) ?? null);
+    createDto.isLink = !createDto.isLink ? false : createDto.isLink;
+    createDto.userId = !createDto.userId ? (new Types.ObjectId(user?.id)) : createDto.userId;
     return await this.loanSlipService.create({...createDto});
   }
 
@@ -43,6 +45,18 @@ export class LoanshipController {
     const user = request['user'];
     if (!user.isAdmin) {
       query.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
+    }
+    return await this.loanSlipService.findAll(pageOptionDto, query);
+  }
+
+  @Get('link')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'loanslips')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
+  async link(@Query() query: Partial<CreateLoanshipDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<LoanSlip>> {
+    const user = request['user'];
+    if (!user.isAdmin) {
+      query.createBy = new Types.ObjectId(user?._id) ?? null;
+      query.isLink = true;
     }
     return await this.loanSlipService.findAll(pageOptionDto, query);
   }

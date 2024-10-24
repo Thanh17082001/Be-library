@@ -14,5 +14,5 @@ export const TypeVoiceSchema = SchemaFactory.createForClass(TypeVoice)
     deletedAt: true,
     deletedBy: true,
   })
-  .remove(['isPublic', 'isLink', 'note'])
+  .remove(['isPublic', 'isLink', 'note', 'libraryId'])
   .index({name: 1});

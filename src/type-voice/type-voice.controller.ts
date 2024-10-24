@@ -28,8 +28,6 @@ export class TypeVoiceController {
   @UseGuards(CaslGuard)
   async create(@Body() createDto: CreateTypeVoiceDto, @Req() request: Request): Promise<TypeVoice> {
     const user = request['user'] ?? null;
-    createDto.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
-    createDto.createBy = new Types.ObjectId(user?._id) ?? null;
     return await this.typeVoiceService.create({...createDto});
   }
 
@@ -37,20 +35,12 @@ export class TypeVoiceController {
   @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'typevoices')) // tên permission và bảng cần chặn
   @UseGuards(CaslGuard) // chặn permission (CRUD)
   async findAll(@Query() query: Partial<CreateTypeVoiceDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<TypeVoice>> {
-    const user = request['user'];
-    if (!user.isAdmin) {
-      query.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
-    }
     return await this.typeVoiceService.findAll(pageOptionDto, query);
   }
   @Get('/deleted')
   @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'typevoices')) // tên permission và bảng cần chặn
   @UseGuards(CaslGuard) // chặn permission (CRUD)
   async findAllDeleted(@Query() query: Partial<CreateTypeVoiceDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<TypeVoice>> {
-    const user = request['user'];
-    if (!user.isAdmin) {
-      query.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
-    }
     return await this.typeVoiceService.findDeleted(pageOptionDto, query);
   }
 

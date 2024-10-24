@@ -54,6 +54,16 @@ export class VoiceController {
     }
     return await this.voiceService.findAll(pageOptionDto, query);
   }
+  @Get('link')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'materials')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
+  async lt(@Query() query: Partial<CreateVoiceDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Voice>> {
+    const user = request['user'];
+    const libraryId = user?.libraryId ?? null;
+
+    return await this.voiceService.GetIsLink(libraryId, pageOptionDto);
+  }
+
   @Get('/deleted')
   @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'voices')) // tên permission và bảng cần chặn
   @UseGuards(CaslGuard)

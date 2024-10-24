@@ -12,8 +12,10 @@ import {Group} from 'src/group/entities/group.entity';
 
 @Injectable()
 export class MaterialService {
-  @InjectModel(Group.name) private groupModel: SoftDeleteModel<Group>;
-  constructor(@InjectModel(Material.name) private materialModel: SoftDeleteModel<Material>) {}
+  constructor(
+    @InjectModel(Material.name) private materialModel: SoftDeleteModel<Material>,
+    @InjectModel(Group.name) private groupModel: SoftDeleteModel<Group>
+  ) {}
   async create(createDto: CreateMaterialDto): Promise<Material> {
     createDto.name = createDto.name.toLowerCase();
     const exits: Material = await this.materialModel.findOne({name: createDto.name, libraryId: createDto.libraryId});
@@ -70,9 +72,9 @@ export class MaterialService {
     return await this.materialModel.findById(id);
   }
 
-  async findByName(names: Array<string>): Promise<Array<Types.ObjectId>> {
+  async findByName(names: Array<string>, libraryId:string): Promise<Array<Types.ObjectId>> {
     const resources = await this.materialModel
-      .find({name: {$in: names}}, '_id') // Chỉ lấy trường _id
+      .find({ name: { $in: names } , libraryId: new Types.ObjectId(libraryId) }, '_id') // Chỉ lấy trường _id
       .lean(); // Trả về dữ liệu đơn giản, không phải mongoose document
 
     // Trả về mảng các ObjectId
@@ -226,8 +228,8 @@ export class MaterialService {
   }
 
   //liên thông
-  async GetIsLink(libraryId: string, pageOptions: PageOptionsDto): Promise<any> {
-    const {page, limit, skip, order} = pageOptions;
+  async GetIsLink(libraryId: string, pageOptions: PageOptionsDto, query: Partial<Material>): Promise<any> {
+    const {page, limit, skip, order, search} = pageOptions;
     const group = await this.groupModel.findOne({
       libraries: {$in: [libraryId]},
     });
@@ -236,10 +238,35 @@ export class MaterialService {
     }
 
     const groupId = group._id;
+
+    // Thêm các điều kiện từ `query` và search
+    const searchRegex = search
+      ? {$regex: search, $options: 'i'} // 'i' để không phân biệt hoa thường
+      : null;
+    const mongoQuery: any = {isLink: true};
+    const pagination = ['page', 'limit', 'skip', 'order', 'search'];
+
+    if (!!query && Object.keys(query).length > 0) {
+      const arrayQuery = Object.keys(query);
+      arrayQuery.forEach(key => {
+        if (key && !pagination.includes(key)) {
+          mongoQuery[key] = query[key];
+        }
+      });
+    }
+    if (Object.keys(mongoQuery).includes('libraryId')) {
+      mongoQuery.libraryId = new Types.ObjectId(mongoQuery.libraryId);
+    }
+    const match = {
+      ...(searchRegex && {name: searchRegex}),
+      ...mongoQuery,
+    };
+
+    // truy vấn
     const results = await this.materialModel.aggregate([
       {
         $match: {
-          isLink: true,
+          ...match,
         },
       },
 
@@ -275,14 +302,43 @@ export class MaterialService {
       },
     ]);
 
-    const itemCount = await this.materialModel.countDocuments({
-      isLink: true,
-      'libraryDetails.groupId': groupId,
-    });
+    // Đếm tổng số tài liệu khớp với điều kiện
+    const countResult = await this.materialModel.aggregate([
+      {
+        $match: {
+          ...match,
+        },
+      },
+      {
+        $lookup: {
+          from: 'libraries',
+          localField: 'libraryId',
+          foreignField: '_id',
+          as: 'libraryDetails',
+        },
+      },
+      {
+        $unwind: {
+          path: '$libraryDetails',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $match: {
+          'libraryDetails.groupId': groupId,
+        },
+      },
+      {
+        $count: 'totalCount', // Đếm số tài liệu
+      },
+    ]);
+
+    const itemCount = countResult.length > 0 ? countResult[0].totalCount : 0;
+    console.log(itemCount);
 
     const pageMetaDto = new PageMetaDto({
       pageOptionsDto: pageOptions,
-      itemCount,
+      itemCount: itemCount,
     });
 
     return new PageDto(results, pageMetaDto);

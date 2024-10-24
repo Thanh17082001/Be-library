@@ -18,6 +18,7 @@ export class RolesGuard implements CanActivate {
     if (user?.isAdmin) {
       return true;
     }
+    console.log(user.roleId);
 
     if (!user) {
       return false;

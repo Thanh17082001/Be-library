@@ -1,22 +1,23 @@
-import {CreatePublicationDto} from './dto/create-publication.dto';
-import {UpdatePublicationDto} from './dto/update-publication.dto';
-import {Injectable, NotFoundException, BadRequestException, HttpException} from '@nestjs/common';
-import {InjectModel} from '@nestjs/mongoose';
-import {Model, ObjectId, Types} from 'mongoose';
-import {PageOptionsDto} from 'src/utils/page-option-dto';
-import {ItemDto, PageDto} from 'src/utils/page.dto';
-import {PageMetaDto} from 'src/utils/page.metadata.dto';
-import {Publication} from './entities/publication.entity';
+import { CreatePublicationDto } from './dto/create-publication.dto';
+import { UpdatePublicationDto } from './dto/update-publication.dto';
+import { Injectable, NotFoundException, BadRequestException, HttpException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, ObjectId, Types } from 'mongoose';
+import { PageOptionsDto } from 'src/utils/page-option-dto';
+import { ItemDto, PageDto } from 'src/utils/page.dto';
+import { PageMetaDto } from 'src/utils/page.metadata.dto';
+import { Publication } from './entities/publication.entity';
 import * as pdfPoppler from 'pdf-poppler';
-import {existsSync, unlinkSync, promises as fs} from 'fs';
+import { existsSync, unlinkSync, promises as fs } from 'fs';
 import * as path from 'path';
 import * as ffmpeg from 'fluent-ffmpeg';
-import {SoftDeleteModel} from 'mongoose-delete';
-import {UpdateQuantityShelves, UpdateQuantityStock} from './dto/update-shelvesdto';
-import {LoanshipService} from 'src/loanship/loanship.service';
-import {LoanSlip} from 'src/loanship/entities/loanship.entity';
-import {Liquidation} from 'src/liquidation/entities/liquidation.entity';
-import {Group} from 'src/group/entities/group.entity';
+import { SoftDeleteModel } from 'mongoose-delete';
+import { UpdateQuantityShelves, UpdateQuantityStock } from './dto/update-shelvesdto';
+import { LoanshipService } from 'src/loanship/loanship.service';
+import { LoanSlip } from 'src/loanship/entities/loanship.entity';
+import { Liquidation } from 'src/liquidation/entities/liquidation.entity';
+import { Group } from 'src/group/entities/group.entity';
+import { SearchName } from './dto/search-name.dto';
 
 @Injectable()
 export class PublicationService {
@@ -25,14 +26,14 @@ export class PublicationService {
     @InjectModel(LoanSlip.name) private loanSlipModel: SoftDeleteModel<LoanSlip>,
     @InjectModel(Liquidation.name) private liquidationModel: SoftDeleteModel<Liquidation>,
     @InjectModel(Group.name) private groupModel: SoftDeleteModel<Group>
-  ) {}
+  ) { }
   async create(createDto: CreatePublicationDto): Promise<Publication> {
     if (createDto.path == '') {
       createDto.path = '/default/publication-default.jpg';
       createDto.priviewImage = '/default/publication-default.jpg';
     }
     createDto.totalQuantity = 0;
-    const pub: Publication = await this.publicationModel.findOne({barcode: createDto.barcode});
+    const pub: Publication = await this.publicationModel.findOne({ barcode: createDto.barcode, libraryId: new Types.ObjectId(createDto.libraryId) });
     if (pub) {
       throw new BadRequestException('Barcode đã tồn tại!');
     }
@@ -47,7 +48,7 @@ export class PublicationService {
     const pubs = await this.publicationModel.find();
     const ids = pubs.map(pub => pub._id);
     return await this.liquidationModel.updateMany(
-      {_id: {$in: ids}}, // Điều kiện lọc, chọn tất cả các tài liệu có _id nằm trong mảng ids
+      { _id: { $in: ids } }, // Điều kiện lọc, chọn tất cả các tài liệu có _id nằm trong mảng ids
       {
         totalQuantity: 0, // Các trường cần cập nhật
       }
@@ -55,16 +56,16 @@ export class PublicationService {
   }
 
   async findAll(pageOptions: PageOptionsDto, query: Partial<Publication>): Promise<PageDto<Publication>> {
-    const {page, limit, skip, order, search} = pageOptions;
+    const { page, limit, skip, order, search } = pageOptions;
     const pagination = ['page', 'limit', 'skip', 'order', 'search'];
-    const mongoQuery: any = {isActive: 1};
+    const mongoQuery: any = { isActive: 1 };
     // Thêm các điều kiện từ `query`
     if (!!query && Object.keys(query).length > 0) {
       const arrayQuery = Object.keys(query);
       arrayQuery.forEach(key => {
         if (key && !pagination.includes(key)) {
           if (['categoryIds', 'authorIds', 'publisherIds', 'materialIds'].includes(key)) {
-            mongoQuery[key] = {$in: query[key]};
+            mongoQuery[key] = { $in: query[key] };
           }
 
           mongoQuery[key] = query[key];
@@ -76,7 +77,7 @@ export class PublicationService {
     }
     //search document
     if (search) {
-      mongoQuery.name = {$regex: new RegExp(search, 'i')};
+      mongoQuery.name = { $regex: new RegExp(search, 'i') };
     }
 
     // Thực hiện phân trang và sắp xếp
@@ -88,7 +89,7 @@ export class PublicationService {
         .populate('publisherIds')
         .populate('materialIds')
         .populate('shelvesId')
-        .sort({order: 1, createdAt: order === 'ASC' ? 1 : -1})
+        .sort({ order: 1, createdAt: order === 'ASC' ? 1 : -1 })
         .skip(skip)
         .limit(limit)
         .lean()
@@ -100,12 +101,12 @@ export class PublicationService {
     // console.log(publicationIds);
 
     const loans = await this.loanSlipModel.aggregate([
-      {$unwind: '$publications'}, // Tách từng phần tử trong mảng publications
-      {$match: {'publications.publicationId': {$in: publicationIds}, isAgree: true}}, // Lọc những phiếu mượn có publicationId trong danh sách
+      { $unwind: '$publications' }, // Tách từng phần tử trong mảng publications
+      { $match: { 'publications.publicationId': { $in: publicationIds }, isAgree: true } }, // Lọc những phiếu mượn có publicationId trong danh sách
       {
         $group: {
           _id: '$publications.publicationId', // Gom nhóm theo publicationId
-          totalQuantityLoan: {$sum: '$publications.quantityLoan'}, // Tính tổng quantityLoan cho từng cuốn sách
+          totalQuantityLoan: { $sum: '$publications.quantityLoan' }, // Tính tổng quantityLoan cho từng cuốn sách
         },
       },
     ]);
@@ -115,7 +116,7 @@ export class PublicationService {
       {
         //lọc bản ghi trong resouce chỉ giữ lại bản ghi có publiccationId nằm trong array publicationIds
         $match: {
-          publicationId: {$in: publicationIds},
+          publicationId: { $in: publicationIds },
         },
       },
       {
@@ -125,16 +126,16 @@ export class PublicationService {
             publicationId: '$publicationId',
             status: '$status', // Tính theo status
           },
-          totalQuantity: {$sum: '$quantity'}, // Tính tổng số lượng
+          totalQuantity: { $sum: '$quantity' }, // Tính tổng số lượng
         },
       },
     ]);
 
     // Tạo map để lưu số lượng thanh lý và hư hỏng cho từng publicationId
     const liquidationMap = liquidations.reduce((map, liquidation) => {
-      const {publicationId, status} = liquidation._id;
+      const { publicationId, status } = liquidation._id;
       if (!map[publicationId.toString()]) {
-        map[publicationId.toString()] = {liquidation: 0, damaged: 0};
+        map[publicationId.toString()] = { liquidation: 0, damaged: 0 };
       }
       map[publicationId.toString()][status === 'thanh lý' ? 'liquidation' : 'damaged'] += liquidation.totalQuantity;
       return map;
@@ -167,8 +168,16 @@ export class PublicationService {
     return new ItemDto(await this.publicationModel.findById(id));
   }
 
-  async findByBarcode(barcode: string): Promise<ItemDto<Publication>> {
-    return new ItemDto(await this.publicationModel.findOne({barcode}));
+  async findByBarcode(barcode: string, libraryId: string): Promise<ItemDto<Publication>> {
+    return new ItemDto(await this.publicationModel.findOne({ barcode, libraryId }));
+  }
+
+  async findBynames(query: SearchName): Promise<ItemDto<Publication>> {
+    const mongoQuery: any = { libraryId: new Types.ObjectId(query.libraryId), type: 'ấn phẩm cứng' };
+    if (query.search) {
+      mongoQuery.name = { $regex: new RegExp(query.search, 'i') };
+    }
+    return new ItemDto(await this.publicationModel.find(mongoQuery));
   }
 
   async findById(id: Types.ObjectId): Promise<Publication> {
@@ -220,7 +229,7 @@ export class PublicationService {
       throw new NotFoundException('Resource not found');
     }
 
-    return await this.publicationModel.findByIdAndUpdate(id, {$inc: {quantity: -data.quantity, shelvesQuantity: data.quantity}, shelvesId: data.shelvesId});
+    return await this.publicationModel.findByIdAndUpdate(id, { $inc: { quantity: -data.quantity, shelvesQuantity: data.quantity }, shelvesId: data.shelvesId });
   }
 
   async updateQuantityStock(data: UpdateQuantityStock): Promise<Publication> {
@@ -230,7 +239,7 @@ export class PublicationService {
       throw new NotFoundException('Resource not found');
     }
 
-    return await this.publicationModel.findByIdAndUpdate(id, {$inc: {quantity: +data.quantity, shelvesQuantity: -data.quantity}});
+    return await this.publicationModel.findByIdAndUpdate(id, { $inc: { quantity: +data.quantity, shelvesQuantity: -data.quantity } });
   }
 
   async convertPdfToImages(pdfPath: string): Promise<string[]> {
@@ -239,7 +248,7 @@ export class PublicationService {
       // const outputFiles: string[] = [];
 
       // Đảm bảo thư mục đầu ra tồn tại
-      await fs.mkdir(outputDir, {recursive: true});
+      await fs.mkdir(outputDir, { recursive: true });
       const existingFiles = new Set(await fs.readdir(outputDir));
 
       // Thiết lập tùy chọn cho việc chuyển đổi
@@ -291,7 +300,7 @@ export class PublicationService {
   }
 
   async findDeleted(pageOptions: PageOptionsDto, query: Partial<Publication>): Promise<PageDto<Publication>> {
-    const {page, limit, skip, order, search} = pageOptions;
+    const { page, limit, skip, order, search } = pageOptions;
     const pagination = ['page', 'limit', 'skip', 'order', 'search'];
     const mongoQuery: any = {}; // Điều kiện để tìm các tài liệu đã bị xóa mềm
 
@@ -301,7 +310,7 @@ export class PublicationService {
       arrayQuery.forEach(key => {
         if (key && !pagination.includes(key)) {
           if (['categoryIds', 'authorIds', 'publisherIds', 'materialIds'].includes(key)) {
-            mongoQuery[key] = {$in: query[key]};
+            mongoQuery[key] = { $in: query[key] };
           }
           mongoQuery[key] = query[key];
         }
@@ -310,14 +319,14 @@ export class PublicationService {
 
     // Tìm kiếm tài liệu
     if (search) {
-      mongoQuery.name = {$regex: new RegExp(search, 'i')};
+      mongoQuery.name = { $regex: new RegExp(search, 'i') };
     }
 
     // Thực hiện phân trang và sắp xếp
     const [results, itemCount] = await Promise.all([
       this.publicationModel
         .findDeleted(mongoQuery) // Sử dụng phương thức `findDeleted` từ mongoose-delete
-        .sort({order: 1, createdAt: order === 'ASC' ? 1 : -1})
+        .sort({ order: 1, createdAt: order === 'ASC' ? 1 : -1 })
         .skip(skip)
         .limit(limit)
         .lean()
@@ -334,17 +343,17 @@ export class PublicationService {
   }
 
   async findByIdDeleted(id: Types.ObjectId): Promise<ItemDto<Publication>> {
-    return new ItemDto(await this.publicationModel.findOneDeleted({_id: new Types.ObjectId(id)}));
+    return new ItemDto(await this.publicationModel.findOneDeleted({ _id: new Types.ObjectId(id) }));
   }
 
   async restoreByIds(ids: string[]): Promise<Publication[]> {
-    const restoredDocuments = await this.publicationModel.restore({_id: {$in: ids}});
+    const restoredDocuments = await this.publicationModel.restore({ _id: { $in: ids } });
 
     // Kiểm tra xem có tài liệu nào được khôi phục hay không
     if (!restoredDocuments || restoredDocuments.length === 0) {
       throw new NotFoundException(`No documents found for the provided IDs`);
     }
-    await this.publicationModel.updateMany({_id: {$in: ids}}, {$set: {deleted: false}});
+    await this.publicationModel.updateMany({ _id: { $in: ids } }, { $set: { deleted: false } });
     return restoredDocuments;
   }
 
@@ -400,7 +409,7 @@ export class PublicationService {
       }
     }
     return await this.publicationModel.deleteMany({
-      _id: {$in: objectIds},
+      _id: { $in: objectIds },
     });
   }
 
@@ -432,13 +441,13 @@ export class PublicationService {
           totalQuantity: {
             $sum: {
               $cond: {
-                if: {$eq: ['$totalQuantity', 0]}, // Nếu số lượng = 0
+                if: { $eq: ['$totalQuantity', 0] }, // Nếu số lượng = 0
                 then: 1, // Gán giá trị là 1
                 else: '$totalQuantity', // Nếu khác 0, giữ nguyên giá trị
               },
             },
           },
-          count: {$sum: 1}, // Đếm tổng số đầu sách theo loại
+          count: { $sum: 1 }, // Đếm tổng số đầu sách theo loại
         },
       },
       {
@@ -458,26 +467,51 @@ export class PublicationService {
   async countBorrowableHardcoverBooks(): Promise<any> {
     const count = await this.publicationModel.countDocuments({
       type: 'ấn phẩm cứng', // Chỉ đếm các sách là ấn phẩm cứng
-      totalQuantity: {$gt: 0}, // Chỉ đếm các sách có totalQuantity > 0
+      totalQuantity: { $gt: 0 }, // Chỉ đếm các sách có totalQuantity > 0
     });
     return count;
   }
 
   //liên thông
-  async GetIsLink(libraryId: string, pageOptions: PageOptionsDto): Promise<any> {
-    const {page, limit, skip, order} = pageOptions;
+  async GetIsLink(libraryId: string, pageOptions: PageOptionsDto, query: Partial<Publication>): Promise<any> {
+    const { page, limit, skip, order, search } = pageOptions;
     const group = await this.groupModel.findOne({
-      libraries: {$in: [libraryId]},
+      libraries: { $in: [libraryId] },
     });
     if (!group) {
       throw new Error('Không tìm thấy groupId cho libraryId này');
     }
 
     const groupId = group._id;
+    // Thêm các điều kiện từ `query` và search
+    const searchRegex = search
+      ? { $regex: search, $options: 'i' } // 'i' để không phân biệt hoa thường
+      : null;
+    const mongoQuery: any = { isLink: true };
+    const pagination = ['page', 'limit', 'skip', 'order', 'search'];
+
+    if (!!query && Object.keys(query).length > 0) {
+      const arrayQuery = Object.keys(query);
+      arrayQuery.forEach(key => {
+        if (key && !pagination.includes(key)) {
+          mongoQuery[key] = query[key];
+        }
+      });
+    }
+    if (Object.keys(mongoQuery).includes('libraryId')) {
+      mongoQuery.libraryId = new Types.ObjectId(mongoQuery.libraryId);
+    }
+    const match = {
+      ...(searchRegex && { name: searchRegex }),
+      ...mongoQuery,
+    };
+
+    // truy vấn
+
     const results = await this.publicationModel.aggregate([
       {
         $match: {
-          isLink: true,
+          ...match,
         },
       },
       {
@@ -495,7 +529,7 @@ export class PublicationService {
             $map: {
               input: '$authorIds',
               as: 'id',
-              in: {$toObjectId: '$$id'}, // Chuyển đổi từng `authorId` sang `ObjectId`
+              in: { $toObjectId: '$$id' }, // Chuyển đổi từng `authorId` sang `ObjectId`
             },
           },
         },
@@ -506,7 +540,7 @@ export class PublicationService {
             $map: {
               input: '$categoryIds',
               as: 'id',
-              in: {$toObjectId: '$$id'}, // Chuyển đổi từng `authorId` sang `ObjectId`
+              in: { $toObjectId: '$$id' }, // Chuyển đổi từng `authorId` sang `ObjectId`
             },
           },
         },
@@ -517,7 +551,7 @@ export class PublicationService {
             $map: {
               input: '$publisherIds',
               as: 'id',
-              in: {$toObjectId: '$$id'}, // Chuyển đổi từng `authorId` sang `ObjectId`
+              in: { $toObjectId: '$$id' }, // Chuyển đổi từng `authorId` sang `ObjectId`
             },
           },
         },
@@ -528,7 +562,7 @@ export class PublicationService {
             $map: {
               input: '$materialIds',
               as: 'id',
-              in: {$toObjectId: '$$id'}, // Chuyển đổi từng `authorId` sang `ObjectId`
+              in: { $toObjectId: '$$id' }, // Chuyển đổi từng `authorId` sang `ObjectId`
             },
           },
         },
@@ -539,7 +573,7 @@ export class PublicationService {
             $map: {
               input: '$materials',
               as: 'id',
-              in: {$toObjectId: '$$id'}, // Chuyển đổi từng `authorId` sang `ObjectId`
+              in: { $toObjectId: '$$id' }, // Chuyển đổi từng `authorId` sang `ObjectId`
             },
           },
         },
@@ -606,7 +640,7 @@ export class PublicationService {
         },
       },
       {
-        $sort: {createdAt: order === 'ASC' ? 1 : -1}, // Sắp xếp theo createdAt
+        $sort: { createdAt: order === 'ASC' ? 1 : -1 }, // Sắp xếp theo createdAt
       },
       {
         $skip: skip, // Bỏ qua các tài liệu đã phân trang
@@ -616,14 +650,43 @@ export class PublicationService {
       },
     ]);
 
-    const itemCount = await this.publicationModel.countDocuments({
-      isLink: true,
-      'libraryDetails.groupId': groupId,
-    });
+    // Đếm tổng số tài liệu khớp với điều kiện
+    const countResult = await this.publicationModel.aggregate([
+      {
+        $match: {
+          ...match,
+        },
+      },
+      {
+        $lookup: {
+          from: 'libraries',
+          localField: 'libraryId',
+          foreignField: '_id',
+          as: 'libraryDetails',
+        },
+      },
+      {
+        $unwind: {
+          path: '$libraryDetails',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $match: {
+          'libraryDetails.groupId': groupId,
+        },
+      },
+      {
+        $count: 'totalCount', // Đếm số tài liệu
+      },
+    ]);
+
+    const itemCount = countResult.length > 0 ? countResult[0].totalCount : 0;
+    console.log(itemCount);
 
     const pageMetaDto = new PageMetaDto({
       pageOptionsDto: pageOptions,
-      itemCount,
+      itemCount: itemCount,
     });
 
     return new PageDto(results, pageMetaDto);

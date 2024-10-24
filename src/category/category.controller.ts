@@ -2,7 +2,7 @@ import {CategoryService} from './category.service';
 import {CreateCategoryDto} from './dto/create-category.dto';
 import {UpdateCategoryDto} from './dto/update-category.dto';
 
-import {Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Req} from '@nestjs/common';
+import {Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Req, BadRequestException} from '@nestjs/common';
 import {PageOptionsDto} from 'src/utils/page-option-dto';
 import {ItemDto, PageDto} from 'src/utils/page.dto';
 import {ApiTags} from '@nestjs/swagger';
@@ -17,6 +17,7 @@ import {Action} from 'src/casl/casl.action';
 import {Request} from 'express';
 import {Public} from 'src/auth/auth.decorator';
 import {Category} from './entities/category.entity';
+import {PullLinkDto} from 'src/material/dto/pull-link.dto';
 
 @Controller('category')
 @ApiTags('category')
@@ -33,6 +34,40 @@ export class CategoryController {
     return await this.categoryService.create({...createDto});
   }
 
+  @Post('pull-link')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Create, 'materials')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard)
+  async pullLink(@Body() pullLinkDto: PullLinkDto, @Req() request: Request) {
+    const user = request['user'] ?? null;
+    pullLinkDto.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
+    pullLinkDto.createBy = new Types.ObjectId(user?.id) ?? null;
+    let errors: Array<{row: number; error: string}> = [];
+    let results: Category[] = [];
+    if (pullLinkDto.ids.length == 0) {
+      throw new BadRequestException('ids is empty');
+    }
+    for (let i = 0; i < pullLinkDto.ids.length; i++) {
+      const id = pullLinkDto.ids[i];
+      const resource: Category = await this.categoryService.findById(id);
+      const createDto: CreateCategoryDto = {
+        name: resource.name,
+        description: '',
+        libraryId: pullLinkDto.libraryId,
+        isLink: false,
+        createBy: pullLinkDto.createBy,
+        isPublic: pullLinkDto.isPublic ? pullLinkDto.isPublic : true,
+        note: pullLinkDto.note,
+      };
+      try {
+        const result = await this.categoryService.create({...createDto});
+        results.push(result);
+      } catch (error) {
+        errors.push({row: i + 1, error: error.message});
+      }
+    }
+    return {results, errors};
+  }
+
   @Get()
   @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'categories')) // tên permisson và bảng cần chặn
   @UseGuards(CaslGuard)
@@ -42,6 +77,16 @@ export class CategoryController {
       query.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
     }
     return await this.categoryService.findAll(pageOptionDto, query);
+  }
+
+  @Get('link')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'categories')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
+  async lt(@Query() query: Partial<CreateCategoryDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Category>> {
+    const user = request['user'];
+    const libraryId = user?.libraryId ?? null;
+
+    return await this.categoryService.GetIsLink(libraryId, pageOptionDto, query);
   }
 
   @Get('/deleted')

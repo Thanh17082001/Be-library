@@ -5,9 +5,10 @@ import {Mongoose} from 'mongoose';
 import {MongooseModule} from '@nestjs/mongoose';
 import {Publisher, PublisherSchema} from './entities/publisher.entity';
 import {CaslModule} from 'src/casl/casl.module';
+import {GroupModule} from 'src/group/group.module';
 
 @Module({
-  imports: [MongooseModule.forFeature([{name: Publisher.name, schema: PublisherSchema}]), CaslModule],
+  imports: [MongooseModule.forFeature([{name: Publisher.name, schema: PublisherSchema}]), CaslModule, GroupModule],
   controllers: [PublisherController],
   providers: [PublisherService],
   exports: [PublisherService, MongooseModule],

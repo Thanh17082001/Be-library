@@ -28,7 +28,7 @@ export class CaslGuard implements CanActivate {
     // Kiểm tra từng policy
     const isAllowed = policies.every(policy => policy(ability));
     if (!isAllowed) {
-      throw new ForbiddenException('Forbidden resource yyttttt');
+      throw new ForbiddenException('Forbidden resource');
     }
 
     return true;
