@@ -111,10 +111,22 @@ export class PublicationController {
 
         const item = data[i];
         const publication = Object.values(item);
-        categoryIds = await this.categoryService.findByName(publication[5].split(',').map(item => item.toLowerCase().trim()),  user.libraryId);
-        authorIds = await this.authorService.findByName(publication[6].split(',').map(item => item.toLowerCase().trim()),user.libraryId);
-        publisherIds = await this.publisherService.findByName(publication[7].split(',').map(item => item.toLowerCase().trim()),user.libraryId);
-        materialIds = await this.materialService.findByName(publication[8].split(',').map(item => item.toLowerCase().trim()),user.libraryId);
+        categoryIds = await this.categoryService.findByName(
+          publication[5].split(',').map(item => item.toLowerCase().trim()),
+          user.libraryId
+        );
+        authorIds = await this.authorService.findByName(
+          publication[6].split(',').map(item => item.toLowerCase().trim()),
+          user.libraryId
+        );
+        publisherIds = await this.publisherService.findByName(
+          publication[7].split(',').map(item => item.toLowerCase().trim()),
+          user.libraryId
+        );
+        materialIds = await this.materialService.findByName(
+          publication[8].split(',').map(item => item.toLowerCase().trim()),
+          user.libraryId
+        );
         const createDto: CreatePublicationDto = {
           name: publication[1],
           barcode: publication[2],
@@ -208,8 +220,6 @@ export class PublicationController {
     const libraryId = user.libraryId;
     return await this.publicationService.findByBarcode(barcode, libraryId);
   }
-
- 
 
   @Delete('selected')
   @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'publications')) // tên permission và bảng cần chặn

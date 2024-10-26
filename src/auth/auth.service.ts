@@ -29,7 +29,6 @@ export class AuthService {
   async signUp(data: SignUpDto): Promise<User> {
     data.username = '';
     data.avatar = '';
-    console.log(data);
     const newUser = await this.usersService.create({...data, barcode: ''});
     return newUser;
   }
@@ -47,7 +46,7 @@ export class AuthService {
     if (!isPass) {
       throw new BadRequestException('Account or password is incorrect');
     }
-    const payload = {...user, password: undefined};
+    const payload = {...user, password: undefined, passWordFirst: undefined, libraryDetail: user.libraryId, libraryId: user.libraryId._id};
     const accessToken = this.jwtService.sign(payload, {expiresIn: '60m'});
     const refreshToken = this.jwtService.sign({userId: user._id}, {expiresIn: '7d'});
     await this.tokenService.create({

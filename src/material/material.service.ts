@@ -18,7 +18,7 @@ export class MaterialService {
   ) {}
   async create(createDto: CreateMaterialDto): Promise<Material> {
     createDto.name = createDto.name.toLowerCase();
-    const exits: Material = await this.materialModel.findOne({name: createDto.name, libraryId: createDto.libraryId});
+    const exits: Material = await this.materialModel.findOne({name: createDto.name, libraryId: new Types.ObjectId(createDto.libraryId)});
     if (exits) {
       throw new BadRequestException('name already exists');
     }
@@ -72,9 +72,9 @@ export class MaterialService {
     return await this.materialModel.findById(id);
   }
 
-  async findByName(names: Array<string>, libraryId:string): Promise<Array<Types.ObjectId>> {
+  async findByName(names: Array<string>, libraryId: string): Promise<Array<Types.ObjectId>> {
     const resources = await this.materialModel
-      .find({ name: { $in: names } , libraryId: new Types.ObjectId(libraryId) }, '_id') // Chỉ lấy trường _id
+      .find({name: {$in: names}, libraryId: new Types.ObjectId(libraryId)}, '_id') // Chỉ lấy trường _id
       .lean(); // Trả về dữ liệu đơn giản, không phải mongoose document
 
     // Trả về mảng các ObjectId

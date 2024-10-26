@@ -72,7 +72,7 @@ export class CategoryService {
     return await this.categoryModel.findById(id);
   }
 
-  async findByName(names: Array<string>, libraryId:string): Promise<Array<Types.ObjectId>> {
+  async findByName(names: Array<string>, libraryId: string): Promise<Array<Types.ObjectId>> {
     const resources = await this.categoryModel
       .find({name: {$in: names}, libraryId: new Types.ObjectId(libraryId)}) // Chỉ lấy trường _id
       .lean(); // Trả về dữ liệu đơn giản, không phải mongoose document

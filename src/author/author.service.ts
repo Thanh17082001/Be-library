@@ -72,9 +72,9 @@ export class AuthorService {
     return await this.exampleModel.findById(id);
   }
 
-  async findByName(names: Array<string>, libraryId:string): Promise<Array<Types.ObjectId>> {
+  async findByName(names: Array<string>, libraryId: string): Promise<Array<Types.ObjectId>> {
     const resources = await this.exampleModel
-      .find({ name: { $in: names },  libraryId: new Types.ObjectId(libraryId) }) // Chỉ lấy trường _id
+      .find({name: {$in: names}, libraryId: new Types.ObjectId(libraryId)}) // Chỉ lấy trường _id
       .lean(); // Trả về dữ liệu đơn giản, không phải mongoose document
 
     // Trả về mảng các ObjectId

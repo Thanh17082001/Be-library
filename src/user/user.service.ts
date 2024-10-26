@@ -117,7 +117,7 @@ export class UserService {
   }
 
   async findOne(data: any): Promise<User> {
-    return await this.userModel.findOne(data).populate('roleId').lean();
+    return await this.userModel.findOne(data).populate('roleId').populate('libraryId').lean();
   }
 
   async update(id: string, updateDto: UpdateUserDto): Promise<User> {
