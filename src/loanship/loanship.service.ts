@@ -282,6 +282,9 @@ export class LoanshipService {
     if (resource.isReturn) {
       throw new BadRequestException('Resource is return');
     }
+    if (!updateDto.libraryId) {
+      updateDto.libraryId=resource.libraryId
+    }
     return this.loanSlipModel.findByIdAndUpdate(id, updateDto, {
       returnDocument: 'after',
     });

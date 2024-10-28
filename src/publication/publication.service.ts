@@ -169,7 +169,7 @@ export class PublicationService {
   }
 
   async findByBarcode(barcode: string, libraryId: string): Promise<ItemDto<Publication>> {
-    return new ItemDto(await this.publicationModel.findOne({barcode, libraryId}));
+    return new ItemDto(await this.publicationModel.findOne({barcode, libraryId:new Types.ObjectId(libraryId)}));
   }
 
   async findBynames(query: SearchName): Promise<ItemDto<Publication>> {

@@ -83,7 +83,7 @@ export class UserService {
     // console.log(mongoQuery)
     //search document
     if (search) {
-      mongoQuery.name = {$regex: new RegExp(search, 'i')};
+      mongoQuery.fullname = {$regex: new RegExp(search, 'i')};
     }
 
     // Thực hiện phân trang và sắp xếp

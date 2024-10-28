@@ -1,3 +1,4 @@
+import { Library } from 'src/library/entities/library.entity';
 import {LoanshipService} from './loanship.service';
 import {CreateLoanshipDto} from './dto/create-loanship.dto';
 import {UpdateLoanshipDto} from './dto/update-loanship.dto';
@@ -31,10 +32,10 @@ export class LoanshipController {
   @UseGuards(CaslGuard) // chặn permission (CRUD)
   async create(@Body() createDto: CreateLoanshipDto, @Req() request: Request): Promise<LoanSlip> {
     const user = request['user'] ?? null;
-    createDto.libraryId = !createDto.libraryId ? (new Types.ObjectId(user?.libraryId) ?? null) : createDto.libraryId;
-    createDto.createBy = new Types.ObjectId(user?.id) ?? null;
+    createDto.libraryId = !createDto.libraryId ? (new Types.ObjectId(user?.libraryId) ?? null) : new Types.ObjectId(createDto.libraryId);
     createDto.isLink = !createDto.isLink ? false : createDto.isLink;
-    createDto.userId = !createDto.userId ? new Types.ObjectId(user?.id) : createDto.userId;
+    createDto.createBy = createDto.isLink ? new Types.ObjectId(user?._id) ?? null : new Types.ObjectId(createDto.createBy) ?? null;
+    createDto.userId = !createDto.isLink ?user?._id : createDto.userId;
     return await this.loanSlipService.create({...createDto});
   }
 
@@ -61,6 +62,18 @@ export class LoanshipController {
     return await this.loanSlipService.findAll(pageOptionDto, query);
   }
 
+  @Get('request-link')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'loanslips')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
+  async requestLink(@Query() query: Partial<CreateLoanshipDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<LoanSlip>> {
+    const user = request['user'];
+    if (!user.isAdmin) {
+      query.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
+      query.isLink = true;
+    }
+    return await this.loanSlipService.findAll(pageOptionDto, query);
+  }
+
   @Get('/deleted')
   @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'loanslips')) // tên permission và bảng cần chặn
   @UseGuards(CaslGuard) // chặn permission (CRUD)
@@ -71,6 +84,7 @@ export class LoanshipController {
     }
     return await this.loanSlipService.findDeleted(pageOptionDto, query);
   }
+
   @Get('approval/:id')
   @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'loanslips')) // tên permission và bảng cần chặn
   @UseGuards(CaslGuard) // chặn permission (CRUD)
@@ -138,6 +152,7 @@ export class LoanshipController {
   @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, 'loanslips')) // tên permission và bảng cần chặn
   @UseGuards(CaslGuard) // chặn permission (CRUD)
   async update(@Param('id') id: string, @Body() updateDto: UpdateLoanshipDto): Promise<LoanSlip> {
+    updateDto.libraryId = updateDto.libraryId ? (new Types.ObjectId(updateDto.libraryId) ?? null) : undefined;
     return await this.loanSlipService.update(id, updateDto);
   }
 }
