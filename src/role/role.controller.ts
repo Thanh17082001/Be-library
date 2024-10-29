@@ -52,6 +52,8 @@ export class RoleController {
 
   @Public()
   @Post('add-permission')
+  @UseGuards(RolesGuard) // chặn role (admin, student ,....)
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Create, 'roles'))
   async addPermisson(@Body() permissionDto: PermissonRoleDto): Promise<RoleS> {
     return await this.roleService.addPermisson(permissionDto);
   }

@@ -1,4 +1,5 @@
 import {Injectable} from '@nestjs/common';
+import { Types } from 'mongoose';
 import {LoanshipService} from 'src/loanship/loanship.service';
 import {PublicationService} from 'src/publication/publication.service';
 
@@ -10,13 +11,13 @@ export class StatisticalService {
   ) {}
 
   // Tính tổng số lượng sách
-  async statisticalPublication() {
-    const totalPublication = await this.publicationService.getTotalBooks();
-    const countBorrowable = await this.publicationService.countBorrowableHardcoverBooks();
-    const topPuliction = await this.loanshipService.getTopBorrowedBooksInMonth();
-    const totalBorrowedBooks = await this.loanshipService.getTotalBorrowedBooks();
-    const totalReturnedBooks = await this.loanshipService.getTotalReturnedBooks();
-    const totalOverdueLoans = await this.loanshipService.getTotalOverdueLoans();
+  async statisticalPublication(libraryId?: Types.ObjectId) {
+    const totalPublication = await this.publicationService.getTotalBooks(libraryId);
+    const countBorrowable = await this.publicationService.countBorrowableHardcoverBooks(libraryId);
+    const topPuliction = await this.loanshipService.getTopBorrowedBooksInMonth(libraryId);
+    const totalBorrowedBooks = await this.loanshipService.getTotalBorrowedBooks(libraryId);
+    const totalReturnedBooks = await this.loanshipService.getTotalReturnedBooks(libraryId);
+    const totalOverdueLoans = await this.loanshipService.getTotalOverdueLoans(libraryId);
     const result = {
       totalPublication: totalPublication,
       totalBorrowable: countBorrowable,

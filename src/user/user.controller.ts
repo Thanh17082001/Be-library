@@ -117,8 +117,7 @@ export class UserController {
   }
 
   @Get(':id')
-  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'users')) // tên permission và bảng cần chặn
-  @UseGuards(CaslGuard) // chặn permission (CRUD)
+  @Public() // chặn permission (CRUD)
   async findOne(@Param('id') id: string): Promise<ItemDto<User>> {
     return await this.userService.findById(new Types.ObjectId(id));
   }

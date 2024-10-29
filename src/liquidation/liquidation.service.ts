@@ -18,7 +18,7 @@ export class LiquidationService {
     private readonly publicationService: PublicationService
   ) {}
   async create(createDto: CreateLiquidationDto): Promise<Liquidation> {
-    const publication: Publication = await this.publicationService.findById(new Types.ObjectId(createDto.publicationId));
+    const publication: Publication = await this.publicationService.findById(createDto.publicationId);
     let data = {};
     if (createDto.position.toLowerCase() == 'trong kho') {
       if (publication.quantity - createDto.quantity < 0) {

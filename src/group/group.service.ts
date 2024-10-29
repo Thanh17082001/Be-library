@@ -247,6 +247,10 @@ export class GroupService {
       throw new BadRequestException('Invalid id');
     }
     const resource: Group = await this.groupModel.findById(new Types.ObjectId(id));
+    for (let j = 0; j < resource.libraries.length; j++) {
+      const library = await this.libraryService.findById(resource.libraries[j].toString());
+      await this.libraryService.updateGroupIdINLibrary(library._id.toString());
+    }
     if (!resource) {
       throw new NotFoundException('Resource not found');
     }
@@ -254,6 +258,14 @@ export class GroupService {
   }
   async deleteMultiple(ids: string[]): Promise<any> {
     const objectIds = ids.map(id => new Types.ObjectId(id));
+    for (let i = 0; i < objectIds.length; i++) {
+      const id = objectIds[i];
+      const group: Group = await this.groupModel.findById(id);
+      for (let j = 0; j < group.libraries.length; j++) {
+        const library = await this.libraryService.findById(group.libraries[j].toString());
+        await this.libraryService.updateGroupIdINLibrary(library._id.toString());
+      }
+    }
     return await this.groupModel.deleteMany({
       _id: {$in: objectIds},
     });

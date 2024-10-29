@@ -169,7 +169,7 @@ export class PublicationService {
   }
 
   async findByBarcode(barcode: string, libraryId: string): Promise<ItemDto<Publication>> {
-    return new ItemDto(await this.publicationModel.findOne({barcode, libraryId:new Types.ObjectId(libraryId)}));
+    return new ItemDto(await this.publicationModel.findOne({barcode, libraryId: new Types.ObjectId(libraryId)}));
   }
 
   async findBynames(query: SearchName): Promise<ItemDto<Publication>> {
@@ -433,8 +433,12 @@ export class PublicationService {
   }
 
   // Tính tổng số lượng sách
-  async getTotalBooks(): Promise<number> {
+  async getTotalBooks(libraryId: Types.ObjectId): Promise<number> {
+    const match: any = libraryId ? { libraryId: libraryId } : {}
     const result = await this.publicationModel.aggregate([
+      {
+        $match: match, // Thêm điều kiện lọc theo libraryId
+      },
       {
         $group: {
           _id: '$type', // Nhóm theo loại ấn phẩm
@@ -464,11 +468,17 @@ export class PublicationService {
     return result;
   }
   // sách có thể mượn totalQuantity>0 và ấn phẩm cứng
-  async countBorrowableHardcoverBooks(): Promise<any> {
-    const count = await this.publicationModel.countDocuments({
+  async countBorrowableHardcoverBooks(libraryId: Types.ObjectId): Promise<any> {
+    const query: any = {
       type: 'ấn phẩm cứng', // Chỉ đếm các sách là ấn phẩm cứng
-      totalQuantity: {$gt: 0}, // Chỉ đếm các sách có totalQuantity > 0
-    });
+      totalQuantity: { $gt: 0 }, // Chỉ đếm các sách có totalQuantity > 0
+    };
+
+    if (libraryId) {
+      query.libraryId = libraryId; // Thêm libraryId vào truy vấn nếu có
+    }
+    
+    const count = await this.publicationModel.countDocuments(query);
     return count;
   }
 

@@ -42,7 +42,7 @@ export class PublisherController {
     const user = request['user'] ?? null;
     pullLinkDto.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
     pullLinkDto.createBy = new Types.ObjectId(user?.id) ?? null;
-    let errors: Array<{ row: number; error: string; resource :any}> = [];
+    let errors: Array<{row: number; error: string; resource: any}> = [];
     let results: Publisher[] = [];
     if (pullLinkDto.ids.length == 0) {
       throw new BadRequestException('ids is empty');
@@ -63,8 +63,7 @@ export class PublisherController {
         const result = await this.publisherService.create({...createDto});
         results.push(result);
       } catch (error) {
-        errors.push({ row: i + 1, error: error.message, resource });
-
+        errors.push({row: i + 1, error: error.message, resource});
       }
     }
     return {results, errors};

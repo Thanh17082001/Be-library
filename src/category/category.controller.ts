@@ -41,7 +41,7 @@ export class CategoryController {
     const user = request['user'] ?? null;
     pullLinkDto.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
     pullLinkDto.createBy = new Types.ObjectId(user?.id) ?? null;
-    let errors: Array<{ row: number; error: string; resource :any}> = [];
+    let errors: Array<{row: number; error: string; resource: any}> = [];
     let results: Category[] = [];
     if (pullLinkDto.ids.length == 0) {
       throw new BadRequestException('ids is empty');

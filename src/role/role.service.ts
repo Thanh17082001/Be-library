@@ -82,8 +82,8 @@ export class RoleService {
     return await this.roleModel.findByIdAndUpdate(
       {_id: new Types.ObjectId(permissionDto.roleId)},
       {
-        $addToSet: {
-          permissions: {$each: permissionDto.permissions},
+        $set: {
+          permissions: permissionDto.permissions,
         },
       },
       {

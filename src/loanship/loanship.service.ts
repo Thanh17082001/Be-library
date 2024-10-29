@@ -283,7 +283,7 @@ export class LoanshipService {
       throw new BadRequestException('Resource is return');
     }
     if (!updateDto.libraryId) {
-      updateDto.libraryId=resource.libraryId
+      updateDto.libraryId = resource.libraryId;
     }
     return this.loanSlipModel.findByIdAndUpdate(id, updateDto, {
       returnDocument: 'after',
@@ -427,11 +427,15 @@ export class LoanshipService {
     ]);
   }
 
-  async getTopBorrowedBooksInMonth(): Promise<any> {
+  async getTopBorrowedBooksInMonth(libraryId): Promise<any> {
     const startOfMonth = moment().startOf('month').toDate();
     const endOfMonth = moment().endOf('month').toDate();
+    const match: any = libraryId ? { libraryId: libraryId } : {}
 
     const results = await this.loanSlipModel.aggregate([
+      {
+        $match: match, // Thêm điều kiện lọc theo libraryId
+      },
       {
         $match: {
           borrowedDay: {
@@ -467,17 +471,32 @@ export class LoanshipService {
     return results;
   }
   // tổng số lượng ấn phẩm đang mượn
-  async getTotalBorrowedBooks(): Promise<number> {
-    return this.loanSlipModel.countDocuments({status: 'đang mượn'}).exec();
+  async getTotalBorrowedBooks(libraryId: Types.ObjectId): Promise<number> {
+    const query: any = { status: 'đang mượn' };
+
+    if (libraryId) {
+      query.libraryId = libraryId;
+    }
+    return this.loanSlipModel.countDocuments(query).exec();
   }
 
   // tổng số lượng ấn phẩm đã trả
-  async getTotalReturnedBooks(): Promise<number> {
-    return this.loanSlipModel.countDocuments({status: 'đã trả'}).exec();
+  async getTotalReturnedBooks(libraryId: Types.ObjectId): Promise<number> {
+    const query: any = { status: 'đã trả' };
+
+    if (libraryId) {
+      query.libraryId = libraryId;
+    }
+    return this.loanSlipModel.countDocuments(query).exec();
   }
 
   // tổng số lượng ấn phẩm đã quá hạn
-  async getTotalOverdueLoans(): Promise<number> {
-    return this.loanSlipModel.countDocuments({status: 'quá hạn'}).exec();
+  async getTotalOverdueLoans(libraryId: Types.ObjectId): Promise<number> {
+    const query: any = { status: 'quá hạn' };
+
+    if (libraryId) {
+      query.libraryId = libraryId;
+    }
+    return this.loanSlipModel.countDocuments(query).exec();
   }
 }

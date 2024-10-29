@@ -1,4 +1,4 @@
-import { Library } from 'src/library/entities/library.entity';
+import {Library} from 'src/library/entities/library.entity';
 import {LoanshipService} from './loanship.service';
 import {CreateLoanshipDto} from './dto/create-loanship.dto';
 import {UpdateLoanshipDto} from './dto/update-loanship.dto';
@@ -34,8 +34,8 @@ export class LoanshipController {
     const user = request['user'] ?? null;
     createDto.libraryId = !createDto.libraryId ? (new Types.ObjectId(user?.libraryId) ?? null) : new Types.ObjectId(createDto.libraryId);
     createDto.isLink = !createDto.isLink ? false : createDto.isLink;
-    createDto.createBy = createDto.isLink ? new Types.ObjectId(user?._id) ?? null : new Types.ObjectId(createDto.createBy) ?? null;
-    createDto.userId = !createDto.isLink ?user?._id : createDto.userId;
+    createDto.createBy = createDto.isLink ? (new Types.ObjectId(user?._id) ?? null) : (new Types.ObjectId(createDto.createBy) ?? null);
+    createDto.userId = !createDto.isLink ? user?._id : createDto.userId;
     return await this.loanSlipService.create({...createDto});
   }
 

@@ -63,6 +63,22 @@ export class LibraryService {
     return await this.libraryModel.findById(new Types.ObjectId(id));
   }
 
+  async updateGroupIdINLibrary(libraryId: string): Promise<Library> {
+    const resource: Library = await this.libraryModel.findById(new Types.ObjectId(libraryId));
+    if (!resource) {
+      throw new NotFoundException('Resource not found');
+    }
+    return this.libraryModel.findByIdAndUpdate(
+      resource._id,
+      {
+        groupId: null,
+      },
+      {
+        returnDocument: 'after',
+      }
+    );
+  }
+
   async update(id: string, updateLibraryDto: UpdateLibraryDto): Promise<Library> {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid id');
