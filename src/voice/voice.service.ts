@@ -96,6 +96,7 @@ export class VoiceService {
       }
     } else {
       updateDto.path = resource.path;
+      updateDto.name = resource.name;
     }
     return this.voiceModel.findByIdAndUpdate(id, updateDto, {
       returnDocument: 'after',

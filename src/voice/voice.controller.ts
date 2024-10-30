@@ -134,6 +134,7 @@ export class VoiceController {
       updateDto.path = '';
     } else {
       updateDto.path = `voice/${file.filename}`;
+      updateDto.name = file.originalname;
     }
     return await this.voiceService.update(id, updateDto);
   }

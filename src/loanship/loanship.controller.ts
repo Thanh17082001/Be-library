@@ -35,7 +35,7 @@ export class LoanshipController {
     createDto.libraryId = !createDto.libraryId ? (new Types.ObjectId(user?.libraryId) ?? null) : new Types.ObjectId(createDto.libraryId);
     createDto.isLink = !createDto.isLink ? false : createDto.isLink;
     createDto.createBy = createDto.isLink ? (new Types.ObjectId(user?._id) ?? null) : (new Types.ObjectId(createDto.createBy) ?? null);
-    createDto.userId = !createDto.isLink ? user?._id : createDto.userId;
+    createDto.userId = createDto.isLink ? user?._id : createDto.userId;
     return await this.loanSlipService.create({...createDto});
   }
 
