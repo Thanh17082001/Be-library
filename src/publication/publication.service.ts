@@ -217,6 +217,11 @@ export class PublicationService {
       updateDto.images = resource.images;
       updateDto.priviewImage = resource.priviewImage;
     }
+
+    updateDto.quantity = updateDto.quantity ? +updateDto.quantity : resource.quantity;
+    updateDto.shelvesQuantity = updateDto.shelvesQuantity ? +updateDto.shelvesQuantity : resource.shelvesQuantity;
+    updateDto.totalQuantity = updateDto.totalQuantity ? +updateDto.totalQuantity : resource.totalQuantity;
+
     return this.publicationModel.findByIdAndUpdate(id, updateDto, {
       returnDocument: 'after',
     });
@@ -434,7 +439,7 @@ export class PublicationService {
 
   // Tính tổng số lượng sách
   async getTotalBooks(libraryId: Types.ObjectId): Promise<number> {
-    const match: any = libraryId ? { libraryId: libraryId } : {}
+    const match: any = libraryId ? {libraryId: libraryId} : {};
     const result = await this.publicationModel.aggregate([
       {
         $match: match, // Thêm điều kiện lọc theo libraryId
@@ -471,13 +476,13 @@ export class PublicationService {
   async countBorrowableHardcoverBooks(libraryId: Types.ObjectId): Promise<any> {
     const query: any = {
       type: 'ấn phẩm cứng', // Chỉ đếm các sách là ấn phẩm cứng
-      totalQuantity: { $gt: 0 }, // Chỉ đếm các sách có totalQuantity > 0
+      totalQuantity: {$gt: 0}, // Chỉ đếm các sách có totalQuantity > 0
     };
 
     if (libraryId) {
       query.libraryId = libraryId; // Thêm libraryId vào truy vấn nếu có
     }
-    
+
     const count = await this.publicationModel.countDocuments(query);
     return count;
   }

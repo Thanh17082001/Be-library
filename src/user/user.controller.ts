@@ -75,6 +75,8 @@ export class UserController {
           createBy: user?._id ?? null,
           note: '',
           barcode: '',
+          class: '',
+          school: '',
         };
         // console.log(createDto);
         const ressult = await this.userService.create({...createDto});

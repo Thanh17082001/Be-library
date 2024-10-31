@@ -303,8 +303,6 @@ export class PublicationController {
       }
     }
 
-    updateDto.quantity = +updateDto.quantity;
-    updateDto.shelvesQuantity = +updateDto.shelvesQuantity;
     return await this.publicationService.update(id, updateDto);
   }
 }

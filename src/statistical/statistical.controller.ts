@@ -5,7 +5,7 @@ import {AppAbility} from 'src/casl/casl-ability.factory/casl-ability.factory';
 import {CheckPolicies} from 'src/casl/check-policies.decorator';
 import {Action} from 'src/casl/casl.action';
 import {CaslGuard} from 'src/casl/casl.guard';
-import { Types } from 'mongoose';
+import {Types} from 'mongoose';
 
 @Controller('statistical')
 export class StatisticalController {
@@ -17,7 +17,7 @@ export class StatisticalController {
     const user = request['user'] ?? null;
     let libraryId: Types.ObjectId = new Types.ObjectId(user?.libraryId);
     if (user.isAdmin) {
-      libraryId=null
+      libraryId = null;
     }
     const totalBooks = await this.statisticalService.statisticalPublication(libraryId);
     return totalBooks;

@@ -10,6 +10,16 @@ export class LoanSlipItem extends Publication {
   position: string;
   quantityReturn: number;
 }
+
+export class LoanSlipHistory extends Publication {
+  historyDate: Date;
+  publicationId: Types.ObjectId;
+  quantityLoan: number;
+  position: string;
+  quantityReturn: number;
+  name: string;
+  barcode: string;
+}
 @Schema()
 export class LoanSlip extends BaseDocument {
   @Prop({ref: 'User', required: true})
@@ -36,6 +46,11 @@ export class LoanSlip extends BaseDocument {
     required: true,
   })
   publications: LoanSlipItem[];
+
+  @Prop({
+    default: [],
+  })
+  historys: LoanSlipHistory[];
 }
 
 export const LoanSlipSchema = SchemaFactory.createForClass(LoanSlip)

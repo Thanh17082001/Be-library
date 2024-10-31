@@ -109,7 +109,7 @@ export class UserService {
   }
 
   async findById(id: Types.ObjectId): Promise<ItemDto<User>> {
-    return new ItemDto(await this.userModel.findById(id).select(['-password']).lean());
+    return new ItemDto(await this.userModel.findById(id).select(['-password']).populate('roleId').populate('libraryId').lean());
   }
 
   async findByBarcode(barcode: string): Promise<ItemDto<User>> {

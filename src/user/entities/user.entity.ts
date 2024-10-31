@@ -25,6 +25,12 @@ export class User extends BaseDocument {
   fullname: string;
 
   @Prop({default: ''})
+  class: string;
+
+  @Prop({default: ''})
+  school: string;
+
+  @Prop({default: ''})
   phoneNumber: string;
 
   @Prop({default: ''})

@@ -22,7 +22,6 @@ import {permission} from 'process';
 
 @Controller('role')
 @ApiTags('role')
-@Public()
 export class RoleController {
   constructor(private readonly roleService: RoleService) {}
 
@@ -41,25 +40,27 @@ export class RoleController {
   // }
 
   @Get()
-  // @Roles(Role.User) // tên role để chặn bên dưới
-  // @UseGuards(RolesGuard) // chặn role (admin, student ,....)
-  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test')) // tên permission và bảng cần chặn
-  // @UseGuards(CaslGuard) // chặn permission (CRUD)
-  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'test'), (ability: AppAbility) => ability.can(Action.Read, 'example'))
+  @Roles(Role.SuperAdmin, Role.Admin, Role.Owner) // tên role để chặn bên dưới
+  @UseGuards(RolesGuard)
   async findAll(@Query() query: Partial<CreateRoleDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<RoleS>> {
-    return await this.roleService.findAll(pageOptionDto, query);
+    let result = await this.roleService.findAll(pageOptionDto, query);
+    const user = request['user'];
+    if (user.isAdmin) {
+      result = await this.roleService.findAll(pageOptionDto, query, true);
+    }
+    return result;
   }
 
-  @Public()
   @Post('add-permission')
-  @UseGuards(RolesGuard) // chặn role (admin, student ,....)
-  @CheckPolicies((ability: AppAbility) => ability.can(Action.Create, 'roles'))
+  @Roles(Role.SuperAdmin) // tên role để chặn bên dưới
+  @UseGuards(RolesGuard)
   async addPermisson(@Body() permissionDto: PermissonRoleDto): Promise<RoleS> {
     return await this.roleService.addPermisson(permissionDto);
   }
 
-  @Public()
   @Delete('remove-permission')
+  @Roles(Role.SuperAdmin) // tên role để chặn bên dưới
+  @UseGuards(RolesGuard)
   async removePermisson(@Body() permissionDto: PermissonRoleDto): Promise<RoleS> {
     return await this.roleService.removePermisson(permissionDto);
   }

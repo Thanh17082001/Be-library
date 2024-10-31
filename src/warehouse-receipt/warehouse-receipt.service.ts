@@ -55,7 +55,6 @@ export class WarehouseReceiptService {
       if (!publication) {
         throw new NotFoundException('Publication not found');
       }
-      console.log(item.quantityWarehouse);
       await this.publicationService.update(publication?._id?.toString(), {quantity: publication.quantity + item.quantityWareHouse, totalQuantity: publication.totalQuantity + item.quantityWareHouse, status: 'có sẵn'});
     }
     await this.warehouseReceiptModel.findByIdAndUpdate(id, {isAccept: true});

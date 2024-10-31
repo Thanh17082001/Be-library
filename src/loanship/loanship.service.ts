@@ -101,6 +101,8 @@ export class LoanshipService {
       throw new NotFoundException('Resource not found');
     }
     const publications = loan.publications;
+    const today = new Date();
+    let history: any = {};
     const error = [];
 
     for (let i = 0; i < publications.length; i++) {
@@ -108,6 +110,7 @@ export class LoanshipService {
       const item1 = publications[i];
       const publicationId = item1.publicationId;
       const item2 = ReturnDto.publications.find(dtoItem => dtoItem.publicationId == item1.publicationId.toString());
+
       if (item2) {
         if (item2.quantityReturn > item1.quantityLoan) {
           error.push({
@@ -116,6 +119,15 @@ export class LoanshipService {
           });
         }
         const publication = await this.publicationService.findById(publicationId);
+        history = {
+          publicationId: item1.publicationId,
+          quantityLoan: item1.quantityLoan,
+          position: item1.position,
+          quantityReturn: item2.quantityReturn,
+          historyDate: today,
+          name: publication.name,
+          barcode: publication.barcode,
+        };
         let data = {};
         if (item2.quantityReturn > item1.quantityLoan - item1.quantityReturn) {
           throw new BadRequestException('quantity return must be less than quantity loan');
@@ -159,7 +171,7 @@ export class LoanshipService {
 
     const resutl = await this.loanSlipModel.findByIdAndUpdate(
       new Types.ObjectId(id),
-      {isReturn: isReturn, status: status, publications: publications},
+      {isReturn: isReturn, status: status, publications: publications, $push: {historys: history}},
       {
         returnDocument: 'after',
       }
@@ -430,7 +442,7 @@ export class LoanshipService {
   async getTopBorrowedBooksInMonth(libraryId): Promise<any> {
     const startOfMonth = moment().startOf('month').toDate();
     const endOfMonth = moment().endOf('month').toDate();
-    const match: any = libraryId ? { libraryId: libraryId } : {}
+    const match: any = libraryId ? {libraryId: libraryId} : {};
 
     const results = await this.loanSlipModel.aggregate([
       {
@@ -472,7 +484,7 @@ export class LoanshipService {
   }
   // tổng số lượng ấn phẩm đang mượn
   async getTotalBorrowedBooks(libraryId: Types.ObjectId): Promise<number> {
-    const query: any = { status: 'đang mượn' };
+    const query: any = {status: 'đang mượn'};
 
     if (libraryId) {
       query.libraryId = libraryId;
@@ -482,7 +494,7 @@ export class LoanshipService {
 
   // tổng số lượng ấn phẩm đã trả
   async getTotalReturnedBooks(libraryId: Types.ObjectId): Promise<number> {
-    const query: any = { status: 'đã trả' };
+    const query: any = {status: 'đã trả'};
 
     if (libraryId) {
       query.libraryId = libraryId;
@@ -492,7 +504,7 @@ export class LoanshipService {
 
   // tổng số lượng ấn phẩm đã quá hạn
   async getTotalOverdueLoans(libraryId: Types.ObjectId): Promise<number> {
-    const query: any = { status: 'quá hạn' };
+    const query: any = {status: 'quá hạn'};
 
     if (libraryId) {
       query.libraryId = libraryId;

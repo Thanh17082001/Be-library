@@ -30,6 +30,14 @@ export class SignUpDto extends OmitType(BaseDto, ['isPublic', 'libraryId'] as co
 
   @ApiProperty()
   @IsString()
+  class: string;
+
+  @ApiProperty()
+  @IsString()
+  school: string;
+
+  @ApiProperty()
+  @IsString()
   phoneNumber: string;
 
   @ApiProperty()

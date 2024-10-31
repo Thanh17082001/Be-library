@@ -23,24 +23,16 @@ export class RoleService {
     return await this.roleModel.create(createDto);
   }
 
-  async findAll(pageOptions: PageOptionsDto, query: Partial<RoleS>): Promise<PageDto<RoleS>> {
+  async findAll(pageOptions: PageOptionsDto, query: Partial<RoleS>, superisAdmin: boolean = false): Promise<PageDto<RoleS>> {
     const {page, limit, skip, order, search} = pageOptions;
     const pagination = ['page', 'limit', 'skip', 'order', 'search'];
     const mongoQuery: any = {};
-    // Thêm các điều kiện từ `query`
-    if (!!query && Object.keys(query).length > 0) {
-      const arrayQuery = Object.keys(query);
-      arrayQuery.forEach(key => {
-        if (key && !pagination.includes(key)) {
-          mongoQuery[key] = query[key];
-        }
-      });
-    }
 
     //search document
     if (search) {
       mongoQuery.name = {$regex: new RegExp(search, 'i')};
     }
+    let data = [];
 
     // Thực hiện phân trang và sắp xếp
     const [results, itemCount] = await Promise.all([
@@ -59,7 +51,14 @@ export class RoleService {
       pageOptionsDto: pageOptions,
       itemCount,
     });
-    return new PageDto(results, pageMetaDto);
+    const roleSuperAdmin = ['Owner', 'Super Admin', 'Admin'];
+    if (!superisAdmin) {
+      data = results.filter(item => !roleSuperAdmin.includes(item.name));
+    } else {
+      data = results;
+    }
+    console.log(superisAdmin);
+    return new PageDto(data, pageMetaDto);
   }
 
   async findOne(data: object): Promise<ItemDto<RoleS>> {

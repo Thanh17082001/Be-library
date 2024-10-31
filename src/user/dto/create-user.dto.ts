@@ -10,9 +10,6 @@ export class CreateUserDto extends OmitType(BaseDto, ['isPublic', 'isLink'] as c
   @IsString()
   email: string;
 
-  // @ApiProperty()
-  // @IsString()
-  // @IsNotEmpty()
   password: string;
 
   passwordFirst: string;
@@ -29,6 +26,14 @@ export class CreateUserDto extends OmitType(BaseDto, ['isPublic', 'isLink'] as c
   @ApiProperty()
   @IsString()
   fullname: string;
+
+  @ApiProperty()
+  @IsString()
+  class: string;
+
+  @ApiProperty()
+  @IsString()
+  school: string;
 
   @ApiProperty()
   @IsString()
