@@ -83,7 +83,7 @@ export class AuthorService {
 
   async update(id: string, updateDto: UpdateAuthorDto): Promise<Author> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new BadRequestException('Invalid id');
+      throw new BadRequestException('Invalid id')
     }
 
     const exits: Author = await this.exampleModel.findOne({
