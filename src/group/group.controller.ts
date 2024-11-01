@@ -58,7 +58,7 @@ export class GroupController {
   }
 
   @Get('/libraries')
-  @Roles(Role.Admin, Role.Teacher) // tên role để chặn bên dưới
+  @Roles(Role.Admin, Role.Teacher, Role.Owner) // tên role để chặn bên dưới
   @UseGuards(RolesGuard) // chặn role (admin, student ,....)
   async findAllLibrary(@Req() request: Request): Promise<ItemDto<Group>> {
     const user = request['user'];

@@ -88,6 +88,7 @@ export class AuthorService {
 
     const exits: Author = await this.exampleModel.findOne({
       name: updateDto.name, // Tìm theo tên
+      libraryId: new Types.ObjectId(updateDto.libraryId),
       _id: {$ne: new Types.ObjectId(id)}, // Loại trừ ID hiện tại
     });
     if (exits) {

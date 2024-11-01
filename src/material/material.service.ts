@@ -86,13 +86,14 @@ export class MaterialService {
       throw new BadRequestException('Invalid id');
     }
 
-    // const exits: Material = await this.materialModel.findOne({
-    //   name: updateExampleDto.name,       // Tìm theo tên
-    //   _id: { $ne: new Types.ObjectId(id) }  // Loại trừ ID hiện tại
-    // });
-    // if (!exits) {
-    //   throw new BadRequestException('name already exists');
-    // }
+    const exits: Material = await this.materialModel.findOne({
+      name: updateExampleDto.name,       // Tìm theo tên
+      libraryId: new Types.ObjectId(updateExampleDto.libraryId),
+      _id: { $ne: new Types.ObjectId(id) }  // Loại trừ ID hiện tại
+    });
+    if (exits) {
+      throw new BadRequestException('name already exists');
+    }
     const resource: Material = await this.materialModel.findById(new Types.ObjectId(id));
     if (!resource) {
       throw new NotFoundException('Resource not found');
