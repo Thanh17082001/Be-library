@@ -439,10 +439,10 @@ export class LoanshipService {
     ]);
   }
 
-  async getTopBorrowedBooksInMonth(libraryId): Promise<any> {
+  async getTopBorrowedBooksInMonth(libraryId: Types.ObjectId): Promise<any> {
     const startOfMonth = moment().startOf('month').toDate();
     const endOfMonth = moment().endOf('month').toDate();
-    const match: any = libraryId ? {libraryId: libraryId} : {};
+    const match: any = libraryId ? { libraryId: libraryId } : {};
 
     const results = await this.loanSlipModel.aggregate([
       {
@@ -480,6 +480,7 @@ export class LoanshipService {
         },
       },
     ]);
+    console.log(results);
     return results;
   }
   // tổng số lượng ấn phẩm đang mượn

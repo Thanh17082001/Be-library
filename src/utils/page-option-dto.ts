@@ -35,6 +35,6 @@ export class PageOptionsDto {
   readonly limit?: number = null;
 
   get skip(): number {
-    return this.limit ? (this.page - 1) * this.limit : null ;
+    return this.limit ? (this.page - 1) * this.limit : null;
   }
 }
