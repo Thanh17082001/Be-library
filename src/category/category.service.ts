@@ -9,7 +9,7 @@ import {PageMetaDto} from 'src/utils/page.metadata.dto';
 import {Category} from './entities/category.entity';
 import {SoftDeleteModel} from 'mongoose-delete';
 import {Group} from 'src/group/entities/group.entity';
-import { Type } from 'class-transformer';
+import {Type} from 'class-transformer';
 
 @Injectable()
 export class CategoryService {
@@ -90,7 +90,7 @@ export class CategoryService {
     const exits: Category = await this.categoryModel.findOne({
       name: updateCategoryDto.name, // Tìm theo tên
       libraryId: new Types.ObjectId(updateCategoryDto.libraryId),
-      _id: { $ne: new Types.ObjectId(id) }, // Loại trừ ID hiện tại
+      _id: {$ne: new Types.ObjectId(id)}, // Loại trừ ID hiện tại
     });
     if (exits) {
       throw new BadRequestException('name already exists');

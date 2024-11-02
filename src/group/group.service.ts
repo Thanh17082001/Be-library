@@ -52,7 +52,7 @@ export class GroupService {
     return result;
   }
 
-  async findAll(pageOptions: PageOptionsDto, query: Partial<Group>, libraryId:string=''): Promise<PageDto<Group>> {
+  async findAll(pageOptions: PageOptionsDto, query: Partial<Group>, libraryId: string = ''): Promise<PageDto<Group>> {
     const {page, limit, skip, order, search} = pageOptions;
     const pagination = ['page', 'limit', 'skip', 'order', 'search'];
     const mongoQuery: any = {isActive: 1};
@@ -66,7 +66,7 @@ export class GroupService {
       });
     }
     if (libraryId) {
-      mongoQuery.libraries = { $in: [libraryId] }; // Tìm kiếm các tài liệu có libraryId trong mảng libraries
+      mongoQuery.libraries = {$in: [libraryId]}; // Tìm kiếm các tài liệu có libraryId trong mảng libraries
     }
 
     //search document

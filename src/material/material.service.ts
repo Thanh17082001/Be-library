@@ -87,9 +87,9 @@ export class MaterialService {
     }
 
     const exits: Material = await this.materialModel.findOne({
-      name: updateExampleDto.name,       // Tìm theo tên
+      name: updateExampleDto.name, // Tìm theo tên
       libraryId: new Types.ObjectId(updateExampleDto.libraryId),
-      _id: { $ne: new Types.ObjectId(id) }  // Loại trừ ID hiện tại
+      _id: {$ne: new Types.ObjectId(id)}, // Loại trừ ID hiện tại
     });
     if (exits) {
       throw new BadRequestException('name already exists');
