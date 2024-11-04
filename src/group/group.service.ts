@@ -10,6 +10,7 @@ import {PageMetaDto} from 'src/utils/page.metadata.dto';
 import {Group} from './entities/group.entity';
 import {LibraryService} from 'src/library/library.service';
 import {SoftDeleteModel} from 'mongoose-delete';
+import {LeaveGroupDto} from './dto/leave-group.dto';
 
 @Injectable()
 export class GroupService {
@@ -147,6 +148,26 @@ export class GroupService {
     });
   }
 
+  async updateLeave(libraryId: string): Promise<Group> {
+    const resource: Group = await this.groupModel.findOne({
+      libraries: {$in: [libraryId]},
+    });
+
+    if (!resource) {
+      throw new NotFoundException('Resource not found');
+    }
+
+    if (resource.mainLibrary.toString() == libraryId) {
+      throw new BadRequestException('Không thể rời khỏi nhóm chính');
+    }
+    const id = resource._id;
+
+    const result = await this.groupModel.updateOne({_id: id}, {$pull: {libraries: libraryId}});
+    await this.libraryService.removeGroupIdInLibrary(libraryId.toString());
+
+    return result;
+  }
+
   async remove(id: string): Promise<Group> {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid id');
@@ -251,7 +272,7 @@ export class GroupService {
     const resource: Group = await this.groupModel.findById(new Types.ObjectId(id));
     for (let j = 0; j < resource.libraries.length; j++) {
       const library = await this.libraryService.findById(resource.libraries[j].toString());
-      await this.libraryService.updateGroupIdINLibrary(library._id.toString());
+      await this.libraryService.removeGroupIdInLibrary(library._id.toString());
     }
     if (!resource) {
       throw new NotFoundException('Resource not found');
@@ -265,7 +286,7 @@ export class GroupService {
       const group: Group = await this.groupModel.findById(id);
       for (let j = 0; j < group.libraries.length; j++) {
         const library = await this.libraryService.findById(group.libraries[j].toString());
-        await this.libraryService.updateGroupIdINLibrary(library._id.toString());
+        await this.libraryService.removeGroupIdInLibrary(library._id.toString());
       }
     }
     return await this.groupModel.deleteMany({

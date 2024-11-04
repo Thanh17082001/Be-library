@@ -18,6 +18,7 @@ import {Request} from 'express';
 import {Group} from './entities/group.entity';
 import {LibraryService} from 'src/library/library.service';
 import {Library} from 'src/library/entities/library.entity';
+import {LeaveGroupDto} from './dto/leave-group.dto';
 
 @Controller('group')
 @ApiTags('group')
@@ -112,6 +113,15 @@ export class GroupController {
   @UseGuards(CaslGuard)
   async restoreByIds(@Body() ids: string[]): Promise<Group[]> {
     return this.groupService.restoreByIds(ids);
+  }
+
+  @Patch('leave')
+  @Roles(Role.Admin, Role.Owner) // tên role để chặn bên dưới
+  @UseGuards(RolesGuard)
+  updateLeave(@Req() request: Request) {
+    const user = request['user'];
+    const libraryId = user.libraryId;
+    return this.groupService.updateLeave(libraryId);
   }
 
   @Patch(':id')

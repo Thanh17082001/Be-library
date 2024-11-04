@@ -13,6 +13,10 @@ import {SoftDeleteModel} from 'mongoose-delete';
 export class LibraryService {
   constructor(@InjectModel(Library.name) private libraryModel: SoftDeleteModel<Library>) {}
   async create(createDto: CreateLibraryDto): Promise<Library> {
+    const library: Library = await this.libraryModel.findOne({name: createDto.name});
+    if (library) {
+      throw new NotFoundException('name already exists');
+    }
     return await this.libraryModel.create(createDto);
   }
 
@@ -63,7 +67,7 @@ export class LibraryService {
     return await this.libraryModel.findById(new Types.ObjectId(id));
   }
 
-  async updateGroupIdINLibrary(libraryId: string): Promise<Library> {
+  async removeGroupIdInLibrary(libraryId: string): Promise<Library> {
     const resource: Library = await this.libraryModel.findById(new Types.ObjectId(libraryId));
     if (!resource) {
       throw new NotFoundException('Resource not found');

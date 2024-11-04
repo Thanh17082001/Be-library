@@ -37,6 +37,11 @@ export class PublicationService {
     if (pub) {
       throw new BadRequestException('Barcode đã tồn tại!');
     }
+
+    const pubName: Publication = await this.publicationModel.findOne({name: createDto.name, libraryId: new Types.ObjectId(createDto.libraryId)});
+    if (pubName) {
+      throw new BadRequestException('name already exists');
+    }
     if (createDto.barcode == '') {
       createDto.barcode = undefined;
     }
@@ -89,6 +94,7 @@ export class PublicationService {
         .populate('publisherIds')
         .populate('materialIds')
         .populate('shelvesId')
+        .populate('libraryId')
         .sort({order: 1, createdAt: order === 'ASC' ? 1 : -1})
         .skip(skip)
         .limit(limit)

@@ -37,6 +37,7 @@ import {StatisticalModule} from './statistical/statistical.module';
 import {TypeVoiceModule} from './type-voice/type-voice.module';
 import {VoiceModule} from './voice/voice.module';
 import {ConsumerRabbitmqModule} from './consumer-rabbitmq/consumer-rabbitmq.module';
+import {RequestGroupModule} from './request-group/request-group.module';
 
 @Module({
   imports: [
@@ -100,6 +101,7 @@ import {ConsumerRabbitmqModule} from './consumer-rabbitmq/consumer-rabbitmq.modu
     TypeVoiceModule,
     VoiceModule,
     ConsumerRabbitmqModule,
+    RequestGroupModule,
   ],
   controllers: [AppController],
   providers: [
