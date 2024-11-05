@@ -43,6 +43,7 @@ export class GroupController {
   async findAll(@Query() query: Partial<CreateGroupDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Group>> {
     const user = request['user'];
     const library: Library = await this.libraryService.findById(user.libraryId);
+    console.log(library);
     if (library.groupId) {
       return await this.groupService.findAll(pageOptionDto, query, user.libraryId.toString());
     }

@@ -4,18 +4,18 @@ import {Types} from 'mongoose';
 
 export class CreateRequestGroupDto {
   @IsOptional()
-     @IsMongoId()
-  createBy?: Types.ObjectId=null;
+  @IsMongoId()
+  createBy?: Types.ObjectId = null;
   // @ApiProperty()
   @IsOptional()
-   @IsMongoId()
-  libraryId?: Types.ObjectId=null;
+  @IsMongoId()
+  libraryId?: string = null;
   // @ApiProperty({example:'id'})
   @IsOptional()
-   @IsMongoId()
+  @IsMongoId()
   mainLibraryId?: Types.ObjectId;
   @ApiProperty({example: 'id'})
-   @IsMongoId()
+  @IsMongoId()
   groupId: Types.ObjectId;
 
   @IsBoolean()

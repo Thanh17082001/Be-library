@@ -104,6 +104,15 @@ export class GroupService {
     return new ItemDto(result);
   }
 
+  async findById(id: string): Promise<Group> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new NotFoundException('Resource not found');
+    }
+    const result = await this.groupModel.findById(id);
+
+    return result;
+  }
+
   async update(id: string, updateGroupDto: UpdateGroupDto): Promise<Group> {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid id');

@@ -51,6 +51,16 @@ export class RoleController {
     return result;
   }
 
+  @Get('super-admin')
+  @Roles(Role.SuperAdmin) // tên role để chặn bên dưới
+  @UseGuards(RolesGuard)
+  async findAll2(@Query() query: Partial<CreateRoleDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<RoleS>> {
+    const user = request['user'];
+    if (user.isAdmin) {
+      return  await this.roleService.findAll(pageOptionDto, query, true);
+    }
+  }
+
   @Post('add-permission')
   @Roles(Role.SuperAdmin) // tên role để chặn bên dưới
   @UseGuards(RolesGuard)

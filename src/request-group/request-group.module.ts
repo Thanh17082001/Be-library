@@ -5,9 +5,10 @@ import {MongooseModule} from '@nestjs/mongoose';
 import {RequestGroup, RequestGroupSchema} from './entities/request-group.entity';
 import {CaslModule} from 'src/casl/casl.module';
 import {GroupModule} from 'src/group/group.module';
+import {LibraryModule} from 'src/library/library.module';
 
 @Module({
-  imports: [MongooseModule.forFeature([{name: RequestGroup.name, schema: RequestGroupSchema}]), CaslModule, GroupModule],
+  imports: [MongooseModule.forFeature([{name: RequestGroup.name, schema: RequestGroupSchema}]), CaslModule, GroupModule, LibraryModule],
   controllers: [RequestGroupController],
   providers: [RequestGroupService],
 })
