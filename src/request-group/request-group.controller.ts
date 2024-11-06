@@ -42,7 +42,6 @@ export class RequestGroupController {
     return await this.requestGroupService.findAll(pageOptionDto, query);
   }
 
-
   @Get('admin')
   @Roles(Role.Admin, Role.Owner) // tên role để chặn bên dưới
   @UseGuards(RolesGuard) // chặn role (admin, student ,....)

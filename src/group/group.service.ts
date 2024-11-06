@@ -11,15 +11,36 @@ import {Group} from './entities/group.entity';
 import {LibraryService} from 'src/library/library.service';
 import {SoftDeleteModel} from 'mongoose-delete';
 import {LeaveGroupDto} from './dto/leave-group.dto';
+import {User} from 'src/user/entities/user.entity';
+import {RoleS} from 'src/role/entities/role.entity';
+import {Role} from 'src/role/role.enum';
 
 @Injectable()
 export class GroupService {
   constructor(
     @InjectModel(Group.name) private groupModel: SoftDeleteModel<Group>,
+    @InjectModel(User.name) private userModel: SoftDeleteModel<User>,
+    @InjectModel(RoleS.name) private roleModel: SoftDeleteModel<RoleS>,
     readonly libraryService: LibraryService
   ) {}
   async create(createDto: CreateGroupDto): Promise<Group> {
     const libraryIds = createDto.libraries;
+
+    const user: User = await this.userModel
+      .findOne({
+        libraryId: new Types.ObjectId(createDto.mainLibrary),
+      })
+      .populate({
+        path: 'roleId',
+        match: {name: 'Admin'}, // Điều kiện lọc theo tên của role
+      });
+    if (!user) {
+      throw new BadRequestException('Thư viện này chưa có tài khoản thủ thư');
+    }
+
+    const role = await this.roleModel.findOne({name: Role.Owner});
+
+    await this.userModel.findByIdAndUpdate(user._id, {roleId: role._id.toString()});
 
     if (!Types.ObjectId.isValid(createDto.mainLibrary)) {
       createDto.mainLibrary = null;

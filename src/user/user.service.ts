@@ -79,8 +79,6 @@ export class UserService {
     if (Object.keys(mongoQuery).includes('roleId')) {
       mongoQuery.roleId = new Types.ObjectId(mongoQuery.roleId.toString());
     }
-    console.log(mongoQuery);
-    // console.log(mongoQuery)
     //search document
     if (search) {
       mongoQuery.fullname = {$regex: new RegExp(search, 'i')};

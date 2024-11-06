@@ -168,6 +168,9 @@ export class PublicationController {
     if (!user.isAdmin) {
       query.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
     }
+    if (query.libraryId) {
+      query.libraryId = new Types.ObjectId(query.libraryId);
+    }
     return await this.publicationService.findAll(pageOptionDto, query);
   }
 

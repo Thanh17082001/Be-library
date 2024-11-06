@@ -57,7 +57,7 @@ export class RoleController {
   async findAll2(@Query() query: Partial<CreateRoleDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<RoleS>> {
     const user = request['user'];
     if (user.isAdmin) {
-      return  await this.roleService.findAll(pageOptionDto, query, true);
+      return await this.roleService.findAll(pageOptionDto, query, true);
     }
   }
 

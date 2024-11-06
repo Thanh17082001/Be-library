@@ -63,7 +63,7 @@ export class PublicationService {
   async findAll(pageOptions: PageOptionsDto, query: Partial<Publication>): Promise<PageDto<Publication>> {
     const {page, limit, skip, order, search} = pageOptions;
     const pagination = ['page', 'limit', 'skip', 'order', 'search'];
-    const mongoQuery: any = {isActive: 1};
+    const mongoQuery: any = {};
     // Thêm các điều kiện từ `query`
     if (!!query && Object.keys(query).length > 0) {
       const arrayQuery = Object.keys(query);
@@ -146,8 +146,6 @@ export class PublicationService {
       map[publicationId.toString()][status === 'thanh lý' ? 'liquidation' : 'damaged'] += liquidation.totalQuantity;
       return map;
     }, {});
-
-    console.log(liquidationMap);
 
     // Tạo map để lưu số lượng mượn cho từng publicationId
     const loansMap = loans.reduce((map, loan) => {

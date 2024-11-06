@@ -31,7 +31,7 @@ export class RequestGroupService {
     const exits = await this.requestGroupModel.findOne({
       libraryId: data.libraryId,
       groupId: data.groupId,
-    })
+    });
     if (exits) {
       throw new BadRequestException('Yêu cầu đã được gửi');
     }
