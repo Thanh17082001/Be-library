@@ -24,6 +24,10 @@ export class Library extends BaseDocument {
 
   @Prop({default: null})
   managementAgency?: string | null;
+  @Prop({type: Number, default: 0})
+  totalStorageUsed: number;
+  @Prop({type: Number, required: true})
+  maxStorageLimit: number;
 }
 
 export const LibrarySchema = SchemaFactory.createForClass(Library).index({name: 1, email: 1, phoneNumber: 1});

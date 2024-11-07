@@ -20,6 +20,7 @@ import {Public} from 'src/auth/auth.decorator';
 import {LoanSlip} from './entities/loanship.entity';
 import {FilterDateDto} from './dto/fillter-date.dto';
 import {ReturnDto} from './dto/return.dto';
+import {isCancel} from 'axios';
 
 @Controller('loan-slip')
 @ApiTags('loanSlip')
@@ -44,9 +45,16 @@ export class LoanshipController {
   @UseGuards(CaslGuard) // chặn permission (CRUD)
   async findAll(@Query() query: Partial<CreateLoanshipDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<LoanSlip>> {
     const user = request['user'];
+    console.log(user.roleId.name);
     if (!user.isAdmin) {
       query.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
+      if (user?.roleId?.name == Role.Teacher || user?.roleId?.name == Role.Student) {
+        query.createBy = new Types.ObjectId(user?._id) ?? null;
+      }
     }
+
+    console.log(query);
+
     return await this.loanSlipService.findAll(pageOptionDto, query);
   }
 
@@ -146,6 +154,25 @@ export class LoanshipController {
   @UseGuards(CaslGuard) // chặn permission (CRUD)
   async restoreByIds(@Body() ids: string[]): Promise<LoanSlip[]> {
     return this.loanSlipService.restoreByIds(ids);
+  }
+
+  @Patch('accept/:id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, 'loanslips')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
+  async updateAccept(@Param('id') id: string, @Body() updateDto: UpdateLoanshipDto): Promise<LoanSlip> {
+    updateDto.libraryId = updateDto.libraryId ? (new Types.ObjectId(updateDto.libraryId) ?? null) : undefined;
+    return await this.loanSlipService.update(id, updateDto);
+  }
+
+  @Patch('cancel/:id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, 'loanslips')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
+  async updateCancel(@Param('id') id: string): Promise<LoanSlip> {
+    const updateDto = {
+      isCancel: true,
+      status: 'đã hủy',
+    };
+    return await this.loanSlipService.update(id, updateDto);
   }
 
   @Patch(':id')

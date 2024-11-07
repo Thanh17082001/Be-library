@@ -85,7 +85,7 @@ export class LoanshipService {
     }
     return await this.loanSlipModel.findByIdAndUpdate(
       new Types.ObjectId(id),
-      {isAgree: true, status: 'đang mượn', publications: publicationsUpdate},
+      {isAgree: true, status: 'đang mượn', borrowedDay: new Date(), publications: publicationsUpdate},
       {
         returnDocument: 'after',
       }
@@ -104,13 +104,13 @@ export class LoanshipService {
     const today = new Date();
     let history: any = {};
     const error = [];
+    const historys = [];
 
     for (let i = 0; i < publications.length; i++) {
       //item1 là lấy trong phiếu, item2 là truyền lên
       const item1 = publications[i];
       const publicationId = item1.publicationId;
       const item2 = ReturnDto.publications.find(dtoItem => dtoItem.publicationId == item1.publicationId.toString());
-
       if (item2) {
         if (item2.quantityReturn > item1.quantityLoan) {
           error.push({
@@ -128,6 +128,7 @@ export class LoanshipService {
           name: publication.name,
           barcode: publication.barcode,
         };
+        historys.push(history);
         let data = {};
         if (item2.quantityReturn > item1.quantityLoan - item1.quantityReturn) {
           throw new BadRequestException('quantity return must be less than quantity loan');
@@ -136,7 +137,7 @@ export class LoanshipService {
         let loanQuantityed = publication.shelvesQuantity + item2.quantityReturn;
         if (publications[i].position == 'stock') {
           loanQuantityed = publication.quantity + item2.quantityReturn;
-          if (loanQuantityed <= 0) {
+          if (loanQuantityed < 0) {
             error.push({
               publicationId: publicationId,
               message: `Not enough quantity : ${publicationId}`,
@@ -144,7 +145,7 @@ export class LoanshipService {
           }
           data = {quantity: loanQuantityed};
         } else {
-          if (loanQuantityed <= 0) {
+          if (loanQuantityed < 0) {
             error.push({
               publicationId: publicationId,
               message: `Not enough quantity: ${publicationId}`,
@@ -171,7 +172,7 @@ export class LoanshipService {
 
     const resutl = await this.loanSlipModel.findByIdAndUpdate(
       new Types.ObjectId(id),
-      {isReturn: isReturn, status: status, publications: publications, $push: {historys: history}},
+      {isReturn: isReturn, status: status, publications: publications, historys: [...historys, ...loan.historys]},
       {
         returnDocument: 'after',
       }
@@ -211,8 +212,10 @@ export class LoanshipService {
                 isAgree: true,
               };
             } else if (query.status == 'returned') {
-              mongoQuery.isReturn = true;
-              mongoQuery.isAgree = true;
+              mongoQuery = {
+                status: 'đã trả', // Trạng thái đã mượn
+                isAgree: true,
+              };
             } else {
               mongoQuery = {
                 status: 'đang mượn', // Trạng thái đã mượn
@@ -228,13 +231,10 @@ export class LoanshipService {
       });
     }
 
-    console.log(mongoQuery);
-
     //search document
     if (search) {
       mongoQuery.name = {$regex: new RegExp(search, 'i')};
     }
-
     // Thực hiện phân trang và sắp xếp
     const [results, itemCount] = await Promise.all([
       this.loanSlipModel
@@ -485,11 +485,14 @@ export class LoanshipService {
   }
   // tổng số lượng ấn phẩm đang mượn
   async getTotalBorrowedBooks(libraryId: Types.ObjectId): Promise<number> {
-    const query: any = {status: 'đang mượn'};
+    const query: any = {status: 'đang mượn', isLink: false};
 
     if (libraryId) {
       query.libraryId = libraryId;
     }
+    const a = await this.loanSlipModel.find(query);
+    console.log(a.length);
+    console.log(a, 'ttt');
     return this.loanSlipModel.countDocuments(query).exec();
   }
 

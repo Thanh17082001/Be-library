@@ -36,6 +36,9 @@ export class LoanSlip extends BaseDocument {
   isPrint: boolean;
 
   @Prop({default: false})
+  isCancel: boolean;
+
+  @Prop({default: false})
   isAgree: boolean;
 
   @Prop({default: false})

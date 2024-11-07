@@ -1,5 +1,5 @@
 import {ApiProperty, OmitType} from '@nestjs/swagger';
-import {IsString} from 'class-validator';
+import {IsNotEmpty, IsNumber, IsString} from 'class-validator';
 import {BaseDto} from 'src/common/base.dto';
 
 export class CreateLibraryDto extends OmitType(BaseDto, ['libraryId', 'isPublic']) {
@@ -26,4 +26,10 @@ export class CreateLibraryDto extends OmitType(BaseDto, ['libraryId', 'isPublic'
   @ApiProperty()
   @IsString()
   managementAgency?: string | null;
+
+  totalStorageUsed: number;
+  @ApiProperty()
+  @IsNumber()
+  @IsNotEmpty()
+  maxStorageLimit: number;
 }

@@ -81,14 +81,14 @@ export class AuthorController {
   @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'authors')) // tên permission và bảng cần chặn
   @UseGuards(CaslGuard) // chặn permission (CRUD)
   async lt(@Query() query: Partial<CreateAuthorDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Author>> {
-   try {
-     const user = request['user'];
-     const libraryId = user?.libraryId ?? null;
+    try {
+      const user = request['user'];
+      const libraryId = user?.libraryId ?? null;
 
-     return await this.authorService.GetIsLink(libraryId, pageOptionDto, query);
-   } catch (error) {
-    console.log(error);
-   }
+      return await this.authorService.GetIsLink(libraryId, pageOptionDto, query);
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   @Get('/deleted')

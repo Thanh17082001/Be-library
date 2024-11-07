@@ -251,9 +251,10 @@ export class PublicationService {
     return await this.publicationModel.findByIdAndUpdate(id, {$inc: {quantity: +data.quantity, shelvesQuantity: -data.quantity}});
   }
 
-  async convertPdfToImages(pdfPath: string): Promise<string[]> {
+  async convertPdfToImages(pdfPath: string): Promise<{files: string[]; totalSizeMB: number}> {
     try {
       const outputDir = path.join(__dirname, '../../public/images-convert');
+      const outputDir2 = path.join(__dirname, '../../public');
       // const outputFiles: string[] = [];
 
       // Đảm bảo thư mục đầu ra tồn tại
@@ -272,10 +273,18 @@ export class PublicationService {
       // Lấy danh sách các tệp đã chuyển đổi
       const newFiles = await fs.readdir(outputDir);
       const outputFiles = newFiles.filter(file => file.endsWith('.png') && !existingFiles.has(file)).map(file => `images-convert/${file}`);
-      return outputFiles;
+
+      // Tính tổng dung lượng các file
+      let totalSize = 0;
+      for (const file of outputFiles) {
+        const stats = await fs.stat(path.join(outputDir2, file));
+        totalSize += stats.size; // Kích thước file tính theo byte
+      }
+      const totalSizeMB = totalSize / (1024 * 1024); // Chuyển sang MB
+      return {files: outputFiles, totalSizeMB};
     } catch (error) {
       console.error('Error converting PDF to images:', error);
-      throw new Error('Failed to convert PDF to images');
+      throw new Error(error);
     }
   }
 

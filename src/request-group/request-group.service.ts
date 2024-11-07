@@ -11,11 +11,13 @@ import {PageOptionsDto} from 'src/utils/page-option-dto';
 import {GroupService} from 'src/group/group.service';
 import {Group} from 'src/group/entities/group.entity';
 import {LibraryService} from 'src/library/library.service';
+import {Library} from 'src/library/entities/library.entity';
 
 @Injectable()
 export class RequestGroupService {
   constructor(
     @InjectModel(RequestGroup.name) private requestGroupModel: SoftDeleteModel<RequestGroup>,
+    @InjectModel(Library.name) private LibraryModel: SoftDeleteModel<Library>,
     private readonly groupService: GroupService,
     private readonly libraryService: LibraryService
   ) {}
@@ -115,6 +117,13 @@ export class RequestGroupService {
       }
     );
 
+    const requestLibraries = await this.requestGroupModel.find({libraryId: resource.libraryId});
+
+    const objectIds = requestLibraries.map(item => new Types.ObjectId(item._id));
+
+    await this.requestGroupModel.deleteMany({
+      _id: {$in: objectIds},
+    });
     await this.requestGroupModel?.findByIdAndDelete(new Types.ObjectId(id));
     return update;
   }

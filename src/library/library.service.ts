@@ -103,6 +103,22 @@ export class LibraryService {
     });
   }
 
+  async updateStorageLimit(id: string, fileSize: number): Promise<Library> {
+    const resource: Library = await this.libraryModel.findById(new Types.ObjectId(id));
+    if (!resource) {
+      throw new NotFoundException('Resource not found');
+    }
+    return this.libraryModel.findByIdAndUpdate(
+      id,
+      {
+        totalStorageUsed: resource.totalStorageUsed + fileSize,
+      },
+      {
+        returnDocument: 'after',
+      }
+    );
+  }
+
   async remove(id: string): Promise<Library> {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid id');

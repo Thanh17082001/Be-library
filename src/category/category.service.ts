@@ -229,22 +229,21 @@ export class CategoryService {
 
   //liên thông
   async GetIsLink(libraryId: string, pageOptions: PageOptionsDto, query: Partial<Category>): Promise<any> {
-    const { page, limit, skip, order, search } = pageOptions;
+    const {page, limit, skip, order, search} = pageOptions;
     const group = await this.groupModel.findOne({
-      libraries: { $in: [libraryId] },
+      libraries: {$in: [libraryId]},
     });
     if (!group) {
       throw new Error('Không tìm thấy groupId cho libraryId này');
     }
 
-
     const groupId = group._id;
 
     // Thêm các điều kiện từ `query` và search
     const searchRegex = search
-      ? { $regex: search, $options: 'i' } // 'i' để không phân biệt hoa thường
+      ? {$regex: search, $options: 'i'} // 'i' để không phân biệt hoa thường
       : null;
-    const mongoQuery: any = { isLink: true };
+    const mongoQuery: any = {isLink: true};
     const pagination = ['page', 'limit', 'skip', 'order', 'search'];
     if (!!query && Object.keys(query).length > 0) {
       const arrayQuery = Object.keys(query);
@@ -258,16 +257,15 @@ export class CategoryService {
       mongoQuery.libraryId = new Types.ObjectId(mongoQuery.libraryId);
     }
     const match = {
-      ...(searchRegex && { name: searchRegex }),
+      ...(searchRegex && {name: searchRegex}),
       ...mongoQuery,
     };
-
 
     // truy vấn
 
     // Xây dựng pipeline với điều kiện `$skip` và `$limit` động
     const pipeline: any[] = [
-      { $match: { ...match } },
+      {$match: {...match}},
       {
         $lookup: {
           from: 'libraries',
@@ -282,23 +280,23 @@ export class CategoryService {
           preserveNullAndEmptyArrays: true,
         },
       },
-      { $match: { 'libraryDetails.groupId': { $exists: true, $eq: groupId } } },
-      { $sort: { createdAt: order === 'ASC' ? 1 : -1 } },
+      {$match: {'libraryDetails.groupId': {$exists: true, $eq: groupId}}},
+      {$sort: {createdAt: order === 'ASC' ? 1 : -1}},
     ];
 
     // Thêm `$skip` và `$limit` vào pipeline nếu có giá trị
     if (typeof skip === 'number' && skip >= 0) {
-      pipeline.push({ $skip: skip });
+      pipeline.push({$skip: skip});
     }
     if (typeof limit === 'number' && limit > 0) {
-      pipeline.push({ $limit: limit });
+      pipeline.push({$limit: limit});
     }
 
     const results = await this.categoryModel.aggregate(pipeline);
 
     // Đếm tổng số tài liệu khớp với điều kiện
     const countPipeline = [
-      { $match: { ...match } },
+      {$match: {...match}},
       {
         $lookup: {
           from: 'libraries',
@@ -313,8 +311,8 @@ export class CategoryService {
           preserveNullAndEmptyArrays: true,
         },
       },
-      { $match: { 'libraryDetails.groupId': groupId } },
-      { $count: 'totalCount' },
+      {$match: {'libraryDetails.groupId': groupId}},
+      {$count: 'totalCount'},
     ];
 
     const countResult = await this.categoryModel.aggregate(countPipeline);

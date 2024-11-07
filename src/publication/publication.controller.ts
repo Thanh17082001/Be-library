@@ -28,6 +28,7 @@ import {UpdateQuantityShelves, UpdateQuantityStock} from './dto/update-shelvesdt
 import {generateImageFromVideo} from 'src/common/genegrate-image-from-video';
 import {Library} from 'src/library/entities/library.entity';
 import {SearchName} from './dto/search-name.dto';
+import {LibraryService} from 'src/library/library.service';
 
 @Controller('publications')
 @ApiTags('publications')
@@ -38,7 +39,8 @@ export class PublicationController {
     private readonly authorService: AuthorService,
     private readonly categoryService: CategoryService,
     private readonly publisherService: PublisherService,
-    private readonly materialService: MaterialService
+    private readonly materialService: MaterialService,
+    private readonly libraryService: LibraryService
   ) {}
   @Get('test')
   async abc() {
@@ -54,14 +56,19 @@ export class PublicationController {
     const user = request['user'] ?? null;
     let images = [];
     createDto.path = '';
+    let fileSize = file.size / (1024 * 1024) || 0;
     if (file) {
       createDto.mimetype = file.mimetype;
       if (file.mimetype == 'application/pdf') {
-        images = await this.publicationService.convertPdfToImages(file?.path);
+        const convertPdftoimage = await this.publicationService.convertPdfToImages(file?.path);
+        images = convertPdftoimage.files;
+        fileSize += convertPdftoimage.totalSizeMB;
         createDto.path = `publication/pdf/${file.filename}`;
         createDto.priviewImage = images.length > 0 ? images[0] : createDto.path;
       } else if (file.mimetype == 'video/mp4') {
-        createDto.priviewImage = await generateImageFromVideo(`publication/video/${file.filename}`);
+        const generateImage = await generateImageFromVideo(`publication/video/${file.filename}`);
+        createDto.priviewImage = generateImage.path;
+        fileSize += generateImage.sizeMB;
         createDto.path = `publication/video/${file.filename}`;
       } else if (file.mimetype == 'application/vnd.openxmlformats-officedocument.presentationml.presentation') {
         createDto.path = `publication/ptt/${file.filename}`;
@@ -86,7 +93,15 @@ export class PublicationController {
     createDto.categoryIds = createDto.categoryIds ? JSON.parse(createDto.categoryIds?.toString()) : [];
     createDto.publisherIds = createDto.publisherIds ? JSON.parse(createDto.publisherIds?.toString()) : [];
     createDto.materialIds = createDto.materialIds ? JSON.parse(createDto.materialIds?.toString()) : [];
-    return await this.publicationService.create({...createDto});
+    const result = await this.publicationService.create({...createDto});
+    if (file) {
+      const library = await this.libraryService.findById(user.libraryId);
+      if (library.totalStorageUsed + fileSize > library.maxStorageLimit) {
+        throw new BadRequestException(`Đã vượt quá số dung lượng: ${library.maxStorageLimit / 1024} GB`);
+      }
+      await this.libraryService.updateStorageLimit(user.libraryId, +fileSize);
+    }
+    return result;
   }
 
   @Post('import-excel')
@@ -278,7 +293,8 @@ export class PublicationController {
   @UseInterceptors(FileInterceptor('file', {storage: storage('publication', true), ...multerOptions}))
   @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, 'publications')) // tên permission và bảng cần chặn
   @UseGuards(CaslGuard) // chặn permission (CRUD)
-  async update(@UploadedFile() file: Express.Multer.File, @Param('id') id: string, @Body() updateDto: UpdatePublicationDto): Promise<Publication> {
+  async update(@UploadedFile() file: Express.Multer.File, @Param('id') id: string, @Body() updateDto: UpdatePublicationDto, @Req() request: Request): Promise<Publication> {
+    const user = request['user'] ?? null;
     updateDto.authorIds = updateDto.authorIds ? JSON.parse(updateDto.authorIds?.toString()) : [];
     updateDto.categoryIds = updateDto.categoryIds ? JSON.parse(updateDto.categoryIds?.toString()) : [];
     updateDto.publisherIds = updateDto.publisherIds ? JSON.parse(updateDto.publisherIds?.toString()) : [];
@@ -286,13 +302,18 @@ export class PublicationController {
     let images = [];
     updateDto.path = '';
     updateDto.priviewImage = '';
+    let fileSize = file.size / (1024 * 1024) || 0;
     if (file) {
       if (file.mimetype == 'application/pdf') {
-        updateDto.images = await this.publicationService.convertPdfToImages(file?.path);
+        const convertPdftoimage = await this.publicationService.convertPdfToImages(file?.path);
+        fileSize += convertPdftoimage.totalSizeMB;
+        updateDto.images = convertPdftoimage.files;
         updateDto.path = `publication/pdf/${file.filename}`;
         updateDto.priviewImage = updateDto.images.length > 0 ? updateDto.images[0] : updateDto.path;
       } else if (file.mimetype == 'video/mp4') {
-        updateDto.priviewImage = await generateImageFromVideo(`publication/video/${file.filename}`);
+        const generateImage = await generateImageFromVideo(`publication/video/${file.filename}`);
+        updateDto.priviewImage = generateImage.path;
+        fileSize += generateImage.sizeMB;
         updateDto.path = `publication/video/${file.filename}`;
       } else if (file.mimetype == 'application/vnd.openxmlformats-officedocument.presentationml.presentation') {
         updateDto.path = `publication/ptt/${file.filename}`;
@@ -305,7 +326,16 @@ export class PublicationController {
         updateDto.priviewImage = `publication/image/${file.filename}`;
       }
     }
+    const result = await this.publicationService.update(id, updateDto);
 
-    return await this.publicationService.update(id, updateDto);
+    if (file) {
+      const library = await this.libraryService.findById(user.libraryId);
+      if (library.totalStorageUsed + fileSize > library.maxStorageLimit) {
+        throw new BadRequestException(`Đã vượt quá số dung lượng: ${library.maxStorageLimit / 1024} GB`);
+      }
+      await this.libraryService.updateStorageLimit(user.libraryId, +fileSize);
+    }
+
+    return result;
   }
 }
