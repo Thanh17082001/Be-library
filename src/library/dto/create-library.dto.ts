@@ -27,7 +27,7 @@ export class CreateLibraryDto extends OmitType(BaseDto, ['libraryId', 'isPublic'
   @IsString()
   managementAgency?: string | null;
 
-  totalStorageUsed: number;
+  totalStorageUsed: number = 0;
   @ApiProperty()
   @IsNumber()
   @IsNotEmpty()

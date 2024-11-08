@@ -93,7 +93,6 @@ export class PublicationController {
     createDto.categoryIds = createDto.categoryIds ? JSON.parse(createDto.categoryIds?.toString()) : [];
     createDto.publisherIds = createDto.publisherIds ? JSON.parse(createDto.publisherIds?.toString()) : [];
     createDto.materialIds = createDto.materialIds ? JSON.parse(createDto.materialIds?.toString()) : [];
-    const result = await this.publicationService.create({...createDto});
     if (file) {
       const library = await this.libraryService.findById(user.libraryId);
       if (library.totalStorageUsed + fileSize > library.maxStorageLimit) {
@@ -101,6 +100,8 @@ export class PublicationController {
       }
       await this.libraryService.updateStorageLimit(user.libraryId, +fileSize);
     }
+    const result = await this.publicationService.create({...createDto});
+    
     return result;
   }
 
@@ -299,7 +300,6 @@ export class PublicationController {
     updateDto.categoryIds = updateDto.categoryIds ? JSON.parse(updateDto.categoryIds?.toString()) : [];
     updateDto.publisherIds = updateDto.publisherIds ? JSON.parse(updateDto.publisherIds?.toString()) : [];
     updateDto.materialIds = updateDto.materialIds ? JSON.parse(updateDto.materialIds?.toString()) : [];
-    let images = [];
     updateDto.path = '';
     updateDto.priviewImage = '';
     let fileSize = file.size / (1024 * 1024) || 0;
@@ -326,8 +326,6 @@ export class PublicationController {
         updateDto.priviewImage = `publication/image/${file.filename}`;
       }
     }
-    const result = await this.publicationService.update(id, updateDto);
-
     if (file) {
       const library = await this.libraryService.findById(user.libraryId);
       if (library.totalStorageUsed + fileSize > library.maxStorageLimit) {
@@ -335,6 +333,9 @@ export class PublicationController {
       }
       await this.libraryService.updateStorageLimit(user.libraryId, +fileSize);
     }
+    const result = await this.publicationService.update(id, updateDto);
+
+   
 
     return result;
   }

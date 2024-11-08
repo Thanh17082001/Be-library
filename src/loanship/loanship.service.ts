@@ -14,12 +14,15 @@ import {FilterDateDto} from './dto/fillter-date.dto';
 import {Cron} from '@nestjs/schedule';
 import * as moment from 'moment';
 import {ReturnDto} from './dto/return.dto';
+import {UserService} from 'src/user/user.service';
+import {User} from 'src/user/entities/user.entity';
 
 @Injectable()
 export class LoanshipService {
   constructor(
     @InjectModel(LoanSlip.name) private loanSlipModel: SoftDeleteModel<LoanSlip>,
-    private readonly publicationService: PublicationService
+    private readonly publicationService: PublicationService,
+    private readonly userService: UserService
   ) {}
   async create(createDto: CreateLoanshipDto): Promise<LoanSlip> {
     createDto.barcode = generateBarcode();
@@ -182,7 +185,7 @@ export class LoanshipService {
 
   async findAll(pageOptions: PageOptionsDto, query: Partial<CreateLoanshipDto>): Promise<PageDto<LoanSlip>> {
     const {page, limit, skip, order, search} = pageOptions;
-    const pagination = ['page', 'limit', 'skip', 'order', 'search'];
+    const pagination = ['page', 'limit', 'skip', 'order', 'search', 'barcodeUser'];
     let mongoQuery: any = {isActive: 1};
     // Thêm các điều kiện từ `query`
     if (!!query && Object.keys(query).length > 0) {
@@ -235,6 +238,13 @@ export class LoanshipService {
     if (search) {
       mongoQuery.name = {$regex: new RegExp(search, 'i')};
     }
+
+    if (query.barcodeUser) {
+      const user: User = (await this.userService.findByBarcode(query.barcodeUser)).result;
+      mongoQuery.userId = user._id.toString();
+    }
+
+    console.log(mongoQuery, 'kkkkk');
     // Thực hiện phân trang và sắp xếp
     const [results, itemCount] = await Promise.all([
       this.loanSlipModel

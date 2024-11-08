@@ -19,6 +19,8 @@ import {RoleS} from 'src/role/entities/role.entity';
 import {SoftDeleteModel} from 'mongoose-delete';
 import {Role} from 'src/role/role.enum';
 import {UpdateAuthDto} from './dto/update-auth.dto';
+import {ChangePasswordDto} from './dto/change-pass.dto';
+import {ChangeInfoUserDto} from './dto/change-info.dto';
 
 @Injectable()
 export class UserService {
@@ -52,8 +54,8 @@ export class UserService {
       ...createUserDto,
 
       permissions: role.permissions,
-      roleId: new Types.ObjectId(roleId),
-      avatar: createUserDto?.avatar || createUserDto?.avatar != '' ? createUserDto.avatar : '/default/68e1d8178e17d7d962ec9db4fae3eabc.jpg',
+      roleId: roleId,
+      avatar: createUserDto?.avatar || createUserDto?.avatar != '' ? createUserDto.avatar : '/default/68e1d8178e17d7d962ec9db4fae3eabc.png',
       passwordFirst: createUserDto.password,
       password: password,
     };
@@ -66,7 +68,7 @@ export class UserService {
   async findAll(pageOptions: PageOptionsDto, query: Partial<User>): Promise<PageDto<User>> {
     const {page, limit, skip, order, search} = pageOptions;
     const pagination = ['page', 'limit', 'skip', 'order', 'search'];
-    const mongoQuery: any = {isActive: 1, isAdmin: false};
+    const mongoQuery: any = {isActive: 1};
     // Thêm các điều kiện từ `query`
     if (!!query && Object.keys(query).length > 0) {
       const arrayQuery = Object.keys(query);
@@ -77,8 +79,10 @@ export class UserService {
       });
     }
     if (Object.keys(mongoQuery).includes('roleId')) {
-      mongoQuery.roleId = new Types.ObjectId(mongoQuery.roleId.toString());
+      mongoQuery.roleId = mongoQuery.roleId.toString();
     }
+
+    console.log(mongoQuery);
     //search document
     if (search) {
       mongoQuery.fullname = {$regex: new RegExp(search, 'i')};
@@ -313,5 +317,47 @@ export class UserService {
         returnDocument: 'after',
       }
     );
+  }
+
+  async changePassword(changePassword: ChangePasswordDto): Promise<User> {
+    const user: User = await this.userModel.findOne({_id: changePassword.userId});
+
+    const isPass = await bcrypt.compare(changePassword.password, user?.password ?? '');
+
+    if (!isPass || !user) {
+      throw new BadRequestException('Account or password is incorrect');
+    }
+
+    const password = await bcrypt.hash(changePassword.newPassword, 10);
+
+    return await this.userModel.findByIdAndUpdate(user._id, {password}, {returnDocument: 'after'});
+  }
+
+  async changeInfo(id, changeinfoDto: ChangeInfoUserDto): Promise<User> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid id');
+    }
+
+    const exits: User = await this.userModel.findOne({
+      email: changeinfoDto.email, // Tìm theo tên
+      _id: {$ne: new Types.ObjectId(id)}, // Loại trừ ID hiện tại
+    });
+    if (exits) {
+      throw new BadRequestException('email already exists');
+    }
+    const resource: User = await this.userModel.findById(new Types.ObjectId(id));
+    if (!resource) {
+      throw new NotFoundException('Resource not found');
+    }
+
+    if (changeinfoDto.avatar && resource.avatar) {
+      const oldImagePath = path.join(__dirname, '..', '..', 'public', resource.avatar);
+      if (resource.avatar !== '/default/68e1d8178e17d7d962ec9db4fae3eabc.png') {
+        if (fs.existsSync(oldImagePath)) fs.unlinkSync(oldImagePath);
+      }
+    }
+    return this.userModel.findByIdAndUpdate(id, changeinfoDto, {
+      returnDocument: 'after',
+    });
   }
 }

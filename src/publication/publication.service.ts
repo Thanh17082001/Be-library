@@ -8,7 +8,7 @@ import {ItemDto, PageDto} from 'src/utils/page.dto';
 import {PageMetaDto} from 'src/utils/page.metadata.dto';
 import {Publication} from './entities/publication.entity';
 import * as pdfPoppler from 'pdf-poppler';
-import {existsSync, unlinkSync, promises as fs} from 'fs';
+import {existsSync, statSync, unlinkSync, promises as fs} from 'fs';
 import * as path from 'path';
 import * as ffmpeg from 'fluent-ffmpeg';
 import {SoftDeleteModel} from 'mongoose-delete';
@@ -18,6 +18,7 @@ import {LoanSlip} from 'src/loanship/entities/loanship.entity';
 import {Liquidation} from 'src/liquidation/entities/liquidation.entity';
 import {Group} from 'src/group/entities/group.entity';
 import {SearchName} from './dto/search-name.dto';
+import {LibraryService} from 'src/library/library.service';
 
 @Injectable()
 export class PublicationService {
@@ -25,7 +26,8 @@ export class PublicationService {
     @InjectModel(Publication.name) private publicationModel: SoftDeleteModel<Publication>,
     @InjectModel(LoanSlip.name) private loanSlipModel: SoftDeleteModel<LoanSlip>,
     @InjectModel(Liquidation.name) private liquidationModel: SoftDeleteModel<Liquidation>,
-    @InjectModel(Group.name) private groupModel: SoftDeleteModel<Group>
+    @InjectModel(Group.name) private groupModel: SoftDeleteModel<Group>,
+    private readonly libraryService: LibraryService
   ) {}
   async create(createDto: CreatePublicationDto): Promise<Publication> {
     if (createDto.path == '') {
@@ -197,10 +199,12 @@ export class PublicationService {
     if (!resource) {
       throw new NotFoundException('Resource not found');
     }
+    let deletedFileSize = 0;
     // co file
     if (updateDto.path) {
       const oldImagePath = path.join(__dirname, '..', '..', 'public', resource.path);
       if (existsSync(oldImagePath) && resource.path !== '/default/publication-default.jpg') {
+        deletedFileSize += statSync(oldImagePath).size; // Tính dung lượng file cũ
         unlinkSync(oldImagePath);
       }
 
@@ -209,13 +213,16 @@ export class PublicationService {
         const imageConvertOld = path.join(__dirname, '..', '..', 'public', resource.images[i]);
 
         if (existsSync(priviewImageOld)) {
+          deletedFileSize += statSync(priviewImageOld).size;
           unlinkSync(priviewImageOld);
         }
 
         if (existsSync(imageConvertOld)) {
+          deletedFileSize += statSync(imageConvertOld).size;
           unlinkSync(imageConvertOld);
         }
       }
+      await this.libraryService.updateStorageLimit(resource.libraryId.toString(), -deletedFileSize / (1024 * 1024)); // chuyển sang MB
     } else {
       updateDto.path = resource.path;
       updateDto.images = resource.images;
@@ -383,8 +390,11 @@ export class PublicationService {
     if (!resource) {
       throw new NotFoundException('Resource not found');
     }
+    let deletedFileSize = 0;
+
     const oldImagePath = path.join(__dirname, '..', '..', 'public', resource.path);
     if (existsSync(oldImagePath) && resource.path !== '/default/publication-default.jpg') {
+      deletedFileSize += statSync(oldImagePath).size; // Tính dung lượng file cũ
       unlinkSync(oldImagePath);
     }
 
@@ -393,23 +403,32 @@ export class PublicationService {
       const imageConvertOld = path.join(__dirname, '..', '..', 'public', resource.images[i]);
 
       if (existsSync(priviewImageOld)) {
+        deletedFileSize += statSync(priviewImageOld).size;
+
         unlinkSync(priviewImageOld);
       }
 
       if (existsSync(imageConvertOld)) {
+        deletedFileSize += statSync(imageConvertOld).size;
+
         unlinkSync(imageConvertOld);
       }
     }
+    await this.libraryService.updateStorageLimit(resource.libraryId.toString(), deletedFileSize / (1024 * 1024)); // chuyển sang MB
+
     return await this.publicationModel?.findByIdAndDelete(new Types.ObjectId(id));
   }
 
   async deleteMultiple(ids: string[]): Promise<any> {
     const objectIds = ids.map(id => new Types.ObjectId(id));
+    let deletedFileSize = 0;
+
     for (let i = 0; i < objectIds.length; i++) {
       const resource: Publication = await this.publicationModel.findOneDeleted(new Types.ObjectId(objectIds[i]));
 
       const oldImagePath = path.join(__dirname, '..', '..', 'public', resource.path);
       if (existsSync(oldImagePath)) {
+        deletedFileSize += statSync(oldImagePath).size; // Tính dung lượng file cũ
         unlinkSync(oldImagePath);
       }
 
@@ -418,13 +437,18 @@ export class PublicationService {
         const imageConvertOld = path.join(__dirname, '..', '..', 'public', resource.images[i]);
 
         if (existsSync(priviewImageOld)) {
+          deletedFileSize += statSync(priviewImageOld).size;
+
           unlinkSync(priviewImageOld);
         }
 
         if (existsSync(imageConvertOld)) {
+          deletedFileSize += statSync(imageConvertOld).size;
+
           unlinkSync(imageConvertOld);
         }
       }
+      await this.libraryService.updateStorageLimit(resource.libraryId.toString(), deletedFileSize / (1024 * 1024)); // chuyển sang MB
     }
     return await this.publicationModel.deleteMany({
       _id: {$in: objectIds},
@@ -507,7 +531,7 @@ export class PublicationService {
       libraries: {$in: [libraryId]},
     });
     if (!group) {
-      throw new Error('Không tìm thấy groupId cho libraryId này');
+      throw new BadRequestException('Thư viện chưa có trong nhóm');
     }
 
     const groupId = group._id;

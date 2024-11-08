@@ -23,6 +23,9 @@ import * as XLSX from 'xlsx';
 import {ImportExcel} from './dto/import-excel.dto';
 import {formatDate} from 'src/utils/format-date';
 import {generateBarcode} from 'src/common/genegrate-barcode';
+import {ChangePasswordDto} from './dto/change-pass.dto';
+import {ChangeInfoUserDto} from './dto/change-info.dto';
+import {LibraryService} from 'src/library/library.service';
 
 @Controller('user')
 @ApiTags('user')
@@ -39,6 +42,7 @@ export class UserController {
     createDto.avatar = file ? `/avatar/${file.filename}` : '';
     createDto.createBy = new Types.ObjectId(user?._id) ?? null;
     createDto.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
+
     return await this.userService.create({...createDto});
   }
 
@@ -125,8 +129,8 @@ export class UserController {
   }
 
   @Get('barcode/:barcode')
-  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'users')) // tên permission và bảng cần chặn
-  @UseGuards(CaslGuard) // chặn permission (CRUD)
+  @Roles(Role.Admin, Role.Teacher, Role.Owner, Role.Student) // tên role để chặn bên dưới
+  @UseGuards(RolesGuard)
   async findByBarcode(@Param('barcode') barcode: string): Promise<ItemDto<User>> {
     return await this.userService.findByBarcode(barcode);
   }
@@ -166,7 +170,19 @@ export class UserController {
     return this.userService.restoreByIds(ids);
   }
 
-  @Patch(':id')
+  @Patch('change-password')
+  async changePassword(@Body() changePassword: ChangePasswordDto): Promise<User> {
+    return await this.userService.changePassword(changePassword);
+  }
+
+  @Patch('change-info/:id')
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file', {storage: storage('avatar'), ...multerOptions}))
+  async changeÌno(@Body() changeInfoDto: ChangeInfoUserDto, @Param('id') id: string): Promise<any> {
+    return await this.userService.changeInfo(id, changeInfoDto);
+  }
+
+  @Patch('')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file', {storage: storage('avatar'), ...multerOptions}))
   @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, 'users')) // tên permission và bảng cần chặn
@@ -175,7 +191,6 @@ export class UserController {
     if (file) {
       updateDto.avatar = `/avatar/${file.filename}`;
     }
-
     return await this.userService.update(id, updateDto);
   }
 }

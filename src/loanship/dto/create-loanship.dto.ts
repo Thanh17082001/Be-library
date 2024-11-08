@@ -44,6 +44,8 @@ export class CreateLoanshipDto extends OmitType(BaseDto, ['isPublic']) {
   // @IsString()
   barcode: string;
 
+  barcodeUser: string;
+
   @ApiProperty()
   @IsBoolean()
   isPrint: boolean;

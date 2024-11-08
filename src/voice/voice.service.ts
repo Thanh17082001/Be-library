@@ -244,7 +244,7 @@ export class VoiceService {
       libraries: {$in: [libraryId]},
     });
     if (!group) {
-      throw new Error('Không tìm thấy groupId cho libraryId này');
+      throw new BadRequestException('Thư viện chưa có trong nhóm');
     }
 
     const groupId = group._id;

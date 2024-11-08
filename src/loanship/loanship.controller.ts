@@ -35,7 +35,7 @@ export class LoanshipController {
     const user = request['user'] ?? null;
     createDto.libraryId = !createDto.libraryId ? (new Types.ObjectId(user?.libraryId) ?? null) : new Types.ObjectId(createDto.libraryId);
     createDto.isLink = !createDto.isLink ? false : createDto.isLink;
-    createDto.createBy = createDto.isLink ? (new Types.ObjectId(user?._id) ?? null) : (new Types.ObjectId(createDto.createBy) ?? null);
+    createDto.createBy = new Types.ObjectId(user?._id) ?? null;
     createDto.userId = createDto.isLink ? user?._id : createDto.userId;
     return await this.loanSlipService.create({...createDto});
   }
@@ -49,11 +49,9 @@ export class LoanshipController {
     if (!user.isAdmin) {
       query.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
       if (user?.roleId?.name == Role.Teacher || user?.roleId?.name == Role.Student) {
-        query.createBy = new Types.ObjectId(user?._id) ?? null;
+        query.userId = user?._id ?? null;
       }
     }
-
-    console.log(query);
 
     return await this.loanSlipService.findAll(pageOptionDto, query);
   }
@@ -93,8 +91,8 @@ export class LoanshipController {
     return await this.loanSlipService.findDeleted(pageOptionDto, query);
   }
 
-  @Get('approval/:id')
-  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'loanslips')) // tên permission và bảng cần chặn
+  @Patch('approval/:id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, 'loanslips')) // tên permission và bảng cần chặn
   @UseGuards(CaslGuard) // chặn permission (CRUD)
   async loanApproval(@Param() id: string): Promise<LoanSlip> {
     return this.loanSlipService.agreeToLoan(id);
@@ -167,12 +165,12 @@ export class LoanshipController {
   @Patch('cancel/:id')
   @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, 'loanslips')) // tên permission và bảng cần chặn
   @UseGuards(CaslGuard) // chặn permission (CRUD)
-  async updateCancel(@Param('id') id: string): Promise<LoanSlip> {
+  async updateCancel(@Param('id') id: string): Promise<ItemDto<LoanSlip>> {
     const updateDto = {
       isCancel: true,
       status: 'đã hủy',
     };
-    return await this.loanSlipService.update(id, updateDto);
+    return new ItemDto(await this.loanSlipService.update(id, updateDto));
   }
 
   @Patch(':id')
