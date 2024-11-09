@@ -475,40 +475,81 @@ export class PublicationService {
   }
 
   // Tính tổng số lượng sách
-  async getTotalBooks(libraryId: Types.ObjectId): Promise<number> {
+  async getTotalBooks(libraryId: Types.ObjectId): Promise<any> {
     const match: any = libraryId ? {libraryId: libraryId} : {};
+
+    // Define default types to return if no documents exist
+    const defaultTypes = [
+      {type: 'ấn phẩm mềm', totalQuantity: 0, count: 0},
+      {type: 'ấn phẩm cứng', totalQuantity: 0, count: 0},
+    ];
+
     const result = await this.publicationModel.aggregate([
-      {
-        $match: match, // Thêm điều kiện lọc theo libraryId
-      },
+      {$match: match},
       {
         $group: {
-          _id: '$type', // Nhóm theo loại ấn phẩm
+          _id: '$type',
           totalQuantity: {
             $sum: {
               $cond: {
-                if: {$eq: ['$totalQuantity', 0]}, // Nếu số lượng = 0
-                then: 1, // Gán giá trị là 1
-                else: '$totalQuantity', // Nếu khác 0, giữ nguyên giá trị
+                if: {$eq: ['$totalQuantity', 0]},
+                then: 1,
+                else: '$totalQuantity',
               },
             },
           },
-          count: {$sum: 1}, // Đếm tổng số đầu sách theo loại
+          count: {$sum: 1},
         },
       },
       {
         $project: {
-          _id: 0, // Ẩn trường _id
-          type: '$_id', // Đổi tên _id thành type
-          totalQuantity: 1, // Hiển thị trường totalQuantity
-          count: 1, // Hiển thị trường count
+          type: '$_id',
+          totalQuantity: 1,
+          count: 1,
+          _id: 0,
+        },
+      },
+      {
+        $unionWith: {
+          coll: this.publicationModel.collection.name,
+          pipeline: [
+            {
+              $project: {
+                type: {$literal: 'ấn phẩm mềm'}, // Ensure all default types are in result
+                totalQuantity: {$literal: 0},
+                count: {$literal: 0},
+              },
+            },
+            {
+              $project: {
+                type: {$literal: 'ấn phẩm cứng'},
+                totalQuantity: {$literal: 0},
+                count: {$literal: 0},
+              },
+            },
+          ],
+        },
+      },
+      {
+        $group: {
+          _id: '$type',
+          totalQuantity: {$max: '$totalQuantity'},
+          count: {$max: '$count'},
+        },
+      },
+      {
+        $project: {
+          type: '$_id',
+          totalQuantity: 1,
+          count: 1,
+          _id: 0,
         },
       },
     ]);
 
-    // Nếu không có sách, trả về 0
     return result;
   }
+
   // sách có thể mượn totalQuantity>0 và ấn phẩm cứng
   async countBorrowableHardcoverBooks(libraryId: Types.ObjectId): Promise<any> {
     const query: any = {

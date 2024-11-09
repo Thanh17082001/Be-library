@@ -101,7 +101,7 @@ export class PublicationController {
       await this.libraryService.updateStorageLimit(user.libraryId, +fileSize);
     }
     const result = await this.publicationService.create({...createDto});
-    
+
     return result;
   }
 
@@ -302,7 +302,7 @@ export class PublicationController {
     updateDto.materialIds = updateDto.materialIds ? JSON.parse(updateDto.materialIds?.toString()) : [];
     updateDto.path = '';
     updateDto.priviewImage = '';
-    let fileSize = file.size / (1024 * 1024) || 0;
+    let fileSize = file?.size / (1024 * 1024) || 0;
     if (file) {
       if (file.mimetype == 'application/pdf') {
         const convertPdftoimage = await this.publicationService.convertPdfToImages(file?.path);
@@ -334,8 +334,6 @@ export class PublicationController {
       await this.libraryService.updateStorageLimit(user.libraryId, +fileSize);
     }
     const result = await this.publicationService.update(id, updateDto);
-
-   
 
     return result;
   }
