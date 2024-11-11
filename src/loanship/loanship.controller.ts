@@ -178,6 +178,7 @@ export class LoanshipController {
   @UseGuards(CaslGuard) // chặn permission (CRUD)
   async update(@Param('id') id: string, @Body() updateDto: UpdateLoanshipDto): Promise<LoanSlip> {
     updateDto.libraryId = updateDto.libraryId ? (new Types.ObjectId(updateDto.libraryId) ?? null) : undefined;
+    updateDto.createBy = updateDto.createBy ? (new Types.ObjectId(updateDto.createBy) ?? null) : undefined;
     return await this.loanSlipService.update(id, updateDto);
   }
 }

@@ -178,8 +178,9 @@ export class UserController {
   @Patch('change-info/:id')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file', {storage: storage('avatar'), ...multerOptions}))
-  async changeÌno(@Body() changeInfoDto: ChangeInfoUserDto, @Param('id') id: string): Promise<any> {
-    return await this.userService.changeInfo(id, changeInfoDto);
+  async changeInfo(@UploadedFile() file: Express.Multer.File, @Body() changeInfoDto: ChangeInfoUserDto, @Param('id') id: string): Promise<ItemDto<User>> {
+    changeInfoDto.avatar = file ? `/avatar/${file.filename}` : '';
+    return new ItemDto(await this.userService.changeInfo(id, changeInfoDto));
   }
 
   @Patch('')

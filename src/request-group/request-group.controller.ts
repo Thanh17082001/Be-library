@@ -32,8 +32,8 @@ export class RequestGroupController {
   }
 
   @Get()
-  @Roles(Role.Owner) // tên role để chặn bên dưới
-  @UseGuards(RolesGuard) // chặn role (admin, student ,....)
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'requestgroups')) // tên permisson và bảng cần chặn
+  @UseGuards(CaslGuard)
   async findAll(@Query() query: Partial<CreateRequestGroupDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<RequestGroup>> {
     const user = request['user'];
     if (!user.isAdmin) {

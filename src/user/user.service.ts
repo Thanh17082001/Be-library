@@ -350,11 +350,15 @@ export class UserService {
       throw new NotFoundException('Resource not found');
     }
 
-    if (changeinfoDto.avatar && resource.avatar) {
+    if (changeinfoDto.avatar) {
       const oldImagePath = path.join(__dirname, '..', '..', 'public', resource.avatar);
       if (resource.avatar !== '/default/68e1d8178e17d7d962ec9db4fae3eabc.png') {
-        if (fs.existsSync(oldImagePath)) fs.unlinkSync(oldImagePath);
+        if (fs.existsSync(oldImagePath)) {
+          fs.unlinkSync(oldImagePath);
+        }
       }
+    } else {
+      changeinfoDto.avatar = resource.avatar;
     }
     return this.userModel.findByIdAndUpdate(id, changeinfoDto, {
       returnDocument: 'after',

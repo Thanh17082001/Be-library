@@ -1,6 +1,6 @@
 import {ApiProperty, OmitType} from '@nestjs/swagger';
 import {Type} from 'class-transformer';
-import {IsDate, IsEmail, IsEnum, IsNotEmpty, IsString} from 'class-validator';
+import {IsDate, IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString} from 'class-validator';
 import {Types} from 'mongoose';
 import {BaseDocument} from 'src/common/base-document';
 import {BaseDto} from 'src/common/base.dto';
@@ -28,12 +28,14 @@ export class CreateUserDto extends OmitType(BaseDto, ['isPublic', 'isLink'] as c
   fullname: string;
 
   @ApiProperty()
+  @IsOptional()
   @IsString()
-  class: string;
+  class?: string = '';
 
   @ApiProperty()
+  @IsOptional()
   @IsString()
-  school: string;
+  school?: string = '';
 
   @ApiProperty()
   @IsString()
