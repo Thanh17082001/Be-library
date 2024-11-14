@@ -19,6 +19,8 @@ import {Liquidation} from 'src/liquidation/entities/liquidation.entity';
 import {Group} from 'src/group/entities/group.entity';
 import {SearchName} from './dto/search-name.dto';
 import {LibraryService} from 'src/library/library.service';
+import {VoiceService} from 'src/voice/voice.service';
+import {Voice} from 'src/voice/entities/voice.entity';
 
 @Injectable()
 export class PublicationService {
@@ -27,6 +29,7 @@ export class PublicationService {
     @InjectModel(LoanSlip.name) private loanSlipModel: SoftDeleteModel<LoanSlip>,
     @InjectModel(Liquidation.name) private liquidationModel: SoftDeleteModel<Liquidation>,
     @InjectModel(Group.name) private groupModel: SoftDeleteModel<Group>,
+    @InjectModel(Voice.name) private voiceModel: SoftDeleteModel<Voice>,
     private readonly libraryService: LibraryService
   ) {}
   async create(createDto: CreatePublicationDto): Promise<Publication> {
@@ -563,6 +566,36 @@ export class PublicationService {
 
     const count = await this.publicationModel.countDocuments(query);
     return count;
+  }
+
+  async link(id: string) {
+    const resource = await this.publicationModel.findOne({_id: id});
+    if (!resource) {
+      throw new NotFoundException('Resource not found');
+    }
+    const voices = await this.voiceModel.find({publicationId: id.toString()});
+    if (voices.length > 0) {
+      for (let i = 0; i < voices.length; i++) {
+        await this.voiceModel.findByIdAndUpdate(voices[i]._id, {isLink: true});
+      }
+    }
+
+    return await this.publicationModel.findByIdAndUpdate(id, {isLink: true});
+  }
+
+  async unlink(id: string) {
+    const resource = await this.publicationModel.findOne({_id: id});
+    if (!resource) {
+      throw new NotFoundException('Resource not found');
+    }
+    const voices = await this.voiceModel.find({publicationId: id});
+    if (voices.length > 0) {
+      for (let i = 0; i < voices.length; i++) {
+        await this.voiceModel.findByIdAndUpdate(voices[i]._id, {isLink: false});
+      }
+    }
+
+    return await this.publicationModel.findByIdAndUpdate(id, {isLink: false});
   }
 
   //liên thông

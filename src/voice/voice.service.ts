@@ -238,62 +238,44 @@ export class VoiceService {
   }
 
   //liên thông
-  async GetIsLink(libraryId: string, pageOptions: PageOptionsDto): Promise<any> {
-    const {page, limit, skip, order} = pageOptions;
+  async GetIsLink(libraryId: string, pageOptions: PageOptionsDto, query: Partial<Voice>): Promise<any> {
+    const { page, limit, skip, order, search } = pageOptions;
     const group = await this.groupModel.findOne({
-      libraries: {$in: [libraryId]},
+      libraries: { $in: [libraryId] },
     });
     if (!group) {
       throw new BadRequestException('Thư viện chưa có trong nhóm');
     }
 
     const groupId = group._id;
-    const results = await this.voiceModel.aggregate([
-      {
-        $match: {
-          isLink: true,
-        },
-      },
 
-      {
-        $lookup: {
-          from: 'libraries', // Tên của collection thư viện
-          localField: 'libraryId', // Trường libraryId của bảng ấn phẩm
-          foreignField: '_id', // Trường _id của bảng thư viện
-          as: 'libraryDetails', // Tên trường chứa dữ liệu kết nối
-        },
-      },
+    // Thêm các điều kiện từ `query` và search
+    const searchRegex = search
+      ? { $regex: search, $options: 'i' } // 'i' để không phân biệt hoa thường
+      : null;
+    const mongoQuery: any = { isLink: true };
+    const pagination = ['page', 'limit', 'skip', 'order', 'search'];
+    if (!!query && Object.keys(query).length > 0) {
+      const arrayQuery = Object.keys(query);
+      arrayQuery.forEach(key => {
+        if (key && !pagination.includes(key) && query[key] !== undefined && query[key] !== null) {
+          mongoQuery[key] = query[key];
+        }
+      });
+    }
+    if (Object.keys(mongoQuery).includes('libraryId')) {
+      mongoQuery.libraryId = new Types.ObjectId(mongoQuery.libraryId);
+    }
+    const match = {
+      ...(searchRegex && { name: searchRegex }),
+      ...mongoQuery,
+    };
 
-      {
-        $unwind: {
-          path: '$libraryDetails',
-          preserveNullAndEmptyArrays: true, // Giữ lại tài liệu nếu abc là null hoặc không tồn tại
-        },
-      },
+    // truy vấn
 
-      {
-        $match: {
-          'libraryDetails.groupId': groupId, // Điều kiện groupId
-        },
-      },
-      {
-        $sort: {createdAt: order === 'ASC' ? 1 : -1}, // Sắp xếp theo createdAt
-      },
-      {
-        $skip: skip, // Bỏ qua các tài liệu đã phân trang
-      },
-      {
-        $limit: limit, // Giới hạn số tài liệu trả về
-      },
-    ]);
-
-    // Đếm tổng số tài liệu khớp với điều kiện
-    const countResult = await this.voiceModel.aggregate([
-      {
-        $match: {
-          isLink: true,
-        },
-      },
+    // Xây dựng pipeline với điều kiện `$skip` và `$limit` động
+    const pipeline: any[] = [
+      { $match: { ...match } },
       {
         $lookup: {
           from: 'libraries',
@@ -308,18 +290,43 @@ export class VoiceService {
           preserveNullAndEmptyArrays: true,
         },
       },
+      { $match: { 'libraryDetails.groupId': { $exists: true, $eq: groupId } } },
+      { $sort: { createdAt: order === 'ASC' ? 1 : -1 } },
+    ];
+
+    // Thêm `$skip` và `$limit` vào pipeline nếu có giá trị
+    if (typeof skip === 'number' && skip >= 0) {
+      pipeline.push({ $skip: skip });
+    }
+    if (typeof limit === 'number' && limit > 0) {
+      pipeline.push({ $limit: limit });
+    }
+
+    const results = await this.voiceModel.aggregate(pipeline);
+
+    // Đếm tổng số tài liệu khớp với điều kiện
+    const countPipeline = [
+      { $match: { ...match } },
       {
-        $match: {
-          'libraryDetails.groupId': groupId,
+        $lookup: {
+          from: 'libraries',
+          localField: 'libraryId',
+          foreignField: '_id',
+          as: 'libraryDetails',
         },
       },
       {
-        $count: 'totalCount', // Đếm số tài liệu
+        $unwind: {
+          path: '$libraryDetails',
+          preserveNullAndEmptyArrays: true,
+        },
       },
-    ]);
+      { $match: { 'libraryDetails.groupId': groupId } },
+      { $count: 'totalCount' },
+    ];
 
+    const countResult = await this.voiceModel.aggregate(countPipeline);
     const itemCount = countResult.length > 0 ? countResult[0].totalCount : 0;
-    console.log(itemCount);
 
     const pageMetaDto = new PageMetaDto({
       pageOptionsDto: pageOptions,

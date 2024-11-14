@@ -27,6 +27,8 @@ export class LibraryController {
   @CheckPolicies((ability: AppAbility) => ability.can(Action.Create, 'libraries')) // tên permisson và bảng cần chặn
   @UseGuards(CaslGuard)
   create(@Body() createLibraryDto: CreateLibraryDto, @Req() request: Request) {
+    const user = request['user'];
+    createLibraryDto.createBy = new Types.ObjectId(user?._id) ?? null;
     createLibraryDto.maxStorageLimit = createLibraryDto.maxStorageLimit * 1024;
     createLibraryDto.totalStorageUsed = 0;
     return this.libraryService.create(createLibraryDto);

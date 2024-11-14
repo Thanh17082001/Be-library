@@ -68,7 +68,7 @@ export class UserService {
   async findAll(pageOptions: PageOptionsDto, query: Partial<User>): Promise<PageDto<User>> {
     const {page, limit, skip, order, search} = pageOptions;
     const pagination = ['page', 'limit', 'skip', 'order', 'search'];
-    const mongoQuery: any = {isActive: 1};
+    const mongoQuery: any = {};
     // Thêm các điều kiện từ `query`
     if (!!query && Object.keys(query).length > 0) {
       const arrayQuery = Object.keys(query);
@@ -363,5 +363,37 @@ export class UserService {
     return this.userModel.findByIdAndUpdate(id, changeinfoDto, {
       returnDocument: 'after',
     });
+  }
+
+  async blockAccount(id: string): Promise<User> {
+    const user: User = await this.userModel.findOne({_id: id});
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return await this.userModel.findByIdAndUpdate(
+      {_id: new Types.ObjectId(id)},
+      {
+        isActive: false,
+      },
+      {
+        returnDocument: 'after',
+      }
+    );
+  }
+
+  async activeAccount(id: string): Promise<User> {
+    const user: User = await this.userModel.findOne({_id: id});
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return await this.userModel.findByIdAndUpdate(
+      {_id: new Types.ObjectId(id)},
+      {
+        isActive: true,
+      },
+      {
+        returnDocument: 'after',
+      }
+    );
   }
 }

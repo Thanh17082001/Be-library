@@ -56,7 +56,7 @@ export class PublicationController {
     const user = request['user'] ?? null;
     let images = [];
     createDto.path = '';
-    let fileSize = file.size / (1024 * 1024) || 0;
+    let fileSize = file?.size / (1024 * 1024) || 0;
     if (file) {
       createDto.mimetype = file.mimetype;
       if (file.mimetype == 'application/pdf') {
@@ -287,6 +287,20 @@ export class PublicationController {
   @UseGuards(CaslGuard) // chặn permission (CRUD)
   async updateQuantityStock(@Body() data: UpdateQuantityStock): Promise<Publication> {
     return this.publicationService.updateQuantityStock(data);
+  }
+
+  @Patch('link/:id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, 'publications')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
+  async link(@Param('id') id: string): Promise<Publication> {
+    return await this.publicationService.link(id);
+  }
+
+  @Patch('unlink/:id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, 'publications')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
+  async unlink(@Param('id') id: string): Promise<Publication> {
+    return await this.publicationService.unlink(id);
   }
 
   @Patch(':id')

@@ -26,6 +26,7 @@ export class AuthController {
   async signup(@Body() signupDto: SignUpDto, @Req() request: Request): Promise<User> {
     const user = request['user'] ?? null;
     signupDto.createBy = new Types.ObjectId(user?._id) ?? null;
+    signupDto.libraryId = new Types.ObjectId(signupDto?.libraryId) ?? null;
     return await this.authService.signUp(signupDto);
   }
 
@@ -61,7 +62,7 @@ export class AuthController {
   @Get('resources')
   async getResources(): Promise<string[]> {
     const resources = await this.authService.getCollections();
-    return [...resources, 'statisticals'];
+    return [...resources, 'statisticals', 'activeaccounts'];
   }
 
   // @Public()

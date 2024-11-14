@@ -41,6 +41,7 @@ export class LoanshipService {
     const result = await this.loanSlipModel.create({...createDto});
     return result;
   }
+
   async agreeToLoan(id: string): Promise<any> {
     const loan = await this.loanSlipModel.findById(new Types.ObjectId(id));
     if (loan.isAgree) {
@@ -56,7 +57,7 @@ export class LoanshipService {
     for (let i = 0; i < publications.length; i++) {
       const publicationId = publications[i].publicationId;
       const publication = await this.publicationService.findById(publicationId);
-      let loanQuantityed = publication.shelvesQuantity - publications[i].quantityLoan;
+      let loanQuantityed = publication?.shelvesQuantity - publications[i].quantityLoan;
       let data = {};
       if (publications[i].position == 'trong kho') {
         loanQuantityed = publication.quantity - publications[i].quantityLoan;
@@ -241,7 +242,11 @@ export class LoanshipService {
 
     if (query.barcodeUser) {
       const user: User = (await this.userService.findByBarcode(query.barcodeUser)).result;
-      mongoQuery.userId = user._id.toString();
+      if (!user) {
+        mongoQuery.userId = null;
+      } else {
+        mongoQuery.userId = user._id.toString();
+      }
     }
 
     console.log(mongoQuery, 'kkkkk');

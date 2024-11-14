@@ -35,6 +35,7 @@ export class GroupService {
         match: {name: 'Admin'}, // Điều kiện lọc theo tên của role
       });
     if (!user) {
+      console.log(user);
       throw new BadRequestException('Thư viện này chưa có tài khoản thủ thư');
     }
 

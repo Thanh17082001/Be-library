@@ -170,6 +170,20 @@ export class UserController {
     return this.userService.restoreByIds(ids);
   }
 
+  @Patch('block-account/:id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, 'activeaccounts')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
+  async blockAccount(@Param('id') id: string): Promise<User> {
+    return await this.userService.blockAccount(id);
+  }
+
+  @Patch('active-account/:id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, 'activeaccounts')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
+  async activeAccount(@Param('id') id: string): Promise<User> {
+    return await this.userService.activeAccount(id);
+  }
+
   @Patch('change-password')
   async changePassword(@Body() changePassword: ChangePasswordDto): Promise<User> {
     return await this.userService.changePassword(changePassword);
@@ -183,7 +197,7 @@ export class UserController {
     return new ItemDto(await this.userService.changeInfo(id, changeInfoDto));
   }
 
-  @Patch('')
+  @Patch(':id')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file', {storage: storage('avatar'), ...multerOptions}))
   @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, 'users')) // tên permission và bảng cần chặn

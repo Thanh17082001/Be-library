@@ -1,3 +1,4 @@
+import {VoiceModule} from './../voice/voice.module';
 import {LoanshipService} from 'src/loanship/loanship.service';
 import {forwardRef, Module} from '@nestjs/common';
 import {PublicationService} from './publication.service';
@@ -15,7 +16,7 @@ import {GroupModule} from 'src/group/group.module';
 import {LibraryModule} from 'src/library/library.module';
 
 @Module({
-  imports: [MongooseModule.forFeature([{name: Publication.name, schema: PublicationSchema}]), LibraryModule, GroupModule, CaslModule, AuthorModule, CategoryModule, MaterialModule, PublisherModule, forwardRef(() => LoanshipModule), forwardRef(() => LiquidationModule)],
+  imports: [MongooseModule.forFeature([{name: Publication.name, schema: PublicationSchema}]), forwardRef(() => VoiceModule), LibraryModule, GroupModule, CaslModule, AuthorModule, CategoryModule, MaterialModule, PublisherModule, forwardRef(() => LoanshipModule), forwardRef(() => LiquidationModule)],
   controllers: [PublicationController],
   providers: [PublicationService],
   exports: [MongooseModule, PublicationService],

@@ -40,7 +40,7 @@ export class AuthService {
   }
 
   async logIn(data: LoginDto): Promise<any> {
-    const user = await this.usersService.findOne({username: data.username});
+    const user = await this.usersService.findOne({username: data.username, isActive: true});
     if (!user) {
       throw new NotFoundException('Account or password is incorrect');
     }
