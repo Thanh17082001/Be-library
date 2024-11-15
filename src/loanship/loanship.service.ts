@@ -57,11 +57,11 @@ export class LoanshipService {
     for (let i = 0; i < publications.length; i++) {
       const publicationId = publications[i].publicationId;
       const publication = await this.publicationService.findById(publicationId);
-      let loanQuantityed = publication?.shelvesQuantity - publications[i].quantityLoan;
+      let loanQuantityed;
       let data = {};
-      if (publications[i].position == 'trong kho') {
+      if (publications[i].position == 'trong kho' || publications[i].position == 'stock') {
         loanQuantityed = publication.quantity - publications[i].quantityLoan;
-        if (loanQuantityed <= 0) {
+        if (loanQuantityed < 0) {
           error.push({
             publicationId: publicationId,
             message: `Not enough quantity : ${publication.name}`,
@@ -69,6 +69,7 @@ export class LoanshipService {
         }
         data = {quantity: loanQuantityed};
       } else {
+        loanQuantityed = Number(publication.shelvesQuantity) - Number(publications[i].quantityLoan);
         if (loanQuantityed < 0) {
           error.push({
             publicationId: publicationId,
@@ -77,10 +78,12 @@ export class LoanshipService {
         }
         data = {shelvesQuantity: loanQuantityed};
       }
+      console.log(data);
       if (error.length > 0) {
         throw new BadRequestException(error);
       }
-      const updatePublication = await this.publicationService.update(publicationId.toString(), data);
+      const updatePublication = await this.publicationService.updatePublicationAfterLoan(publicationId.toString(), data);
+
       publicationsUpdate.push({
         ...publications[i],
         quantity: updatePublication.quantity,
@@ -139,7 +142,7 @@ export class LoanshipService {
         }
 
         let loanQuantityed = publication.shelvesQuantity + item2.quantityReturn;
-        if (publications[i].position == 'stock') {
+        if (publications[i].position == 'trong kho' || publications[i].position == 'stock') {
           loanQuantityed = publication.quantity + item2.quantityReturn;
           if (loanQuantityed < 0) {
             error.push({

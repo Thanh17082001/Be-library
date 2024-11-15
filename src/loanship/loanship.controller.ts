@@ -3,7 +3,7 @@ import {LoanshipService} from './loanship.service';
 import {CreateLoanshipDto} from './dto/create-loanship.dto';
 import {UpdateLoanshipDto} from './dto/update-loanship.dto';
 
-import {Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Req} from '@nestjs/common';
+import {Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Req, HttpException, BadRequestException} from '@nestjs/common';
 import {PageOptionsDto} from 'src/utils/page-option-dto';
 import {ItemDto, PageDto} from 'src/utils/page.dto';
 import {ApiTags} from '@nestjs/swagger';
@@ -73,6 +73,10 @@ export class LoanshipController {
   @UseGuards(CaslGuard) // chặn permission (CRUD)
   async requestLink(@Query() query: Partial<CreateLoanshipDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<LoanSlip>> {
     const user = request['user'];
+    console.log(user);
+    if (!user?.libraryDetail?.groupId) {
+      throw new BadRequestException('Thư viện chưa có trong nhóm');
+    }
     if (!user.isAdmin) {
       query.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
       query.isLink = true;

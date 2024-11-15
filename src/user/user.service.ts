@@ -21,6 +21,7 @@ import {Role} from 'src/role/role.enum';
 import {UpdateAuthDto} from './dto/update-auth.dto';
 import {ChangePasswordDto} from './dto/change-pass.dto';
 import {ChangeInfoUserDto} from './dto/change-info.dto';
+import {ChangeUsernameDto} from './dto/change-username.dto';
 
 @Injectable()
 export class UserService {
@@ -333,17 +334,35 @@ export class UserService {
     return await this.userModel.findByIdAndUpdate(user._id, {password}, {returnDocument: 'after'});
   }
 
+  async changeUsername(changeUsernameDto: ChangeUsernameDto): Promise<User> {
+    const user: User = await this.userModel.findOne({_id: changeUsernameDto.userId});
+
+    const usernameExits: User = await this.userModel.findOne({username: changeUsernameDto.username});
+
+    if (usernameExits) {
+      throw new BadRequestException('Username already exists');
+    }
+    if (!user) {
+      throw new BadRequestException('Account or password is incorrect');
+    }
+
+    return await this.userModel.findByIdAndUpdate(user._id, {username: changeUsernameDto.username}, {returnDocument: 'after'});
+  }
+
   async changeInfo(id, changeinfoDto: ChangeInfoUserDto): Promise<User> {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid id');
     }
 
     const exits: User = await this.userModel.findOne({
-      email: changeinfoDto.email, // Tìm theo tên
+      $or: [
+        { email: changeinfoDto.email }, // Tìm theo email
+        { username: changeinfoDto.username }, // Hoặc tìm theo username
+      ], // Tìm theo tên
       _id: {$ne: new Types.ObjectId(id)}, // Loại trừ ID hiện tại
     });
     if (exits) {
-      throw new BadRequestException('email already exists');
+      throw new BadRequestException('email  or username already exists');
     }
     const resource: User = await this.userModel.findById(new Types.ObjectId(id));
     if (!resource) {
@@ -360,6 +379,7 @@ export class UserService {
     } else {
       changeinfoDto.avatar = resource.avatar;
     }
+    
     return this.userModel.findByIdAndUpdate(id, changeinfoDto, {
       returnDocument: 'after',
     });

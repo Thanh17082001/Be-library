@@ -26,6 +26,7 @@ import {generateBarcode} from 'src/common/genegrate-barcode';
 import {ChangePasswordDto} from './dto/change-pass.dto';
 import {ChangeInfoUserDto} from './dto/change-info.dto';
 import {LibraryService} from 'src/library/library.service';
+import {ChangeUsernameDto} from './dto/change-username.dto';
 
 @Controller('user')
 @ApiTags('user')
@@ -187,6 +188,11 @@ export class UserController {
   @Patch('change-password')
   async changePassword(@Body() changePassword: ChangePasswordDto): Promise<User> {
     return await this.userService.changePassword(changePassword);
+  }
+
+  @Patch('change-username')
+  async changeUsername(@Body() changeUserNameDto: ChangeUsernameDto): Promise<User> {
+    return await this.userService.changeUsername(changeUserNameDto);
   }
 
   @Patch('change-info/:id')

@@ -113,7 +113,7 @@ export class PublicationService {
 
     const loans = await this.loanSlipModel.aggregate([
       {$unwind: '$publications'}, // Tách từng phần tử trong mảng publications
-      {$match: {'publications.publicationId': {$in: publicationIds}, isAgree: true}}, // Lọc những phiếu mượn có publicationId trong danh sách
+      {$match: {'publications.publicationId': {$in: publicationIds}, isAgree: true, isReturn: false}}, // Lọc những phiếu mượn có publicationId trong danh sách
       {
         $group: {
           _id: '$publications.publicationId', // Gom nhóm theo publicationId
@@ -236,6 +236,20 @@ export class PublicationService {
     updateDto.shelvesQuantity = updateDto.shelvesQuantity ? +updateDto.shelvesQuantity : resource.shelvesQuantity;
     updateDto.totalQuantity = updateDto.totalQuantity ? +updateDto.totalQuantity : resource.totalQuantity;
 
+    return this.publicationModel.findByIdAndUpdate(id, updateDto, {
+      returnDocument: 'after',
+    });
+  }
+
+  async updatePublicationAfterLoan(id: string, updateDto: object) {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid id');
+    }
+
+    const resource: Publication = await this.publicationModel.findById(new Types.ObjectId(id));
+    if (!resource) {
+      throw new NotFoundException('Resource not found');
+    }
     return this.publicationModel.findByIdAndUpdate(id, updateDto, {
       returnDocument: 'after',
     });
