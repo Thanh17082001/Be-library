@@ -189,6 +189,14 @@ export class PublicationService {
     return new ItemDto(await this.publicationModel.find(mongoQuery));
   }
 
+  async findBynamesLink(query: SearchName): Promise<ItemDto<Publication>> {
+    const mongoQuery: any = { libraryId: new Types.ObjectId(query.libraryId), type: 'ấn phẩm cứng', isLink:true };
+    if (query.search) {
+      mongoQuery.name = { $regex: new RegExp(query.search, 'i') };
+    }
+    return new ItemDto(await this.publicationModel.find(mongoQuery));
+  }
+
   async findById(id: Types.ObjectId): Promise<Publication> {
     return await this.publicationModel.findById(id).lean();
   }

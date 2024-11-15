@@ -208,6 +208,15 @@ export class PublicationController {
     return await this.publicationService.findBynames(query);
   }
 
+  @Get('/link-name')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'publications')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
+  async findByLinkName(@Query() query: SearchName, @Req() request: Request): Promise<ItemDto<Publication>> {
+    const user = request['user'];
+    query.libraryId = query.libraryId ?? user.libraryId;
+    return await this.publicationService.findBynamesLink(query);
+  }
+
   @Get('/deleted')
   @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'publications')) // tên permission và bảng cần chặn
   @UseGuards(CaslGuard) // chặn permission (CRUD)
