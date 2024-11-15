@@ -1,6 +1,7 @@
 import {Prop, Schema, SchemaFactory} from '@nestjs/mongoose';
 import {Types} from 'mongoose';
 import {BaseDocument} from 'src/common/base-document';
+import * as mongooseDelete from 'mongoose-delete';
 
 @Schema()
 export class Publication extends BaseDocument {
@@ -46,6 +47,11 @@ export class Publication extends BaseDocument {
   materialIds: Types.ObjectId[];
 }
 
-const PublicationSchema = SchemaFactory.createForClass(Publication).index({name: 1});
+const PublicationSchema = SchemaFactory.createForClass(Publication).index({name: 1}).plugin(mongooseDelete, {
+  deleted: true,
+  overrideMethods: 'all',
+  deletedAt: true,
+  deletedBy: true,
+});
 
 export {PublicationSchema};

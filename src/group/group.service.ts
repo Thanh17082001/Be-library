@@ -308,6 +308,14 @@ export class GroupService {
     if (!resource) {
       throw new NotFoundException('Resource not found');
     }
+
+    const mainLibrary = resource.mainLibrary.toString();
+    const roleOwner = await this.roleModel.findOne({name: Role.Owner});
+
+    const userLibrary = await this.userModel.findOne({libraryId: new Types.ObjectId(mainLibrary), roleId: roleOwner._id.toString()});
+    const roleAdmin = await this.roleModel.findOne({name: Role.Admin});
+    await this.userModel.findByIdAndUpdate(userLibrary._id, {roleId: roleAdmin._id.toString()});
+
     return await this.groupModel?.findByIdAndDelete(new Types.ObjectId(id));
   }
   async deleteMultiple(ids: string[]): Promise<any> {
@@ -315,10 +323,18 @@ export class GroupService {
     for (let i = 0; i < objectIds.length; i++) {
       const id = objectIds[i];
       const group: Group = await this.groupModel.findById(id);
+      // set group null for library
       for (let j = 0; j < group.libraries.length; j++) {
         const library = await this.libraryService.findById(group.libraries[j].toString());
         await this.libraryService.removeGroupIdInLibrary(library._id.toString());
       }
+
+      const mainLibrary = group.mainLibrary.toString();
+      const roleOwner = await this.roleModel.findOne({name: Role.Owner});
+
+      const userLibrary = await this.userModel.findOne({libraryId: new Types.ObjectId(mainLibrary), roleId: roleOwner._id.toString()});
+      const roleAdmin = await this.roleModel.findOne({name: Role.Admin});
+      await this.userModel.findByIdAndUpdate(userLibrary._id, {roleId: roleAdmin._id.toString()});
     }
     return await this.groupModel.deleteMany({
       _id: {$in: objectIds},

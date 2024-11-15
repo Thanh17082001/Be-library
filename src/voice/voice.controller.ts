@@ -54,11 +54,10 @@ export class VoiceController {
     }
     return await this.voiceService.findAll(pageOptionDto, query);
   }
- 
 
   @Get('link')
   @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'materials')) // tên permission và bảng cần chặn
-  @UseGuards(CaslGuard) 
+  @UseGuards(CaslGuard)
   async lt(@Query() query: Partial<CreateVoiceDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<Voice>> {
     const user = request['user'];
     const libraryId = user?.libraryId ?? null;
