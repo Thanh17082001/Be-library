@@ -356,8 +356,8 @@ export class UserService {
 
     const exits: User = await this.userModel.findOne({
       $or: [
-        { email: changeinfoDto.email }, // Tìm theo email
-        { username: changeinfoDto.username }, // Hoặc tìm theo username
+        {email: changeinfoDto.email}, // Tìm theo email
+        {username: changeinfoDto.username}, // Hoặc tìm theo username
       ], // Tìm theo tên
       _id: {$ne: new Types.ObjectId(id)}, // Loại trừ ID hiện tại
     });
@@ -379,7 +379,7 @@ export class UserService {
     } else {
       changeinfoDto.avatar = resource.avatar;
     }
-    
+
     return this.userModel.findByIdAndUpdate(id, changeinfoDto, {
       returnDocument: 'after',
     });

@@ -30,7 +30,6 @@ export class AuthService {
     data.username = '';
     data.avatar = '';
     data.class = '';
-    data.school = '';
     const newUser = await this.usersService.create({...data, barcode: ''});
     return newUser;
   }
