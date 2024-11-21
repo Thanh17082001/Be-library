@@ -136,6 +136,8 @@ export class GroupService {
   }
 
   async update(id: string, updateGroupDto: UpdateGroupDto): Promise<Group> {
+
+    
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid id');
     }
@@ -151,6 +153,19 @@ export class GroupService {
 
     if (!resource) {
       throw new NotFoundException('Resource not found');
+    }
+
+    const user: User = await this.userModel
+      .findOne({
+        libraryId: new Types.ObjectId(updateGroupDto.mainLibrary),
+      })
+      .populate({
+        path: 'roleId',
+        match: { name: 'Admin' }, // Điều kiện lọc theo tên của role
+      });
+    if (!user) {
+      console.log(user);
+      throw new BadRequestException('Thư viện này chưa có tài khoản thủ thư');
     }
     const librariesOld = resource.libraries;
 

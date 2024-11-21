@@ -209,12 +209,16 @@ export class LibraryService {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid id');
     }
-    const resource: Library = await this.libraryModel.findById(new Types.ObjectId(id));
+    const resource: Library = await this.libraryModel.findById(new Types.ObjectId(id)); 
     if (!resource) {
       throw new NotFoundException('Resource not found');
     }
+    if (resource.groupId) {
+      throw new BadRequestException('Thư viện đang trong nhóm không thể xóa')
+    }
     return await this.libraryModel?.findByIdAndDelete(new Types.ObjectId(id));
   }
+
   async deleteMultiple(ids: string[]): Promise<any> {
     const objectIds = ids.map(id => new Types.ObjectId(id));
     return await this.libraryModel.deleteMany({
