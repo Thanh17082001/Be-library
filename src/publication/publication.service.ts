@@ -1,6 +1,6 @@
 import {CreatePublicationDto} from './dto/create-publication.dto';
 import {UpdatePublicationDto} from './dto/update-publication.dto';
-import {Injectable, NotFoundException, BadRequestException, HttpException} from '@nestjs/common';
+import {Injectable, NotFoundException, BadRequestException, HttpException, ConflictException} from '@nestjs/common';
 import {InjectModel} from '@nestjs/mongoose';
 import {Model, ObjectId, Types} from 'mongoose';
 import {PageOptionsDto} from 'src/utils/page-option-dto';
@@ -209,6 +209,15 @@ export class PublicationService {
     const resource: Publication = await this.publicationModel.findById(new Types.ObjectId(id));
     if (!resource) {
       throw new NotFoundException('Resource not found');
+    }
+
+    const duplicate = await this.publicationModel.findOne({
+      barcode: updateDto.barcode, // Kiểm tra barcode trùng
+      _id: { $ne: resource._id }, // Loại trừ id hiện tại
+    });
+
+    if (duplicate && updateDto.barcode) {
+      throw new ConflictException('Barcode đã tồn tại trong hệ thống');
     }
     let deletedFileSize = 0;
     // co file
@@ -452,7 +461,7 @@ export class PublicationService {
       const resource: Publication = await this.publicationModel.findOneDeleted(new Types.ObjectId(objectIds[i]));
 
       const oldImagePath = path.join(__dirname, '..', '..', 'public', resource.path);
-      if (existsSync(oldImagePath)) {
+      if (existsSync(oldImagePath) && resource.path !== '/default/publication-default.jpg') {
         deletedFileSize += statSync(oldImagePath).size; // Tính dung lượng file cũ
         unlinkSync(oldImagePath);
       }

@@ -104,7 +104,7 @@ export class RequestGroupService {
 
     const library = await this.libraryService.findById(resource.libraryId.toString());
     const libraries = [resource.libraryId, ...group.libraries];
-    await this.groupService.update(resource.groupId.toString(), {libraries: libraries});
+    await this.groupService.updateLibraries(resource.groupId.toString(), {libraries: libraries});
     library.groupId = new Types.ObjectId(resource.groupId);
     await this.libraryService.update(resource.libraryId.toString(), {
       ...library,

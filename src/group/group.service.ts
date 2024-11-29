@@ -155,7 +155,7 @@ export class GroupService {
 
     const user: User = await this.userModel
       .findOne({
-        libraryId: new Types.ObjectId(updateGroupDto.mainLibrary),
+        libraryId:  new Types.ObjectId(updateGroupDto.mainLibrary),
       })
       .populate({
         path: 'roleId',
@@ -168,7 +168,6 @@ export class GroupService {
     const roleAdmin = await this.roleModel.findOne({name: Role.Admin});
 
     if (!user) {
-      console.log(user);
       throw new BadRequestException('Thư viện này chưa có tài khoản thủ thư');
     }
     const librariesOld = resource.libraries;
@@ -190,16 +189,25 @@ export class GroupService {
       const userAdmin: User = await this.userModel.findOne({
         libraryId: new Types.ObjectId(librariesNew[i].toString()),
       });
+      if (!userAdmin) {
+        throw new BadRequestException(`Thư viện ${library.name} chưa có tài khoản thủ thư`);
+      }
       library.groupId = new Types.ObjectId(id);
       await this.libraryService.update(librariesNew[i].toString(), {
         ...library,
       });
-      await this.userModel.findByIdAndUpdate(userAdmin._id, {roleId: roleAdmin._id.toString()});
+      await this.userModel.findByIdAndUpdate(userAdmin?._id, {roleId: roleAdmin._id.toString()});
     }
 
     const roleOwner = await this.roleModel.findOne({name: Role.Owner});
     await this.userModel.findByIdAndUpdate(userOwner._id, {roleId: roleOwner._id.toString()});
 
+    return this.groupModel.findByIdAndUpdate(id, updateGroupDto, {
+      returnDocument: 'after',
+    });
+  }
+
+  async updateLibraries(id: string, updateGroupDto: UpdateGroupDto) {
     return this.groupModel.findByIdAndUpdate(id, updateGroupDto, {
       returnDocument: 'after',
     });
