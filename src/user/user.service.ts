@@ -142,7 +142,9 @@ export class UserService {
 
     if (updateDto.avatar && resource.avatar) {
       const oldImagePath = path.join(__dirname, '..', '..', 'public', resource.avatar);
-      fs.unlinkSync(oldImagePath);
+      if (updateDto.avatar !== '/default/68e1d8178e17d7d962ec9db4fae3eabc.png') {
+        fs.unlinkSync(oldImagePath);
+      }
     }
     return this.userModel.findByIdAndUpdate(id, updateDto, {
       returnDocument: 'after',
