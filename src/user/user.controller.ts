@@ -6,7 +6,6 @@ import {PageOptionsDto} from 'src/utils/page-option-dto';
 import {ItemDto, PageDto} from 'src/utils/page.dto';
 import {ApiConsumes, ApiTags} from '@nestjs/swagger';
 import {ObjectId, Types} from 'mongoose';
-import {Roles} from 'src/role/role.decorator';
 import {Role} from 'src/role/role.enum';
 import {RolesGuard} from 'src/role/role.guard';
 import {CaslGuard} from 'src/casl/casl.guard';
@@ -27,11 +26,14 @@ import {ChangePasswordDto} from './dto/change-pass.dto';
 import {ChangeInfoUserDto} from './dto/change-info.dto';
 import {LibraryService} from 'src/library/library.service';
 import {ChangeUsernameDto} from './dto/change-username.dto';
+import { RoleService } from 'src/role/role.service';
+import { RoleS } from 'src/role/entities/role.entity';
+import { Roles } from 'src/role/role.decorator';
 
 @Controller('user')
 @ApiTags('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService, private readonly roleService :RoleService) {}
 
   @Post()
   @CheckPolicies((ability: AppAbility) => ability.can(Action.Create, 'users')) // tên permission và bảng cần chặn
@@ -58,12 +60,23 @@ export class UserController {
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
     const data = XLSX.utils.sheet_to_json(worksheet);
+    // console.log(data);
     let users: Array<User> = [];
     let errors: Array<{row: number; error: string}> = [];
     for (let i = 0; i < data.length; i++) {
       try {
         const item = data[i];
+        // console.log(item);
         const valuesItem = Object.values(item);
+        // console.log(valuesItem);
+        let roleName =''
+        if (data[i]['vai trò'] == 'giáo viên' || data[i]['vai trò'] == 'Giáo viên' || data[i]['vai trò'] == 'Giáo Viên') {
+          roleName = Role.Teacher
+        } else if (data[i]['vai trò'] == 'học sinh' || data[i]['vai trò'] == 'Học sinh' || data[i]['vai trò'] == 'Học Sinh') {
+          roleName = Role.Student
+        }
+        const role: any = await this.roleService.findByName(roleName || Role.Student)
+        console.log(roleName);
         const createDto: CreateUserDto = {
           fullname: valuesItem[1],
           email: valuesItem[2],
@@ -76,14 +89,13 @@ export class UserController {
           libraryId: new Types.ObjectId(user?.libraryId) ?? null,
           passwordFirst: '',
           avatar: '',
-          roleId: new Types.ObjectId(),
+          roleId: new Types.ObjectId(role._id),
           createBy: user?._id ?? null,
           note: '',
           barcode: '',
-          class: '',
-          school: '',
+          class: data[i]['lớp'] ?? '',
+          school: user.school,
         };
-        // console.log(createDto);
         const ressult = await this.userService.create({...createDto});
         users.push(ressult);
       } catch (error) {

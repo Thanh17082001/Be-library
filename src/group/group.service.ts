@@ -155,7 +155,7 @@ export class GroupService {
 
     const user: User = await this.userModel
       .findOne({
-        libraryId:  new Types.ObjectId(updateGroupDto.mainLibrary),
+        libraryId: new Types.ObjectId(updateGroupDto.mainLibrary),
       })
       .populate({
         path: 'roleId',

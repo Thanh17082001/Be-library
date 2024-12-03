@@ -65,6 +65,10 @@ export class RoleService {
     return new ItemDto(await this.roleModel.findOne(data));
   }
 
+  async findByName(name: string): Promise<RoleS> {
+    return await this.roleModel.findOne({name: name});
+  }
+
   async findById(id: string): Promise<RoleS> {
     return await this.roleModel.findById(new Types.ObjectId(id));
   }

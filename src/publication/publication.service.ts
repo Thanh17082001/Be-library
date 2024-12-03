@@ -213,7 +213,7 @@ export class PublicationService {
 
     const duplicate = await this.publicationModel.findOne({
       barcode: updateDto.barcode, // Kiểm tra barcode trùng
-      _id: { $ne: resource._id }, // Loại trừ id hiện tại
+      _id: {$ne: resource._id}, // Loại trừ id hiện tại
     });
 
     if (duplicate && updateDto.barcode) {
