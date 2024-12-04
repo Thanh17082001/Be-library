@@ -26,14 +26,17 @@ import {ChangePasswordDto} from './dto/change-pass.dto';
 import {ChangeInfoUserDto} from './dto/change-info.dto';
 import {LibraryService} from 'src/library/library.service';
 import {ChangeUsernameDto} from './dto/change-username.dto';
-import { RoleService } from 'src/role/role.service';
-import { RoleS } from 'src/role/entities/role.entity';
-import { Roles } from 'src/role/role.decorator';
+import {RoleService} from 'src/role/role.service';
+import {RoleS} from 'src/role/entities/role.entity';
+import {Roles} from 'src/role/role.decorator';
 
 @Controller('user')
 @ApiTags('user')
 export class UserController {
-  constructor(private readonly userService: UserService, private readonly roleService :RoleService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly roleService: RoleService
+  ) {}
 
   @Post()
   @CheckPolicies((ability: AppAbility) => ability.can(Action.Create, 'users')) // tên permission và bảng cần chặn
@@ -69,14 +72,13 @@ export class UserController {
         // console.log(item);
         const valuesItem = Object.values(item);
         // console.log(valuesItem);
-        let roleName =''
+        let roleName = '';
         if (data[i]['vai trò'] == 'giáo viên' || data[i]['vai trò'] == 'Giáo viên' || data[i]['vai trò'] == 'Giáo Viên') {
-          roleName = Role.Teacher
+          roleName = Role.Teacher;
         } else if (data[i]['vai trò'] == 'học sinh' || data[i]['vai trò'] == 'Học sinh' || data[i]['vai trò'] == 'Học Sinh') {
-          roleName = Role.Student
+          roleName = Role.Student;
         }
-        const role: any = await this.roleService.findByName(roleName || Role.Student)
-        console.log(roleName);
+        const role: any = await this.roleService.findByName(roleName || Role.Student);
         const createDto: CreateUserDto = {
           fullname: valuesItem[1],
           email: valuesItem[2],

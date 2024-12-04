@@ -17,12 +17,13 @@ export function generateUserName(fullname: string, birthday: Date): string {
   const day = String(birthDate.getDate()).padStart(2, '0');
 
   // Kết hợp để tạo tên người dùng
-  return `${firstNameInitial}${removeVietnameseTones(lastName)}${day}${month}${year}`;
+  const userName: string = `${firstNameInitial}${removeVietnameseTones(lastName)}${day}${month}${year}`;
+  return userName
 }
 
 function removeVietnameseTones(str) {
   const vietnameseChars = 'áàảãạâấầẩẫậăắằẳẵặêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵ';
-  const nonVietnameseChars = 'aaaaaaaaaaaaaaaaaeeeeeeeeeiiiiiioooooooooooooooouuuuuuuuuuyyyyy';
+  const nonVietnameseChars = 'aaaaaaaaaaaaaaaaaeeeeeeeiiiiiioooooooooooooouuuuuuuuuuuuyyyyy';
 
   const map = {};
   for (let i = 0; i < vietnameseChars.length; i++) {

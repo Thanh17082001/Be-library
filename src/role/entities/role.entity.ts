@@ -1,8 +1,7 @@
 import {Prop, Schema, SchemaFactory} from '@nestjs/mongoose';
 import {BaseDocument} from 'src/common/base-document';
-import { Permission } from 'src/user/entities/user.entity';
-import { Document } from 'mongoose';
-
+import {Permission} from 'src/user/entities/user.entity';
+import {Document} from 'mongoose';
 
 @Schema()
 export class RoleS extends Document {
