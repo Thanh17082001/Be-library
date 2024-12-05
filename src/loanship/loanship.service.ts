@@ -30,7 +30,9 @@ export class LoanshipService {
     for (let i = 0; i < createDto.publications.length; i++) {
       const publicationId = createDto.publications[i].publicationId;
       const publication = await this.publicationService.findById(publicationId);
-
+      if (createDto.publications[i].quantityLoan <= 0) {
+        throw new BadRequestException(`Số lượng mượn phải lớn hơn 0 ${publication.name}`)
+      }
       publications.push({
         ...createDto.publications[i],
         quantityReturn: 0,
@@ -423,7 +425,7 @@ export class LoanshipService {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid id');
     }
-    const resource: LoanSlip = await this.loanSlipModel.findOneDeleted({_id: new Types.ObjectId(id)});
+    const resource: LoanSlip = await this.loanSlipModel.findOne({_id: new Types.ObjectId(id)});
     if (!resource) {
       throw new NotFoundException('Resource not found');
     }
