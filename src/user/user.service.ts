@@ -167,6 +167,9 @@ export class UserService {
     if (!resource) {
       throw new NotFoundException('Resource not found');
     }
+    if (updateDto.libraryId) {
+      updateDto.libraryId = new Types.ObjectId(updateDto.libraryId);
+    }
     return this.userModel.findByIdAndUpdate(id, updateDto, {
       returnDocument: 'after',
     });
