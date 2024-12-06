@@ -259,7 +259,7 @@ export class LoanshipService {
     const [results, itemCount] = await Promise.all([
       this.loanSlipModel
         .find(mongoQuery)
-        // .populate('publications.publicationId')
+        .populate('libraryId')
         .populate({
           path: 'userId',
           select: ['-password', '-passwordFirst'],
