@@ -18,7 +18,7 @@ export function generateUserName(fullname: string, birthday: Date): string {
 
   // Kết hợp để tạo tên người dùng
   const userName: string = `${firstNameInitial}${removeVietnameseTones(lastName)}${day}${month}${year}`;
-  return userName
+  return userName;
 }
 
 function removeVietnameseTones(str) {

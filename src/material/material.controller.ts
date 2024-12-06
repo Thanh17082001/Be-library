@@ -36,6 +36,20 @@ export class MaterialController {
     });
   }
 
+  @Post('create-model')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Create, 'materials')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard)
+  async creates(@Body() createMaterialDtos: [CreateMaterialDto], @Req() request: Request) {
+    const user = request['user'] ?? null;
+    for (let i = 0; i < createMaterialDtos.length; i++) {
+      createMaterialDtos[i].libraryId = new Types.ObjectId(user?.libraryId) ?? null;
+      createMaterialDtos[i].createBy = new Types.ObjectId(user?.id) ?? null;
+      await this.materialService.create({
+        ...createMaterialDtos[i],
+      });
+    }
+  }
+
   @Post('pull-link')
   @CheckPolicies((ability: AppAbility) => ability.can(Action.Create, 'materials')) // tên permission và bảng cần chặn
   @UseGuards(CaslGuard)

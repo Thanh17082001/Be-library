@@ -31,7 +31,7 @@ export class LoanshipService {
       const publicationId = createDto.publications[i].publicationId;
       const publication = await this.publicationService.findById(publicationId);
       if (createDto.publications[i].quantityLoan <= 0) {
-        throw new BadRequestException(`Số lượng mượn phải lớn hơn 0 ${publication.name}`)
+        throw new BadRequestException(`Số lượng mượn phải lớn hơn 0 ${publication.name}`);
       }
       publications.push({
         ...createDto.publications[i],
