@@ -317,7 +317,7 @@ export class LoanshipService {
     if (!updateDto.libraryId) {
       updateDto.libraryId = resource.libraryId;
     }
-    return this.loanSlipModel.findByIdAndUpdate(id, updateDto, {
+    return await this.loanSlipModel.findByIdAndUpdate(id, updateDto, {
       returnDocument: 'after',
     });
   }
