@@ -9,5 +9,5 @@ export class CreateMaterialDto extends BaseDto {
 
   @ApiProperty()
   @IsString()
-  description?: string='';
+  description?: string = '';
 }

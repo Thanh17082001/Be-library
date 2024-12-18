@@ -37,6 +37,7 @@ export class LoanshipController {
     createDto.isLink = !createDto.isLink ? false : createDto.isLink;
     createDto.createBy = new Types.ObjectId(user?._id) ?? null;
     createDto.userId = createDto.isLink ? user?._id : createDto.userId;
+    console.log(createDto);
     return await this.loanSlipService.create({...createDto});
   }
 
@@ -45,7 +46,6 @@ export class LoanshipController {
   @UseGuards(CaslGuard) // chặn permission (CRUD)
   async findAll(@Query() query: Partial<CreateLoanshipDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<LoanSlip>> {
     const user = request['user'];
-    console.log(user.roleId.name);
     if (!user.isAdmin) {
       query.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
       if (user?.roleId?.name == Role.Teacher || user?.roleId?.name == Role.Student) {
@@ -73,14 +73,15 @@ export class LoanshipController {
   @UseGuards(CaslGuard) // chặn permission (CRUD)
   async requestLink(@Query() query: Partial<CreateLoanshipDto>, @Query() pageOptionDto: PageOptionsDto, @Req() request: Request): Promise<PageDto<LoanSlip>> {
     const user = request['user'];
-    console.log(user);
     if (!user?.libraryDetail?.groupId) {
       throw new BadRequestException('Thư viện chưa có trong nhóm');
     }
     if (!user.isAdmin) {
+      console.log(user?.libraryId);
       query.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
       query.isLink = true;
     }
+    console.log(query, 'thanhhhhhhh');
     return await this.loanSlipService.findAll(pageOptionDto, query);
   }
 
