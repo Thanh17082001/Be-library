@@ -1,9 +1,12 @@
 import {Prop, Schema, SchemaFactory} from '@nestjs/mongoose';
 import {BaseDocument} from 'src/common/base-document';
 import * as mongooseDelete from 'mongoose-delete';
+import {Types} from 'mongoose';
 
 @Schema()
 export class Asset extends BaseDocument {
+  @Prop({require: true, ref: 'TypeAsset'})
+  typeAssetId: Types.ObjectId;
   @Prop({required: true})
   name: string;
   @Prop({default: 0})

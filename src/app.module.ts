@@ -38,6 +38,8 @@ import {TypeVoiceModule} from './type-voice/type-voice.module';
 import {VoiceModule} from './voice/voice.module';
 import {ConsumerRabbitmqModule} from './consumer-rabbitmq/consumer-rabbitmq.module';
 import {RequestGroupModule} from './request-group/request-group.module';
+import {StockAssetModule} from './stock-asset/stock-asset.module';
+import {TypeAssetModule} from './type-asset/type-asset.module';
 
 @Module({
   imports: [
@@ -102,6 +104,8 @@ import {RequestGroupModule} from './request-group/request-group.module';
     VoiceModule,
     ConsumerRabbitmqModule,
     RequestGroupModule,
+    StockAssetModule,
+    TypeAssetModule,
   ],
   controllers: [AppController],
   providers: [

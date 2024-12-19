@@ -9,5 +9,6 @@ import {CaslModule} from 'src/casl/casl.module';
   imports: [MongooseModule.forFeature([{name: Asset.name, schema: AssetSchema}]), CaslModule],
   controllers: [AssetController],
   providers: [AssetService],
+  exports: [AssetService, MongooseModule],
 })
 export class AssetModule {}

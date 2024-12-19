@@ -24,8 +24,8 @@ export class AssetController {
   constructor(private readonly assetService: AssetService) {}
 
   @Post()
-  @CheckPolicies((ability: AppAbility) => ability.can(Action.Create, 'assets')) // tên permisson và bảng cần chặn
   @UseGuards(CaslGuard)
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Create, 'assets')) // tên permisson và bảng cần chặn
   async create(@Body() createDto: CreateAssetDto, @Req() request: Request): Promise<Asset> {
     const user = request['user'] ?? null;
     createDto.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
