@@ -5,16 +5,18 @@ import {Types} from 'mongoose';
 import {Asset} from 'src/asset/entities/asset.entity';
 
 export class StockAssetItem extends Asset {
+  @Prop({ required: true })
   assetId: Types.ObjectId;
+  @Prop({ required: true })
   quantity: number;
+  @Prop({ required: true })
+  priceInput: number;
 }
 @Schema()
 export class StockAsset extends BaseDocument {
   @Prop({required: true, ref: 'Supplier'})
   supplierId: Types.ObjectId;
-  @Prop({
-    required: true,
-  })
+  @Prop({required: true})
   assets: StockAssetItem[];
   @Prop({default: false})
   isAccept: boolean;

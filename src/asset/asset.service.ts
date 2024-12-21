@@ -85,6 +85,46 @@ export class AssetService {
     });
   }
 
+  async updateQuantityMinus(id: string): Promise<Asset> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid id');
+    }
+
+    const resource: Asset = await this.exampleModel.findById(new Types.ObjectId(id));
+    if (!resource) {
+      throw new NotFoundException('Resource not found');
+    }
+    if ((resource.status === 'mới' && resource.quantityWarehouse <= 0) || (resource.status === 'có sẵn' && resource.quantityWarehouse <= 0)) {
+      throw new BadRequestException('Số lượng tài sản trong kho bé hơn 0');
+    }
+
+    return await this.exampleModel.findByIdAndUpdate(
+      id,
+      {quantityWarehouse: resource.quantityWarehouse - 1, quantityUsed: resource.quantityUsed + 1},
+      {
+        returnDocument: 'after',
+      }
+    );
+  }
+
+  async updateQuantityPlus(id: string): Promise<Asset> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid id');
+    }
+
+    const resource: Asset = await this.exampleModel.findById(new Types.ObjectId(id));
+    if (!resource) {
+      throw new NotFoundException('Resource not found');
+    }
+    return this.exampleModel.findByIdAndUpdate(
+      id,
+      {quantityWarehouse: resource.quantityWarehouse + 1},
+      {
+        returnDocument: 'after',
+      }
+    );
+  }
+
   async remove(id: string): Promise<Asset> {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid id');

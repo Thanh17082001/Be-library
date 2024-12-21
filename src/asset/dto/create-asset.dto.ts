@@ -8,6 +8,12 @@ export class CreateAssetDto extends OmitType(BaseDto, ['isPublic']) {
   @IsString()
   name: string;
   @ApiProperty()
+  @IsNumber()
+  priceInput?: number = 0;
+  @ApiProperty({enum: ['có sẵn', 'mới']})
+  @IsString()
+  status: string;
+  @ApiProperty()
   @IsString()
   typeAssetId: Types.ObjectId;
   @ApiProperty()

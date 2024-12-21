@@ -21,6 +21,7 @@ export class StockAssetService {
     private readonly assetservice: AssetService
   ) {}
   async create(createDto: CreateStockAssetDto): Promise<StockAsset> {
+    console.log(createDto, 'hhhahahaha');
     const assets = [];
     if (createDto?.assets?.length == 0 || !createDto.assets) {
       throw new BadRequestException('Invalid asset');
@@ -30,37 +31,42 @@ export class StockAssetService {
       const asset = await this.assetservice.findById(assetId);
 
       assets.push({
-        ...createDto.assets[i],
+
+
         ...asset,
+        ...createDto.assets[i],
+        priceInput:createDto.assets[i].price,
       });
     }
     createDto.assets = assets;
+    console.log(createDto.assets);
     createDto.barcode = generateBarcode();
     const result: StockAsset = await this.StockAssetModel.create(createDto);
 
     return result;
   }
 
-  // async accept(id: string): Promise<StockAsset> {
-  //   const warehouse = await this.StockAssetModel.findById(new Types.ObjectId(id));
-  //   if (warehouse.isAccept) {
-  //     throw new BadRequestException('Warehouse already accept');
-  //   }
-  //   if (!warehouse) {
-  //     throw new NotFoundException('Resource not found');
-  //   }
-  //   for (let i = 0; i < warehouse.assets.length; i++) {
-  //     const item = warehouse.assets[i];
-  //     item.assetId = new Types.ObjectId(item.assetId);
-  //     const asset: Asset = await this.assetservice.findById(item.publicationId);
-  //     if (!asset) {
-  //       throw new NotFoundException('Publication not found');
-  //     }
-  //     await this.assetservice.update(asset?._id?.toString(), { quantity: asset.quantity + item.quantityWareHouse, totalQuantity: asset.totalQuantity + item.quantityWareHouse, status: 'có sẵn' });
-  //   }
-  //   await this.StockAssetModel.findByIdAndUpdate(id, { isAccept: true });
-  //   return warehouse;
-  // }
+  async accept(id: string): Promise<StockAsset> {
+    const stockAsset = await this.StockAssetModel.findById(new Types.ObjectId(id));
+    if (stockAsset.isAccept) {
+      throw new BadRequestException('stockAsset already accept');
+    }
+    if (!stockAsset) {
+      throw new NotFoundException('Resource not found');
+    }
+    // mảng items asset trong phiếu nhập kho
+    for (let i = 0; i < stockAsset.assets.length; i++) {
+      const item = stockAsset.assets[i];
+      item.assetId = new Types.ObjectId(item.assetId);
+      const asset: Asset = await this.assetservice.findById(item.assetId);
+      if (!asset) {
+        throw new NotFoundException('Asset not found');
+      }
+      await this.assetservice.update(asset?._id?.toString(), {quantityWarehouse: asset.quantityWarehouse + item.quantity, quantityTotal: asset.quantityTotal + item.quantity, priceInput: item.price});
+    }
+    await this.StockAssetModel.findByIdAndUpdate(id, {isAccept: true});
+    return stockAsset;
+  }
 
   async findAll(pageOptions: PageOptionsDto, query: Partial<CreateStockAssetDto>): Promise<PageDto<StockAsset>> {
     const {page, limit, skip, order, search} = pageOptions;

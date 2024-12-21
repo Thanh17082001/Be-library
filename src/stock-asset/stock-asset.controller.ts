@@ -72,12 +72,12 @@ export class StockAssetController {
     return await this.stockAssetService.findOne(new Types.ObjectId(id));
   }
 
-  // @Get('accept/:id')
-  // @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'StockAssets')) // tên permission và bảng cần chặn
-  // @UseGuards(CaslGuard)
-  // async acceptWarehouse(@Param('id') id: string): Promise<StockAsset> {
-  //   return await this.stockAssetService.accept(id);
-  // }
+  @Get('accept/:id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'stockassets')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard)
+  async acceptWarehouse(@Param('id') id: string): Promise<StockAsset> {
+    return await this.stockAssetService.accept(id);
+  }
 
   @Delete('selected')
   @CheckPolicies((ability: AppAbility) => ability.can(Action.Delete, 'stockassets')) // tên permission và bảng cần chặn

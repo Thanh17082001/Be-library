@@ -8,12 +8,18 @@ import {ItemDto, PageDto} from 'src/utils/page.dto';
 import {PageMetaDto} from 'src/utils/page.metadata.dto';
 import {Shelves} from './entities/shelf.entity';
 import {SoftDeleteModel} from 'mongoose-delete';
+import {AssetService} from 'src/asset/asset.service';
 
 @Injectable()
 export class ShelvesService {
-  constructor(@InjectModel(Shelves.name) private shelvesModel: SoftDeleteModel<Shelves>) {}
+  constructor(
+    @InjectModel(Shelves.name) private shelvesModel: SoftDeleteModel<Shelves>,
+    private readonly assetService: AssetService
+  ) {}
   async create(createDto: CreateShelfDto): Promise<Shelves> {
-    return await this.shelvesModel.create(createDto);
+    await this.assetService.updateQuantityMinus(createDto.assetId.toString());
+    const result = await this.shelvesModel.create(createDto);
+    return result;
   }
 
   async findAll(pageOptions: PageOptionsDto, query: Partial<Shelves>): Promise<PageDto<Shelves>> {
@@ -39,7 +45,7 @@ export class ShelvesService {
     const [results, itemCount] = await Promise.all([
       this.shelvesModel
         .find(mongoQuery)
-        // .populate('aaaaaa')
+        .populate('assetId')
         .sort({order: 1, createdAt: order === 'ASC' ? 1 : -1})
         .skip(skip)
         .limit(limit)

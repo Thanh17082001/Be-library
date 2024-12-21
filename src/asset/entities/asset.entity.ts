@@ -9,6 +9,10 @@ export class Asset extends BaseDocument {
   typeAssetId: Types.ObjectId;
   @Prop({required: true})
   name: string;
+  @Prop()
+  priceInput: number;
+  @Prop({enum: ['có sẵn', 'mới']})
+  status: string;
   @Prop({default: 0})
   quantityUsed: number;
   @Prop({default: 0})

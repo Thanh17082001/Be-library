@@ -5,9 +5,10 @@ import {Mongoose} from 'mongoose';
 import {MongooseModule} from '@nestjs/mongoose';
 import {Shelves, ShelvesSchema} from './entities/shelf.entity';
 import {CaslModule} from 'src/casl/casl.module';
+import {AssetModule} from 'src/asset/asset.module';
 
 @Module({
-  imports: [MongooseModule.forFeature([{name: Shelves.name, schema: ShelvesSchema}]), CaslModule],
+  imports: [MongooseModule.forFeature([{name: Shelves.name, schema: ShelvesSchema}]), CaslModule, AssetModule],
   controllers: [ShelvesController],
   providers: [ShelvesService],
 })
