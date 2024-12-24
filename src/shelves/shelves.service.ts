@@ -174,14 +174,23 @@ export class ShelvesService {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid id');
     }
-    const resource: Shelves = await this.shelvesModel.findOneDeleted(new Types.ObjectId(id));
+    const resource: Shelves = await this.shelvesModel.findOne(new Types.ObjectId(id));
     if (!resource) {
       throw new NotFoundException('Resource not found');
     }
+    await this.assetService.updateQuantityPlus(resource.assetId.toString());
     return await this.shelvesModel?.findByIdAndDelete(new Types.ObjectId(id));
   }
   async deleteMultiple(ids: string[]): Promise<any> {
     const objectIds = ids.map(id => new Types.ObjectId(id));
+    for (let i = 0; i < objectIds.length; i++) {
+      const id = objectIds[i];
+      const resource: Shelves = await this.shelvesModel.findOne(new Types.ObjectId(id));
+      if (!resource) {
+        throw new NotFoundException('Resource not found');
+      }
+      await this.assetService.updateQuantityPlus(resource.assetId.toString());
+    }
     return await this.shelvesModel.deleteMany({
       _id: {$in: objectIds},
     });

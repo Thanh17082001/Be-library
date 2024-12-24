@@ -12,7 +12,7 @@ export class User extends BaseDocument {
   @Prop({required: true, unique: true})
   username: string;
 
-  @Prop({required: false, default: '', unique: true})
+  @Prop({required: false, default: ''})
   email: string;
 
   @Prop()
@@ -45,7 +45,7 @@ export class User extends BaseDocument {
   @Prop({enum: ['nam', 'nữ', 'khác'], default: 'khác'})
   gender: string;
 
-  @Prop({unique: true})
+  @Prop({})
   barcode: string;
 
   @Prop({ref: 'RoleS'}) // Vai trò của người dùng

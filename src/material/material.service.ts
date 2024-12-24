@@ -76,12 +76,23 @@ export class MaterialService {
   }
 
   async findByName(names: Array<string>, libraryId: string): Promise<Array<Types.ObjectId>> {
-    const resources = await this.materialModel
-      .find({name: {$in: names}, libraryId: new Types.ObjectId(libraryId)}, '_id') // Chỉ lấy trường _id
-      .lean(); // Trả về dữ liệu đơn giản, không phải mongoose document
+    const existingResources = await this.materialModel.find({name: {$in: names}, libraryId: new Types.ObjectId(libraryId)}).lean();
 
-    // Trả về mảng các ObjectId
-    return resources.map(item => item._id);
+    const existingNames = existingResources.map(item => item.name);
+    const missingNames = names.filter(name => !existingNames.includes(name));
+
+    if (missingNames.length > 0) {
+      const newResources = await this.materialModel.insertMany(
+        missingNames.map(name => ({
+          name,
+          libraryId: new Types.ObjectId(libraryId),
+        }))
+      );
+
+      return [...existingResources.map(item => item._id), ...newResources.map(item => item._id)];
+    }
+
+    return existingResources.map(item => item._id.toString());
   }
 
   async update(id: string, updateExampleDto: UpdateMaterialDto): Promise<Material> {

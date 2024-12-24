@@ -17,11 +17,20 @@ export class Publication extends BaseDocument {
   description: string;
   @Prop()
   mimetype: string;
+  //số lượng trong kho
   @Prop({default: 0})
   quantity: number;
+
+  @Prop({default: 0})
+  priceInput: number;
+  //số lượng hư hỏng thanh lý
+  @Prop({default: 0})
+  quantityLiquidation: number;
+  //tổng số lượng
   @Prop({default: 0})
   totalQuantity: number;
   @Prop({default: 0})
+  // số lượng trên kệ
   shelvesQuantity: number;
   @Prop({enum: ['thanh lý', 'bị hư hỏng', 'có sẵn', 'không có sẵn'], default: 'có sẵn'})
   status: string;

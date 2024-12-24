@@ -28,6 +28,7 @@ export class LiquidationController {
   async create(@Body() createDto: CreateLiquidationDto, @Req() request: Request): Promise<Liquidation> {
     const user = request['user'] ?? null;
     createDto.libraryId = new Types.ObjectId(user?.libraryId) ?? null;
+    createDto.createBy = new Types.ObjectId(user?._id) ?? null;
     return await this.liquidationService.create({...createDto});
   }
 
@@ -99,6 +100,13 @@ export class LiquidationController {
   @UseGuards(CaslGuard) // chặn permission (CRUD)
   async restoreByIds(@Body() ids: string[]): Promise<Liquidation[]> {
     return this.liquidationService.restoreByIds(ids);
+  }
+
+  @Patch('signature/:id')
+  @CheckPolicies((ability: AppAbility) => ability.can(Action.Update, 'liquidations')) // tên permission và bảng cần chặn
+  @UseGuards(CaslGuard) // chặn permission (CRUD)
+  async signature(@Param('id') id: string): Promise<Liquidation> {
+    return await this.liquidationService.signature(id);
   }
 
   @Patch(':id')

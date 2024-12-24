@@ -119,58 +119,61 @@ export class PublicationController {
     let publications: Array<Publication> = [];
     let errors: Array<{row: number; error: string}> = [];
     for (let i = 0; i < data.length; i++) {
-      try {
-        let categoryIds = [];
-        let authorIds = [];
-        let publisherIds = [];
-        let materialIds = [];
+      const item = data[i];
 
-        const item = data[i];
-        const publication = Object.values(item);
-        categoryIds = await this.categoryService.findByName(
-          publication[5].split(',').map(item => item.toLowerCase().trim()),
-          user.libraryId
-        );
-        authorIds = await this.authorService.findByName(
-          publication[6].split(',').map(item => item.toLowerCase().trim()),
-          user.libraryId
-        );
-        publisherIds = await this.publisherService.findByName(
-          publication[7].split(',').map(item => item.toLowerCase().trim()),
-          user.libraryId
-        );
-        materialIds = await this.materialService.findByName(
-          publication[8].split(',').map(item => item.toLowerCase().trim()),
-          user.libraryId
-        );
-        const createDto: CreatePublicationDto = {
-          name: publication[1],
-          barcode: publication[2],
-          quantity: 0,
-          shelvesQuantity: 0,
-          path: '',
-          priviewImage: '',
-          images: [],
-          description: publication[3],
-          libraryId: new Types.ObjectId(user?.libraryId?.toString()) ?? null,
-          status: 'không có sẵn',
-          shelvesId: null,
-          publisherIds,
-          categoryIds,
-          authorIds,
-          materialIds,
-          isLink: false,
-          isPublic: true,
-          type: publication[4],
-          createBy: new Types.ObjectId(user?._id.toString()) ?? null,
-          note: '',
-          totalQuantity: 0,
-          mimetype: null,
-        };
-        const ressult = await this.publicationService.create({...createDto});
-        publications.push(ressult);
-      } catch (error) {
-        errors.push({row: i + 1, error: error.message});
+      const publication = Object.values(item).filter(value => value !== 'Các trường lĩnh vực, tác giá, nhà xuất bản nếu có nhiều hơn 1 thì cách nhau bằng dấu phẩy(,). Mã barcode có thể bỏ trống');
+      if (publication.length > 2) {
+        try {
+          let categoryIds = [];
+          let authorIds = [];
+          let publisherIds = [];
+          let materialIds = [];
+
+          categoryIds = await this.categoryService.findByName(
+            item['Lĩnh vực'].split(',').map(item => item.toLowerCase().trim()),
+            user.libraryId
+          );
+          authorIds = await this.authorService.findByName(
+            item['Tác giả'].split(',').map(item => item.toLowerCase().trim()),
+            user.libraryId
+          );
+          publisherIds = await this.publisherService.findByName(
+            item['Nhà xuất bản'].split(',').map(item => item.toLowerCase().trim()),
+            user.libraryId
+          );
+          materialIds = await this.materialService.findByName(
+            item['Dạng học liệu'].split(',').map(item => item.toLowerCase().trim()),
+            user.libraryId
+          );
+          const createDto: CreatePublicationDto = {
+            name: item['Tên ấn phẩm'],
+            barcode: item['Mã barcode'] || '',
+            quantity: 0,
+            shelvesQuantity: 0,
+            path: '',
+            priviewImage: '',
+            images: [],
+            description: item['Mô tả'],
+            libraryId: new Types.ObjectId(user?.libraryId?.toString()) ?? null,
+            status: 'không có sẵn',
+            shelvesId: null,
+            publisherIds,
+            categoryIds,
+            authorIds,
+            materialIds,
+            isLink: false,
+            isPublic: true,
+            type: 'ấn phẩm cứng',
+            createBy: new Types.ObjectId(user?._id.toString()) ?? null,
+            note: '',
+            totalQuantity: 0,
+            mimetype: null,
+          };
+          const ressult = await this.publicationService.create({...createDto});
+          publications.push(ressult);
+        } catch (error) {
+          errors.push({row: i + 1, error: error.message});
+        }
       }
     }
     return {publications, errors};

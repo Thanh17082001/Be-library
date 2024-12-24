@@ -8,7 +8,7 @@ import {BaseDto} from 'src/common/base.dto';
 export class CreateUserDto extends OmitType(BaseDto, ['isPublic', 'isLink'] as const) {
   @ApiProperty({example: 'string@gmail.com'})
   @IsString()
-  email: string;
+  email?: string = '';
 
   password: string;
 
@@ -39,11 +39,11 @@ export class CreateUserDto extends OmitType(BaseDto, ['isPublic', 'isLink'] as c
 
   @ApiProperty()
   @IsString()
-  phoneNumber: string;
+  phoneNumber?: string = '';
 
   @ApiProperty()
   @IsString()
-  address: string;
+  address?: string = '';
 
   avatar: string;
 

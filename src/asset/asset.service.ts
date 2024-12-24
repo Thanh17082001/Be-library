@@ -60,7 +60,7 @@ export class AssetService {
     return new ItemDto(await this.exampleModel.findById(id));
   }
 
-  async findById(id: Types.ObjectId): Promise<Asset> {
+  async findById(id): Promise<Asset> {
     return await this.exampleModel.findById(id).lean();
   }
 
@@ -118,7 +118,7 @@ export class AssetService {
     }
     return this.exampleModel.findByIdAndUpdate(
       id,
-      {quantityWarehouse: resource.quantityWarehouse + 1},
+      {quantityWarehouse: resource.quantityWarehouse + 1, quantityUsed: resource.quantityUsed - 1},
       {
         returnDocument: 'after',
       }

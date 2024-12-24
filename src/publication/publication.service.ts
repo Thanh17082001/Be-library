@@ -39,13 +39,13 @@ export class PublicationService {
     }
     createDto.totalQuantity = 0;
     const pub: Publication = await this.publicationModel.findOne({barcode: createDto.barcode, libraryId: new Types.ObjectId(createDto.libraryId)});
-    if (pub) {
+    if (pub && createDto.barcode != '') {
       throw new BadRequestException('Barcode đã tồn tại!');
     }
 
     const pubName: Publication = await this.publicationModel.findOne({name: createDto.name, libraryId: new Types.ObjectId(createDto.libraryId)});
     if (pubName) {
-      throw new BadRequestException('name already exists');
+      throw new BadRequestException('tên ấn phẩm đã tồn tại!');
     }
     if (createDto.barcode == '') {
       createDto.barcode = undefined;
@@ -197,7 +197,7 @@ export class PublicationService {
     return new ItemDto(await this.publicationModel.find(mongoQuery));
   }
 
-  async findById(id: Types.ObjectId): Promise<Publication> {
+  async findById(id: any): Promise<Publication> {
     return await this.publicationModel.findById(id).lean();
   }
 
@@ -254,6 +254,17 @@ export class PublicationService {
     updateDto.totalQuantity = updateDto.totalQuantity ? +updateDto.totalQuantity : resource.totalQuantity;
 
     return this.publicationModel.findByIdAndUpdate(id, updateDto, {
+      returnDocument: 'after',
+    });
+  }
+
+  async updateQuantityLiquidation(id: string, updateDto: object): Promise<Publication> {
+    const publication = await this.publicationModel.findById(id);
+    if (!publication) {
+      throw new NotFoundException('Không tìm thấy ấn phẩm');
+    }
+
+    return await this.publicationModel.findByIdAndUpdate(id, updateDto, {
       returnDocument: 'after',
     });
   }

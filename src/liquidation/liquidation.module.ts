@@ -6,9 +6,10 @@ import {Liquidation, LiquidationSchema} from './entities/liquidation.entity';
 import {LibrarySchema} from 'src/library/entities/library.entity';
 import {CaslModule} from 'src/casl/casl.module';
 import {PublicationModule} from 'src/publication/publication.module';
+import {AssetModule} from 'src/asset/asset.module';
 
 @Module({
-  imports: [MongooseModule.forFeature([{name: Liquidation.name, schema: LiquidationSchema}]), CaslModule, forwardRef(() => PublicationModule)],
+  imports: [MongooseModule.forFeature([{name: Liquidation.name, schema: LiquidationSchema}]), CaslModule, forwardRef(() => PublicationModule), AssetModule],
   controllers: [LiquidationController],
   providers: [LiquidationService],
   exports: [LiquidationService, MongooseModule],

@@ -31,11 +31,9 @@ export class StockAssetService {
       const asset = await this.assetservice.findById(assetId);
 
       assets.push({
-
-
         ...asset,
         ...createDto.assets[i],
-        priceInput:createDto.assets[i].price,
+        priceInput: createDto.assets[i].price,
       });
     }
     createDto.assets = assets;

@@ -78,12 +78,23 @@ export class CategoryService {
   }
 
   async findByName(names: Array<string>, libraryId: string): Promise<Array<Types.ObjectId>> {
-    const resources = await this.categoryModel
-      .find({name: {$in: names}, libraryId: new Types.ObjectId(libraryId)}) // Chỉ lấy trường _id
-      .lean(); // Trả về dữ liệu đơn giản, không phải mongoose document
-    console.log(names);
-    // Trả về mảng các ObjectId
-    return resources.map(item => item._id);
+    const existingResources = await this.categoryModel.find({name: {$in: names}, libraryId: new Types.ObjectId(libraryId)}).lean();
+
+    const existingNames = existingResources.map(item => item.name);
+    const missingNames = names.filter(name => !existingNames.includes(name));
+
+    if (missingNames.length > 0) {
+      const newResources = await this.categoryModel.insertMany(
+        missingNames.map(name => ({
+          name,
+          libraryId: new Types.ObjectId(libraryId),
+        }))
+      );
+
+      return [...existingResources.map(item => item._id), ...newResources.map(item => item._id)];
+    }
+
+    return existingResources.map(item => item._id.toString());
   }
 
   async update(id: string, updateCategoryDto: UpdateCategoryDto): Promise<Category> {
