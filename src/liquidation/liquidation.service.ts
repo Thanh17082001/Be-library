@@ -14,6 +14,9 @@ import {UpdateLiquidationDto} from './dto/update-liquidation.dto';
 import {PublicationService} from 'src/publication/publication.service';
 import {error} from 'console';
 import {Publication} from 'src/publication/entities/publication.entity';
+import {UploadFileSignature} from './dto/upload-file.dto';
+import {existsSync, statSync, unlinkSync, promises as fs} from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class LiquidationService {
@@ -255,6 +258,40 @@ export class LiquidationService {
     //   throw new HttpException('ware house receipt is accepted', 400);
     // }
     return await this.LiquidationModel?.deleteById(new Types.ObjectId(id));
+  }
+
+  async uploadFile(id: string, uploadDto: UploadFileSignature): Promise<Liquidation> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid id');
+    }
+    const resource: Liquidation = await this.LiquidationModel.findById(new Types.ObjectId(id));
+    if (!resource) {
+      throw new NotFoundException('Không tìm thấy phiếu thanh lý');
+    }
+
+    if (!resource.isAccept) {
+      const oldImagePath = path.join(__dirname, '..', '..', 'public', uploadDto.fileSignature.path);
+
+      if (existsSync(oldImagePath)) {
+        unlinkSync(oldImagePath);
+      }
+      throw new BadRequestException('Chưa có chữ ký của hiệu trưởng');
+    }
+    if (uploadDto.update === '0' && resource.fileSignature) {
+      const oldImagePath = path.join(__dirname, '..', '..', 'public', uploadDto.fileSignature.path);
+
+      if (existsSync(oldImagePath)) {
+        unlinkSync(oldImagePath);
+      }
+      throw new BadRequestException('File đã được tải lên');
+    } else if (uploadDto.update === '1' && resource.fileSignature) {
+      const oldImagePath = path.join(__dirname, '..', '..', 'public', resource.fileSignature.path);
+
+      if (existsSync(oldImagePath)) {
+        unlinkSync(oldImagePath);
+      }
+    }
+    return await this.LiquidationModel?.findByIdAndUpdate(new Types.ObjectId(id), {fileSignature: uploadDto.fileSignature}, {returnDocument: 'after'});
   }
 
   async removes(ids: string[]): Promise<Array<Liquidation>> {

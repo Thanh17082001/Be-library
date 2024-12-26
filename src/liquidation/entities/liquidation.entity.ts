@@ -23,6 +23,15 @@ export class LiquidationItem {
   @Prop({enum: ['trong kho', 'trưng bày']})
   position: string;
 }
+
+class fileSignature {
+  @Prop()
+  path: string;
+  @Prop()
+  typeFile: string;
+  @Prop()
+  name: string;
+}
 @Schema()
 export class Liquidation extends BaseDocument {
   @Prop({default: ''})
@@ -39,6 +48,9 @@ export class Liquidation extends BaseDocument {
 
   @Prop({default: false})
   isCancel: boolean;
+
+  @Prop({nullable: true, default: null})
+  fileSignature?: fileSignature;
 }
 
 export const LiquidationSchema = SchemaFactory.createForClass(Liquidation)
