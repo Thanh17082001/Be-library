@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  nestjs:
+    build: .
+    container_name: nestjs-app
+    ports:
+      - "${PORT}:${PORT}"  # Sử dụng biến PORT từ .env
+    environment:
+      - MONGO_URI=${MONGO_URI}  # Sử dụng biến MONGO_URI từ .env
+    depends_on:
+      - mongo
+    networks:
+      - nestjs-network
+
+  mongo:
+    image: mongo:latest
+    container_name: mongo-db
+    ports:
+      - "27017:27017"
+    networks:
+      - nestjs-network
+
+networks:
+  nestjs-network:
+    driver: bridge

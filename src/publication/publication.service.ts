@@ -122,39 +122,9 @@ export class PublicationService {
       },
     ]);
 
-    // Tính số lượng thanh lý và hư hỏng
-    const liquidations = await this.liquidationModel.aggregate([
-      {
-        //lọc bản ghi trong resouce chỉ giữ lại bản ghi có publiccationId nằm trong array publicationIds
-        $match: {
-          publicationId: {$in: publicationIds},
-        },
-      },
-      {
-        //nhóm các record theo pubID và status sau đó tính tổng
-        $group: {
-          _id: {
-            publicationId: '$publicationId',
-            status: '$status', // Tính theo status
-          },
-          totalQuantity: {$sum: '$quantity'}, // Tính tổng số lượng
-        },
-      },
-    ]);
-
-    // Tạo map để lưu số lượng thanh lý và hư hỏng cho từng publicationId
-    const liquidationMap = liquidations.reduce((map, liquidation) => {
-      const {publicationId, status} = liquidation._id;
-      if (!map[publicationId.toString()]) {
-        map[publicationId.toString()] = {liquidation: 0, damaged: 0};
-      }
-      map[publicationId.toString()][status === 'thanh lý' ? 'liquidation' : 'damaged'] += liquidation.totalQuantity;
-      return map;
-    }, {});
-
     // Tạo map để lưu số lượng mượn cho từng publicationId
     const loansMap = loans.reduce((map, loan) => {
-      map[loan._id.toString()] = loan.totalQuantityLoan;
+      map[loan._id.toString()] = loan.totalQuantityLoan ;
       return map;
     }, {});
 
@@ -162,8 +132,6 @@ export class PublicationService {
     const publicationsWithLoanCount = results.map(publication => ({
       ...publication,
       quantityLoan: loansMap[publication._id.toString()] ?? 0,
-      quantityLiquidation: liquidationMap[publication._id.toString()]?.liquidation ?? 0, // Nếu không có thì đặt là 0
-      quantityDamaged: liquidationMap[publication._id.toString()]?.damaged ?? 0, // Nếu không có thì đặt là 0
     }));
 
     const pageMetaDto = new PageMetaDto({

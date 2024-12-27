@@ -28,8 +28,8 @@ export class LiquidationService {
   async create(createDto: CreateLiquidationDto): Promise<any> {
     const liquidations = [];
     const errors: string[] = [];
-    if (createDto?.liquidations?.length == 0 || !createDto.liquidations) {
-      throw new BadRequestException('Invalid asset');
+    if (createDto?.liquidations?.length == 0 || !createDto?.liquidations) {
+      throw new BadRequestException('Không có tài sản hoặc ấn phẩm trong phiếu thanh lý');
     }
     for (let i = 0; i < createDto.liquidations.length; i++) {
       const itemId = createDto.liquidations[i].itemId;
@@ -76,13 +76,58 @@ export class LiquidationService {
 
     // thủ thư và hieuj trưởng ký
     if (liquidation.signatures.length == 0) {
-      resutl = await this.LiquidationModel.findByIdAndUpdate(
-        id,
-        {signatures: [...liquidation.signatures, 'thủ thư']},
-        {
-          returnDocument: 'after',
+      for (let i = 0; i < liquidation.liquidations.length; i++) {
+        const item = liquidation.liquidations[i];
+        item.itemId = item.itemId;
+        // tài sản
+        if (item.type == 'Asset') {
+          const asset: Asset = await this.assetservice.findById(item.itemId);
+          if (!asset) {
+            throw new NotFoundException('Asset not found');
+          }
+          if (item.position == 'trong kho') {
+            if (item.quantityLiquidation > asset.quantityWarehouse) {
+              errors.push(`số lượng ${asset.name} trong kho không đủ`);
+            } 
+          } else {
+            if (item.quantityLiquidation > asset.quantityUsed) {
+              errors.push(`số lượng ${asset.name} đang sử dụng không đủ`);
+            }
+          }
         }
-      );
+        // ấn phẩm
+        if (item.type == 'Publication') {
+          const publication: Publication = await this.publicationService.findById(item.itemId);
+          if (!publication) {
+            throw new NotFoundException('publication not found');
+          }
+          if (item.position == 'trong kho') {
+            if (item.quantityLiquidation > publication.quantity) {
+              errors.push(`số lượng ${publication.name} trong kho không đủ`);
+            } 
+          } else {
+            if (item.quantityLiquidation > publication.shelvesQuantity) {
+              errors.push(`số lượng ${publication.name} đang sử dụng không đủ`);
+            } 
+          }
+        }
+      }
+
+      
+
+      if (errors.length > 0) {
+        throw new BadRequestException(errors);
+      }
+        
+        resutl = await this.LiquidationModel.findByIdAndUpdate(
+          id,
+          { signatures: [...liquidation.signatures, 'thủ thư'] },
+          {
+            returnDocument: 'after',
+          }
+        );
+
+     
     }
     // hiệu trưởng ký
     else {
@@ -97,7 +142,6 @@ export class LiquidationService {
       // trừ số lượng tài sản hoặc ấn phẩm
       for (let i = 0; i < liquidation.liquidations.length; i++) {
         const item = liquidation.liquidations[i];
-        console.log(item);
         item.itemId = item.itemId;
         // tài sản
         if (item.type == 'Asset') {
@@ -109,13 +153,13 @@ export class LiquidationService {
             if (item.quantityLiquidation > asset.quantityWarehouse) {
               errors.push(`số lượng ${asset.name} trong kho không đủ`);
             } else {
-              await this.assetservice.update(asset?._id?.toString(), {quantityLiquidation: asset?.quantityLiquidation || 0 + item.quantityLiquidation, quantityWarehouse: asset.quantityWarehouse - item.quantityLiquidation});
+              await this.assetservice.update(asset?._id?.toString(), {quantityLiquidation: asset?.quantityLiquidation ? asset?.quantityLiquidation + item.quantityLiquidation : 0 + item.quantityLiquidation, quantityWarehouse: asset.quantityWarehouse - item.quantityLiquidation});
             }
           } else {
             if (item.quantityLiquidation > asset.quantityUsed) {
               errors.push(`số lượng ${asset.name} đang sử dụng không đủ`);
             } else {
-              await this.assetservice.update(asset?._id?.toString(), {quantityLiquidation: asset?.quantityLiquidation || 0 + item.quantityLiquidation, quantityUsed: asset.quantityUsed - item.quantityLiquidation});
+              await this.assetservice.update(asset?._id?.toString(), {quantityLiquidation: asset?.quantityLiquidation ? asset?.quantityLiquidation + item.quantityLiquidation : 0 + item.quantityLiquidation, quantityUsed: asset.quantityUsed - item.quantityLiquidation});
             }
           }
         }
@@ -129,13 +173,19 @@ export class LiquidationService {
             if (item.quantityLiquidation > publication.quantity) {
               errors.push(`số lượng ${publication.name} trong kho không đủ`);
             } else {
-              await this.publicationService.updateQuantityLiquidation(publication?._id?.toString(), {quantityLiquidation: publication?.quantityLiquidation || 0 + item.quantityLiquidation, quantity: publication.quantity - item.quantityLiquidation});
+              await this.publicationService.updateQuantityLiquidation(publication?._id?.toString(), {
+                quantityLiquidation: publication?.quantityLiquidation ? publication?.quantityLiquidation + item.quantityLiquidation : 0 + item.quantityLiquidation,
+                quantity: publication.quantity - item.quantityLiquidation,
+              });
             }
           } else {
             if (item.quantityLiquidation > publication.shelvesQuantity) {
               errors.push(`số lượng ${publication.name} đang sử dụng không đủ`);
             } else {
-              await this.publicationService.updateQuantityLiquidation(publication?._id?.toString(), {quantityLiquidation: publication?.quantityLiquidation || 0 + item.quantityLiquidation, quantityUsed: publication.shelvesQuantity - item.quantityLiquidation});
+              await this.publicationService.updateQuantityLiquidation(publication?._id?.toString(), {
+                quantityLiquidation: publication?.quantityLiquidation ? publication?.quantityLiquidation + item.quantityLiquidation : 0 + item.quantityLiquidation,
+                shelvesQuantity: publication.shelvesQuantity - item.quantityLiquidation,
+              });
             }
           }
         }
@@ -232,12 +282,19 @@ export class LiquidationService {
 
     for (let i = 0; i < updateDto.liquidations.length; i++) {
       const assetId = updateDto.liquidations[i].itemId;
-      const asset = await this.assetservice.findById(assetId);
-
-      assets.push({
-        ...updateDto.liquidations[i],
-        ...asset,
-      });
+      if (updateDto.liquidations[i].type == 'Publication') {
+        const publication = await this.publicationService.findById(assetId);
+        assets.push({
+          ...publication,
+          ...updateDto.liquidations[i],
+        });
+      } else {
+        const asset = await this.assetservice.findById(assetId);
+        assets.push({
+          ...asset,
+          ...updateDto.liquidations[i],
+        });
+      }
     }
     updateDto.liquidations = assets;
 
