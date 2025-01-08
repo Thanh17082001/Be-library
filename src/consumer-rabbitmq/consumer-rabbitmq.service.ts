@@ -25,9 +25,9 @@ export class ConsumerRabbitmqService implements OnModuleInit {
           async message => {
             if (message) {
               const content = JSON.parse(message.content.toString());
-              console.log('Received message:', content);
               try {
-                await this.emailService.sendEmailCampaign(); // Đảm bảo rằng hàm này được truyền đúng tham số
+                await this.emailService.sendEmailCampaign(content); // Đảm bảo rằng hàm này được truyền đúng tham số
+                console.log('aaaaaa');
                 channel.ack(message); // Xác nhận tin nhắn đã được xử lý
               } catch (error) {
                 console.error('Error while sending email:', error.message);

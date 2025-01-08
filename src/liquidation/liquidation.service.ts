@@ -88,7 +88,7 @@ export class LiquidationService {
           if (item.position == 'trong kho') {
             if (item.quantityLiquidation > asset.quantityWarehouse) {
               errors.push(`số lượng ${asset.name} trong kho không đủ`);
-            } 
+            }
           } else {
             if (item.quantityLiquidation > asset.quantityUsed) {
               errors.push(`số lượng ${asset.name} đang sử dụng không đủ`);
@@ -104,30 +104,26 @@ export class LiquidationService {
           if (item.position == 'trong kho') {
             if (item.quantityLiquidation > publication.quantity) {
               errors.push(`số lượng ${publication.name} trong kho không đủ`);
-            } 
+            }
           } else {
             if (item.quantityLiquidation > publication.shelvesQuantity) {
               errors.push(`số lượng ${publication.name} đang sử dụng không đủ`);
-            } 
+            }
           }
         }
       }
 
-      
-
       if (errors.length > 0) {
         throw new BadRequestException(errors);
       }
-        
-        resutl = await this.LiquidationModel.findByIdAndUpdate(
-          id,
-          { signatures: [...liquidation.signatures, 'thủ thư'] },
-          {
-            returnDocument: 'after',
-          }
-        );
 
-     
+      resutl = await this.LiquidationModel.findByIdAndUpdate(
+        id,
+        {signatures: [...liquidation.signatures, 'thủ thư']},
+        {
+          returnDocument: 'after',
+        }
+      );
     }
     // hiệu trưởng ký
     else {

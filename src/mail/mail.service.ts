@@ -22,13 +22,17 @@ export class MailService {
     this.emailClient = new SibApiV3Sdk.TransactionalEmailsApi();
   }
 
-  async sendEmailCampaign() {
+  async sendEmailCampaign(emaiDto?: EmailDto) {
+    const emails = emaiDto.emails.map(email => {
+      if (!Object.keys(email).includes('email')) {
+        return { email: email };
+      }
+    });
     const email = new SibApiV3Sdk.SendSmtpEmail();
-    email.sender = {name: 'GDVN', email: 'thanhdev082001@gmail.com'}; // Địa chỉ đã được xác thực
-    email.to = [{email: 'thienthanh17082001@gmail.com'}, {email: 'camthi010501@gmail.com'}, {email: 'manchausa521@gmail.com'}, {email: 'kingkongct2001@gmail.com'}];
-    email.subject = 'Nhắc hạn trả sách';
-    email.htmlContent = '<h1>This is the HTML content of the email.</h1>'; // Nội dung HTML của email
-    email.textContent = 'This is the text content of the email.'; // Nội dung văn bản của email
+    email.sender = emaiDto.sender ?? { name: 'Hệ thống liên thông thư viện GDVN', email: 'thanhdev082001@gmail.com'}; // Địa chỉ đã được xác thực
+    email.to = emails;
+    email.subject = emaiDto.subject ?? 'Hệ thống liên thông thư viện GDVN';
+    email.htmlContent = emaiDto.body ; // Nội dung HTML của email
 
     try {
       const response = await this.emailClient.sendTransacEmail(email);

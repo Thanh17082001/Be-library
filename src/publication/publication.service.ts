@@ -124,7 +124,7 @@ export class PublicationService {
 
     // Tạo map để lưu số lượng mượn cho từng publicationId
     const loansMap = loans.reduce((map, loan) => {
-      map[loan._id.toString()] = loan.totalQuantityLoan ;
+      map[loan._id.toString()] = loan.totalQuantityLoan;
       return map;
     }, {});
 

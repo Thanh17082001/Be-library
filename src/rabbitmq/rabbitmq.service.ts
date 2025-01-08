@@ -27,15 +27,18 @@ export class RabbitmqService implements OnModuleInit {
   }
 
   public async sendEmailToQueue(emailData) {
-    if (!this.channel) {
-      console.error('Channel is not available to send emails');
-      return;
-    }
-    const msg = JSON.stringify(emailData);
-    await this.channel.sendToQueue('emailQueue', Buffer.from(msg), {
-      persistent: true,
-    });
-    console.log(`Email data sent to queue: chờ xử lý`);
+   try {
+     if (!this.channel) {
+       console.error('Channel is not available to send emails');
+       return;
+     }
+     const msg = JSON.stringify(emailData);
+    //  await this.consumeEmailQueue()
+     console.log(`Email data sent to queue: chờ xử lý`);
+     this.channel.sendToQueue('emailQueue', Buffer.from(msg), {persistent: true});
+   } catch (error) {
+    console.log(error);
+   }
   }
 
   // private async consumeEmailQueue() {
@@ -55,7 +58,7 @@ export class RabbitmqService implements OnModuleInit {
 
   //         try {
   //           await this.mailService.sendEmailCampaign(); // Truyền emailData vào hàm
-  //           console.log(`Email sent successfully to ${emailData.to}`);
+  //           console.log(`Email sent successfully to ${emailData.to} Thanhhhh`);
   //           this.channel.ack(msg); // Xác nhận tin nhắn đã được xử lý
   //         } catch (error) {
   //           console.error('Error while sending email:', error.message);

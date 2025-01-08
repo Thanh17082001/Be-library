@@ -29,13 +29,19 @@ import {ChangeUsernameDto} from './dto/change-username.dto';
 import {RoleService} from 'src/role/role.service';
 import {RoleS} from 'src/role/entities/role.entity';
 import {Roles} from 'src/role/role.decorator';
+import { RabbitmqService } from 'src/rabbitmq/rabbitmq.service';
+import { EmailDto } from 'src/mail/dto/create-mail.dto';
+import { CodeForgotService } from 'src/code-forgot/code-forgot.service';
+import { generateVerificationCode } from 'src/common/random-code-forgot-pass';
 
 @Controller('user')
 @ApiTags('user')
 export class UserController {
   constructor(
     private readonly userService: UserService,
-    private readonly roleService: RoleService
+    private readonly roleService: RoleService,
+    private readonly rabbitMQService: RabbitmqService,
+    private readonly codeForgotService: CodeForgotService,
   ) {}
 
   @Post()
@@ -203,6 +209,44 @@ export class UserController {
   async changePassword(@Body() changePassword: ChangePasswordDto): Promise<User> {
     return await this.userService.changePassword(changePassword);
   }
+
+  @Patch('code-forgot-password')
+  async sendEmail(@Body() emailDto: EmailDto, @Req() request: Request) {
+    const user = request['user'];
+    const code = generateVerificationCode();
+
+    await this.codeForgotService.create({ code, mail: Array.isArray(emailDto.emails) ? emailDto.emails[0] : emailDto.emails })
+    
+      const htmlContent =
+        `
+            <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; color: #000;">
+        <div style=" margin: 20px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+          <header style="background-color: #4CAF50; color: #ffffff; padding: 20px; text-align: center;">
+            <h1 style="margin: 0; font-size: 24px;">ĐẶT LẠI MẬT KHẨU</h1>
+          </header>
+          <div style="padding: 20px; color: #000;">
+            <p>Kính gửi <strong style="color: blue;">${user.fullname}</strong>,</p>
+            <p>Chúng tôi đã nhận được yêu cầu đặt lại mật khẩu cho tài khoản <strong style="color: blue;">${user.username}</strong> của bạn. Để tiếp tục, Sử dụng mã bảo mật của bạn:</p>
+            <p>
+              <span style="display: inline-block; color: red; padding: 10px 20px; text-decoration: none; border-radius: 4px; font-size: 20px; letter-spacing: 3px;">${code}</a>
+            </p>
+            <p>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này. Tài khoản của bạn sẽ vẫn an toàn.</p>
+            <p>Trân trọng,</p>
+          </div>
+          <footer style="background-color: #f4f4f4; text-align: center; padding: 10px; font-size: 12px; color: #666;">
+            <p>© 2025 Công ty cổ phần giải pháp công nghệ GDVN. All rights reserved.</p>
+          </footer>
+        </div>
+      </body>
+      `;
+    emailDto.body = htmlContent;
+    emailDto.emails = Array.isArray(emailDto.emails) ? emailDto.emails : [emailDto.emails];
+    emailDto.subject = 'QUÊN MẬT KHẨU'
+    
+
+    const result = await this.rabbitMQService.sendEmailToQueue(emailDto);
+      return result;
+    }
 
   @Patch('change-username')
   async changeUsername(@Body() changeUserNameDto: ChangeUsernameDto): Promise<User> {
