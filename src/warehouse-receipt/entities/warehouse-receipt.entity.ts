@@ -7,6 +7,10 @@ import {Publication} from 'src/publication/entities/publication.entity';
 export class WarehouseReceiptItem extends Publication {
   publicationId: Types.ObjectId;
   quantityWarehouse: number;
+  @Prop({required: true})
+  priceInput: number;
+  @Prop({required: true})
+  priceOutput: number;
 }
 @Schema()
 export class WarehouseReceipt extends BaseDocument {

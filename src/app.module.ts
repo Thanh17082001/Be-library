@@ -40,7 +40,7 @@ import {ConsumerRabbitmqModule} from './consumer-rabbitmq/consumer-rabbitmq.modu
 import {RequestGroupModule} from './request-group/request-group.module';
 import {StockAssetModule} from './stock-asset/stock-asset.module';
 import {TypeAssetModule} from './type-asset/type-asset.module';
-import { CodeForgotModule } from './code-forgot/code-forgot.module';
+import {CodeForgotModule} from './code-forgot/code-forgot.module';
 
 @Module({
   imports: [

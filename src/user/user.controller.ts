@@ -29,10 +29,10 @@ import {ChangeUsernameDto} from './dto/change-username.dto';
 import {RoleService} from 'src/role/role.service';
 import {RoleS} from 'src/role/entities/role.entity';
 import {Roles} from 'src/role/role.decorator';
-import { RabbitmqService } from 'src/rabbitmq/rabbitmq.service';
-import { EmailDto } from 'src/mail/dto/create-mail.dto';
-import { CodeForgotService } from 'src/code-forgot/code-forgot.service';
-import { generateVerificationCode } from 'src/common/random-code-forgot-pass';
+import {RabbitmqService} from 'src/rabbitmq/rabbitmq.service';
+import {EmailDto} from 'src/mail/dto/create-mail.dto';
+import {CodeForgotService} from 'src/code-forgot/code-forgot.service';
+import {generateVerificationCode} from 'src/common/random-code-forgot-pass';
 
 @Controller('user')
 @ApiTags('user')
@@ -41,7 +41,7 @@ export class UserController {
     private readonly userService: UserService,
     private readonly roleService: RoleService,
     private readonly rabbitMQService: RabbitmqService,
-    private readonly codeForgotService: CodeForgotService,
+    private readonly codeForgotService: CodeForgotService
   ) {}
 
   @Post()
@@ -215,10 +215,9 @@ export class UserController {
     const user = request['user'];
     const code = generateVerificationCode();
 
-    await this.codeForgotService.create({ code, mail: Array.isArray(emailDto.emails) ? emailDto.emails[0] : emailDto.emails })
-    
-      const htmlContent =
-        `
+    await this.codeForgotService.create({code, mail: Array.isArray(emailDto.emails) ? emailDto.emails[0] : emailDto.emails});
+
+    const htmlContent = `
             <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; color: #000;">
         <div style=" margin: 20px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
           <header style="background-color: #4CAF50; color: #ffffff; padding: 20px; text-align: center;">
@@ -241,12 +240,11 @@ export class UserController {
       `;
     emailDto.body = htmlContent;
     emailDto.emails = Array.isArray(emailDto.emails) ? emailDto.emails : [emailDto.emails];
-    emailDto.subject = 'QUÊN MẬT KHẨU'
-    
+    emailDto.subject = 'QUÊN MẬT KHẨU';
 
     const result = await this.rabbitMQService.sendEmailToQueue(emailDto);
-      return result;
-    }
+    return result;
+  }
 
   @Patch('change-username')
   async changeUsername(@Body() changeUserNameDto: ChangeUsernameDto): Promise<User> {

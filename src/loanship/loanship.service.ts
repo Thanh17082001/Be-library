@@ -425,7 +425,7 @@ export class LoanshipService {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid id');
     }
-    const resource: LoanSlip = await this.loanSlipModel.findOne({_id: new Types.ObjectId(id)});
+    const resource: LoanSlip = await this.loanSlipModel.findOneDeleted({_id: new Types.ObjectId(id)});
     if (!resource) {
       throw new NotFoundException('Resource not found');
     }

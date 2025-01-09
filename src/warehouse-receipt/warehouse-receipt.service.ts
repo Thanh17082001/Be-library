@@ -29,8 +29,8 @@ export class WarehouseReceiptService {
       const publication = await this.publicationService.findById(publicationId);
 
       publications.push({
-        ...createDto.publications[i],
         ...publication,
+        ...createDto.publications[i],
       });
     }
     createDto.publications = publications;
@@ -55,7 +55,13 @@ export class WarehouseReceiptService {
       if (!publication) {
         throw new NotFoundException('Publication not found');
       }
-      await this.publicationService.update(publication?._id?.toString(), {quantity: publication.quantity + item.quantityWareHouse, totalQuantity: publication.totalQuantity + item.quantityWareHouse, status: 'có sẵn'});
+      await this.publicationService.update(publication?._id?.toString(), {
+        quantity: publication.quantity + item.quantityWareHouse,
+        totalQuantity: publication.totalQuantity + item.quantityWareHouse,
+        status: 'có sẵn',
+        priceInput: item.priceInput,
+        priceOutput: item.priceOutput,
+      });
     }
     await this.warehouseReceiptModel.findByIdAndUpdate(id, {isAccept: true});
     return warehouse;

@@ -1,5 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { CodeForgotService } from './code-forgot.service';
+import {Test, TestingModule} from '@nestjs/testing';
+import {CodeForgotService} from './code-forgot.service';
 
 describe('CodeForgotService', () => {
   let service: CodeForgotService;

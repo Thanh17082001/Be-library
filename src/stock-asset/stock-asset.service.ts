@@ -21,7 +21,6 @@ export class StockAssetService {
     private readonly assetservice: AssetService
   ) {}
   async create(createDto: CreateStockAssetDto): Promise<StockAsset> {
-    console.log(createDto, 'hhhahahaha');
     const assets = [];
     if (createDto?.assets?.length == 0 || !createDto.assets) {
       throw new BadRequestException('Invalid asset');
@@ -37,7 +36,6 @@ export class StockAssetService {
       });
     }
     createDto.assets = assets;
-    console.log(createDto.assets);
     createDto.barcode = generateBarcode();
     const result: StockAsset = await this.StockAssetModel.create(createDto);
 
@@ -60,7 +58,11 @@ export class StockAssetService {
       if (!asset) {
         throw new NotFoundException('Asset not found');
       }
-      await this.assetservice.update(asset?._id?.toString(), {quantityWarehouse: asset.quantityWarehouse + item.quantity, quantityTotal: asset.quantityTotal + item.quantity, priceInput: item.price});
+      await this.assetservice.update(asset?._id?.toString(), {
+        quantityWarehouse: asset.quantityWarehouse + item.quantity,
+        quantityTotal: asset.quantityTotal + item.quantity,
+        priceInput: item.price,
+      });
     }
     await this.StockAssetModel.findByIdAndUpdate(id, {isAccept: true});
     return stockAsset;

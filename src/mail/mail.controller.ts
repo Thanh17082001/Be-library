@@ -1,24 +1,21 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { MailService } from './mail.service';
-import { UpdateMailDto } from './dto/update-mail.dto';
-import { RabbitmqService } from 'src/rabbitmq/rabbitmq.service';
-import { ApiTags } from '@nestjs/swagger';
-import { Public } from 'src/auth/auth.decorator';
-import { EmailDto } from './dto/create-mail.dto';
+import {Controller, Get, Post, Body, Patch, Param, Delete} from '@nestjs/common';
+import {MailService} from './mail.service';
+import {UpdateMailDto} from './dto/update-mail.dto';
+import {RabbitmqService} from 'src/rabbitmq/rabbitmq.service';
+import {ApiTags} from '@nestjs/swagger';
+import {Public} from 'src/auth/auth.decorator';
+import {EmailDto} from './dto/create-mail.dto';
 
 @Controller('mail')
 @ApiTags('mail')
 export class MailController {
-  constructor(private readonly rabbitMQService: RabbitmqService) { }
+  constructor(private readonly rabbitMQService: RabbitmqService) {}
   @Public()
   @Post('send')
   async sendEmail(@Body() emailDto: EmailDto) {
     // Gửi email vào hàng đợi
 
-
-
-    const htmlContent =
-      `
+    const htmlContent = `
           <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; color: #333;">
       <div style="max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
         <header style="background-color: #4CAF50; color: #ffffff; padding: 20px; text-align: center;">
@@ -39,7 +36,7 @@ export class MailController {
       </div>
     </body>
     `;
-    emailDto.body=htmlContent;
+    emailDto.body = htmlContent;
     const result = await this.rabbitMQService.sendEmailToQueue(emailDto);
     return result;
   }

@@ -23,6 +23,8 @@ export class Publication extends BaseDocument {
 
   @Prop({default: 0})
   priceInput: number;
+  @Prop({default: 0})
+  priceOutput: number;
   //số lượng hư hỏng thanh lý
   @Prop({default: 0})
   quantityLiquidation: number;

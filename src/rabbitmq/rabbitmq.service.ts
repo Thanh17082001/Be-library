@@ -27,18 +27,18 @@ export class RabbitmqService implements OnModuleInit {
   }
 
   public async sendEmailToQueue(emailData) {
-   try {
-     if (!this.channel) {
-       console.error('Channel is not available to send emails');
-       return;
-     }
-     const msg = JSON.stringify(emailData);
-    //  await this.consumeEmailQueue()
-     console.log(`Email data sent to queue: chờ xử lý`);
-     this.channel.sendToQueue('emailQueue', Buffer.from(msg), {persistent: true});
-   } catch (error) {
-    console.log(error);
-   }
+    try {
+      if (!this.channel) {
+        console.error('Channel is not available to send emails');
+        return;
+      }
+      const msg = JSON.stringify(emailData);
+      //  await this.consumeEmailQueue()
+      console.log(`Email data sent to queue: chờ xử lý`);
+      this.channel.sendToQueue('emailQueue', Buffer.from(msg), {persistent: true});
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   // private async consumeEmailQueue() {

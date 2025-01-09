@@ -1,6 +1,6 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { CodeForgotController } from './code-forgot.controller';
-import { CodeForgotService } from './code-forgot.service';
+import {Test, TestingModule} from '@nestjs/testing';
+import {CodeForgotController} from './code-forgot.controller';
+import {CodeForgotService} from './code-forgot.service';
 
 describe('CodeForgotController', () => {
   let controller: CodeForgotController;

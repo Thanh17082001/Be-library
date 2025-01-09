@@ -1,8 +1,8 @@
-import { IsString } from "class-validator";
+import {IsString} from 'class-validator';
 
 export class CreateCodeForgotDto {
-    @IsString()
-    code: string;
-    @IsString()
-    mail: string;
+  @IsString()
+  code: string;
+  @IsString()
+  mail: string;
 }
