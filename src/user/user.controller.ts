@@ -215,7 +215,7 @@ export class UserController {
     const user = request['user'];
     const code = generateVerificationCode();
 
-    await this.codeForgotService.create({code, mail: Array.isArray(emailDto.emails) ? emailDto.emails[0] : emailDto.emails});
+    await this.codeForgotService.create({ code, mail: user.email});
 
     const htmlContent = `
             <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; color: #000;">
@@ -239,7 +239,7 @@ export class UserController {
       </body>
       `;
     emailDto.body = htmlContent;
-    emailDto.emails = Array.isArray(emailDto.emails) ? emailDto.emails : [emailDto.emails];
+    emailDto.emails = [user.email];
     emailDto.subject = 'QUÊN MẬT KHẨU';
 
     const result = await this.rabbitMQService.sendEmailToQueue(emailDto);
