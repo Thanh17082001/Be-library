@@ -32,7 +32,6 @@ export class StockAssetService {
       assets.push({
         ...asset,
         ...createDto.assets[i],
-        priceInput: createDto.assets[i].price,
       });
     }
     createDto.assets = assets;
