@@ -33,6 +33,11 @@ import {RabbitmqService} from 'src/rabbitmq/rabbitmq.service';
 import {EmailDto} from 'src/mail/dto/create-mail.dto';
 import {CodeForgotService} from 'src/code-forgot/code-forgot.service';
 import {generateVerificationCode} from 'src/common/random-code-forgot-pass';
+import { CodeForgot } from 'src/code-forgot/entities/code-forgot.entity';
+import { checkExpired } from 'src/common/check-expired';
+import { ConfirmPass, ForgotPassDto } from './dto/forgot-pass.dto';
+import * as crypto from 'crypto';
+import { ResetPassDto } from './dto/reset-forgot-pass.dto';
 
 @Controller('user')
 @ApiTags('user')
@@ -210,12 +215,25 @@ export class UserController {
     return await this.userService.changePassword(changePassword);
   }
 
+  @Public()
   @Patch('code-forgot-password')
-  async sendEmail(@Body() emailDto: EmailDto, @Req() request: Request) {
-    const user = request['user'];
+  async sendEmail(@Body() forgotPassDto: ForgotPassDto) {
+    const user: User = await this.userService.findOne({ username: forgotPassDto.username });
+    let emailDto: EmailDto={
+      emails: [],
+      subject: '',
+      body: ''
+    };
     const code = generateVerificationCode();
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+    const codeOld: CodeForgot = await this.codeForgotService.findOneByEmail(user.email)
+    if (codeOld) {
+      await this.codeForgotService.remove(user.email, codeOld.code);
+    }
 
-    await this.codeForgotService.create({ code, mail: user.email});
+    await this.codeForgotService.create({ code, mail: user.email });
 
     const htmlContent = `
             <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; color: #000;">
@@ -225,10 +243,11 @@ export class UserController {
           </header>
           <div style="padding: 20px; color: #000;">
             <p>Kính gửi <strong style="color: blue;">${user.fullname}</strong>,</p>
-            <p>Chúng tôi đã nhận được yêu cầu đặt lại mật khẩu cho tài khoản <strong style="color: blue;">${user.username}</strong> của bạn. Để tiếp tục, Sử dụng mã bảo mật của bạn:</p>
+            <p>Chúng tôi đã nhận được yêu cầu đặt lại mật khẩu cho tài khoản <strong style="color: blue;">${user.username}</strong> của bạn. Để tiếp tục, Sử dụng mã bảo mật của bạn để đặt lại mật khẩu, mã này có thời hạn 30 giây:</p>
             <p>
               <span style="display: inline-block; color: red; padding: 10px 20px; text-decoration: none; border-radius: 4px; font-size: 20px; letter-spacing: 3px;">${code}</a>
             </p>
+            <p style=" color: red; font-style:italic;">Bạn vui lòng không chia sẻ mã này cho bất kỳ ai để tránh rủi ro bảo mật.</p>
             <p>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này. Tài khoản của bạn sẽ vẫn an toàn.</p>
             <p>Trân trọng,</p>
           </div>
@@ -243,7 +262,40 @@ export class UserController {
     emailDto.subject = 'QUÊN MẬT KHẨU';
 
     const result = await this.rabbitMQService.sendEmailToQueue(emailDto);
-    return result;
+    return new ItemDto(result);
+  }
+
+  @Public()
+  @Patch('confirm-forgot-password')
+  async confirmForgotPassword(@Body() confirmPass: ConfirmPass) {
+    const user: User = await this.userService.findOne({ username: confirmPass.username });
+
+    const code: CodeForgot = await this.codeForgotService.findOne(user.email, confirmPass.code)
+      if (!code || checkExpired(code.codeExpiry)) {
+        throw new BadRequestException('Mã xác nhận hết hạn hoặc không hợp lệ');
+    }
+    
+    const token = crypto.randomBytes(12).toString('hex');
+
+     await this.codeForgotService.update(user.email, token)
+
+
+    return new ItemDto({token:token});
+
+  }
+  @Public()
+  @Patch('reset-password')
+  async resetPassword( @Body() resetPassDto: ResetPassDto) {
+    const user: User = await this.userService.findOne({ username: resetPassDto.username });
+
+    const code: CodeForgot = await this.codeForgotService.checkConfirm(user.email, resetPassDto.token)
+    if (!code) {
+      throw new BadRequestException('Không có quyền hoặc chưa xác nhận mã');
+    }
+
+    const result = await this.userService.resetPassword(user._id, resetPassDto.password);
+    await this.codeForgotService.remove(user.email, code.code)
+    return new ItemDto(result);
   }
 
   @Patch('change-username')

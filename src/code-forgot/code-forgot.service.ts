@@ -21,10 +21,22 @@ export class CodeForgotService {
   }
 
   async findOne(email: string, code: string) {
-    return await this.codeForgotModel.findOne({email, code}).lean();
+    return await this.codeForgotModel.findOne({mail:email, code}).lean();
+  }
+
+  async checkConfirm(email: string, token: string) {
+    return await this.codeForgotModel.findOne({ mail: email, token, isConfirm: true }).lean();
+  }
+
+  async findOneByEmail(email: string) {
+    return await this.codeForgotModel.findOne({ mail :email}).sort({ createdAt: -1 }).lean();
   }
 
   async remove(email: string, code: string) {
-    return await this.codeForgotModel.findOneAndDelete({email, code});
+    return await this.codeForgotModel.findOneAndDelete({mail:email, code});
+  }
+
+  async update(email: string, token: string) {
+    return await this.codeForgotModel.findOneAndUpdate({ mail: email },{token:token, isConfirm:true});
   }
 }
