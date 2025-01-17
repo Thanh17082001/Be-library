@@ -340,12 +340,9 @@ export class UserService {
   }
 
   async resetPassword(id, password): Promise<User> {
-
-
-   
     const passwordNew = await bcrypt.hash(password, 10);
 
-    return await this.userModel.findByIdAndUpdate(id, { password:passwordNew, passwordFirst: '' }, { returnDocument: 'after' });
+    return await this.userModel.findByIdAndUpdate(id, {password: passwordNew, passwordFirst: ''}, {returnDocument: 'after'});
   }
 
   async changeUsername(changeUsernameDto: ChangeUsernameDto): Promise<User> {
