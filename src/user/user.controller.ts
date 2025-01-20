@@ -38,7 +38,7 @@ import {checkExpired} from 'src/common/check-expired';
 import {ConfirmPass, ForgotPassDto} from './dto/forgot-pass.dto';
 import * as crypto from 'crypto';
 import {ResetPassDto} from './dto/reset-forgot-pass.dto';
-import { validateEmail } from 'src/common/validate-email';
+import {validateEmail} from 'src/common/validate-email';
 
 @Controller('user')
 @ApiTags('user')
@@ -220,7 +220,7 @@ export class UserController {
   @Patch('code-forgot-password')
   async sendEmail(@Body() forgotPassDto: ForgotPassDto) {
     const user: User = await this.userService.findOne({username: forgotPassDto.username});
-    if (validateEmail(user.email)) {
+    if (!validateEmail(user.email)) {
       throw new BadRequestException('Tài khoản này chưa có email hoặc email không hợp lệ vui lòng liên hệ thủ thư để đặt lại mật khẩu');
     }
     let emailDto: EmailDto = {
