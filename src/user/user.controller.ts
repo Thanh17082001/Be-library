@@ -306,6 +306,16 @@ export class UserController {
     return await this.userService.changeUsername(changeUserNameDto);
   }
 
+  @Patch('reset-password-admin/:id')
+  @Roles(Role.Admin, Role.Owner, Role.SuperAdmin) // tên role để chặn bên dưới
+  @UseGuards(RolesGuard) // chặn role (admin, student ,....)
+  async resetPasswordAdmin(@Param('id') id: string): Promise<ItemDto<User>> {
+    console.log(id);
+    const newPass = '1';
+    const result = await this.userService.resetPassword(id, newPass);
+    return new ItemDto(result);
+  }
+
   @Patch('change-info/:id')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file', {storage: storage('avatar'), ...multerOptions}))
