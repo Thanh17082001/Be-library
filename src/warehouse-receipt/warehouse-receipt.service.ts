@@ -131,8 +131,8 @@ export class WarehouseReceiptService {
       const publication = await this.publicationService.findById(publicationId);
 
       publications.push({
-        ...updateDto.publications[i],
         ...publication,
+        ...updateDto.publications[i],
       });
     }
     updateDto.publications = publications;

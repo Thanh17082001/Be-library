@@ -13,9 +13,9 @@ import {Supplier} from './entities/supplier.entity';
 export class SupplierService {
   constructor(@InjectModel(Supplier.name) private supplierModel: SoftDeleteModel<Supplier>) {}
   async create(createDto: CreateSupplierDto): Promise<Supplier> {
-    const exits = await this.supplierModel.findOne({name: createDto.name});
+    const exits = await this.supplierModel.findOne({name: createDto.name.toLocaleLowerCase(), libraryId: createDto.libraryId});
     if (exits) {
-      throw new BadRequestException('name supplier already exists');
+      throw new BadRequestException('Tên nhà cung cấp đã tồn tại');
     }
     return await this.supplierModel.create(createDto);
   }
