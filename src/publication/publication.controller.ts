@@ -29,6 +29,10 @@ import {generateImageFromVideo} from 'src/common/genegrate-image-from-video';
 import {Library} from 'src/library/entities/library.entity';
 import {SearchName} from './dto/search-name.dto';
 import {LibraryService} from 'src/library/library.service';
+import {resizeImage} from 'src/utils/resizeImage';
+
+import {Public} from 'src/auth/auth.decorator';
+import {changeFileName} from 'src/utils/change-file-name';
 
 @Controller('publications')
 @ApiTags('publications')
@@ -77,8 +81,9 @@ export class PublicationController {
         createDto.path = `publication/word/${file.filename}`;
         createDto.priviewImage = '/default/default-word.jpg';
       } else {
+        const link: string = await resizeImage(file);
         createDto.path = `publication/image/${file.filename}`;
-        createDto.priviewImage = `publication/image/${file.filename}`;
+        createDto.priviewImage = changeFileName(link);
       }
     }
     createDto.images = images;
@@ -101,7 +106,7 @@ export class PublicationController {
       await this.libraryService.updateStorageLimit(user.libraryId, +fileSize);
     }
     const result = await this.publicationService.create({...createDto});
-
+    console.log(createDto);
     return result;
   }
 
