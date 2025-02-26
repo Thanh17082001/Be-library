@@ -41,6 +41,7 @@ import {RequestGroupModule} from './request-group/request-group.module';
 import {StockAssetModule} from './stock-asset/stock-asset.module';
 import {TypeAssetModule} from './type-asset/type-asset.module';
 import {CodeForgotModule} from './code-forgot/code-forgot.module';
+import {TopicModule} from './topic/topic.module';
 
 @Module({
   imports: [
@@ -108,6 +109,7 @@ import {CodeForgotModule} from './code-forgot/code-forgot.module';
     StockAssetModule,
     TypeAssetModule,
     CodeForgotModule,
+    TopicModule,
   ],
   controllers: [AppController],
   providers: [

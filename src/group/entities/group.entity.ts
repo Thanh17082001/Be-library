@@ -16,4 +16,4 @@ export class Group extends BaseDocument {
 
 export const GroupSchema = SchemaFactory.createForClass(Group).remove(['groupId']);
 
-GroupSchema.index({name: 1});
+GroupSchema.index({ name: 1 }).remove(['groupId']);
