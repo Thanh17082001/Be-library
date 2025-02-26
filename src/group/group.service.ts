@@ -170,9 +170,9 @@ export class GroupService {
     if (!user) {
       throw new BadRequestException('Thư viện này chưa có tài khoản thủ thư');
     }
-    const librariesOld = resource.libraries;
+    const librariesOld: Types.ObjectId[] = resource.libraries;
 
-    const librariesNew = updateGroupDto.libraries;
+    const librariesNew: Types.ObjectId[] = updateGroupDto.libraries;
 
     const result = librariesOld.filter(item => !librariesNew.includes(item)); /// lấy ra phần tử bị loại
 
