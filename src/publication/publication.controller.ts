@@ -162,6 +162,7 @@ export class PublicationController {
             libraryId: new Types.ObjectId(user?.libraryId?.toString()) ?? null,
             status: 'không có sẵn',
             shelvesId: null,
+            topicId: null,
             publisherIds,
             categoryIds,
             authorIds,

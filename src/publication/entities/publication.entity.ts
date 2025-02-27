@@ -51,6 +51,9 @@ export class Publication extends BaseDocument {
   @Prop({type: Types.ObjectId, ref: 'Shelves', default: null})
   shelvesId: Types.ObjectId;
 
+  @Prop({type: Types.ObjectId, ref: 'Topic', default: null})
+  topicId: Types.ObjectId;
+
   @Prop({type: [Types.ObjectId], ref: 'Publisher'})
   publisherIds: Types.ObjectId[];
 

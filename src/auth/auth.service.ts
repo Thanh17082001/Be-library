@@ -48,7 +48,7 @@ export class AuthService {
       throw new BadRequestException('Account or password is incorrect');
     }
     const payload = {...user, password: undefined, passWordFirst: undefined, libraryDetail: user.libraryId, libraryId: user.libraryId._id};
-    const accessToken = this.jwtService.sign(payload, {expiresIn: '7d'});
+    const accessToken = this.jwtService.sign(payload, {expiresIn: '60m'});
     const refreshToken = this.jwtService.sign({userId: user._id}, {expiresIn: '7d'});
     await this.tokenService.create({
       userId: new Types.ObjectId(user._id.toString()),
