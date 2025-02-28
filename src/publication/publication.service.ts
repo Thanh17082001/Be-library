@@ -99,6 +99,7 @@ export class PublicationService {
         .populate('publisherIds')
         .populate('materialIds')
         .populate('shelvesId')
+        .populate('topicId')
         .populate('libraryId')
         .sort({order: 1, createdAt: order === 'ASC' ? 1 : -1})
         .skip(skip)

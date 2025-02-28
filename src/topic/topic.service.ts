@@ -21,7 +21,7 @@ export class TopicService {
       categoryIds: {$all: createDto.categoryIds}, // Tìm theo categoryId
     });
     if (exits) {
-      throw new BadRequestException('name already exists');
+      throw new BadRequestException('Tên chủ đề đã tồn tại');
     }
     return await this.topicModel.create(createDto);
   }
@@ -81,14 +81,14 @@ export class TopicService {
       throw new BadRequestException('Invalid id');
     }
 
-    // const exits: Topic = await this.topicModel.findOne({
-    //   name: updateDto.name, // Tìm theo tên
-    //   categoryIds: updateDto.categoryIds, // Tìm theo categoryId
-    //   _id: {$ne: new Types.ObjectId(id)}, // Loại trừ ID hiện tại
-    // });
-    // if (exits) {
-    //   throw new BadRequestException('name already exists');
-    // }
+    const exits: Topic = await this.topicModel.findOne({
+      name: updateDto.name, // Tìm theo tên
+      categoryIds: { $all: updateDto.categoryIds }, // Tìm theo categoryId
+      _id: { $ne: new Types.ObjectId(id) }, // Loại trừ ID hiện tại
+    });
+    if (exits) {
+      throw new BadRequestException('Tên chủ đề đã tồn tại');
+    }
     const resource: Topic = await this.topicModel.findById(new Types.ObjectId(id));
     if (!resource) {
       throw new NotFoundException('Resource not found');
@@ -103,9 +103,9 @@ export class TopicService {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid id');
     }
-    const resource: Topic = await this.topicModel.findOneDeleted(new Types.ObjectId(id));
+    const resource: Topic = await this.topicModel.findOne(new Types.ObjectId(id));
     if (!resource) {
-      throw new NotFoundException('Resource not found');
+      throw new NotFoundException('Không tìm thấy chủ đề');
     }
     return await this.topicModel?.findByIdAndDelete(new Types.ObjectId(id));
   }
